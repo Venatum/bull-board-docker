@@ -23,7 +23,7 @@ WORKDIR /home/node/
 COPY --chown=node:node ./package.json .
 COPY --chown=node:node ./yarn.lock .
 
-RUN yarn install --frozen-lockfile
+RUN yarn install --production --frozen-lockfile
 
 COPY --chown=node:node ./src ./src
 

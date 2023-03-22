@@ -4,7 +4,7 @@ Supports both: bull and bullmq. bull-board version v3.2.6
 
 ### Quick start with Docker
 ```
-docker run -p 3000:3000 deadly0/bull-board
+docker run -p 3000:3000 venatum/bull-board
 ```
 will run bull-board interface on `localhost:3000` and connect to your redis instance on `localhost:6379` without password.
 
@@ -82,5 +82,5 @@ volumes:
         external: false
 ```
 
-[bull-board]: https://github.com/vcapretz/bull-board
+[bull-board]: https://github.com/felixmosh/bull-board
 [bull-board]: https://github.com/felixmosh/bull-board#hosting-router-on-a-sub-path
