@@ -1,4 +1,4 @@
-import { createClient } from 'redis';
+import { createClient } from 'ioredis';
 import {config} from "./config";
 
 export const redisConfig = {

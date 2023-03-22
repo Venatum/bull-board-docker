@@ -13,18 +13,15 @@ const {setQueues} = createBullBoard({queues: [], serverAdapter});
 export const router = serverAdapter.getRouter();
 
 async function setBullQueues() {
-	// await client.connect();
-
-	client.KEYS(`${config.BULL_PREFIX}:*`, (err, keys) => {
-		const uniqKeys = new Set(keys.map(key => key.replace(/^.+?:(.+?):.+?$/, '$1')));
-		const queueList = Array.from(uniqKeys).sort().map(
-			(item) => config.BULL_VERSION === 'BULLMQ' ?
-				new BullMQAdapter(new bullmq.Queue(item, {connection: redisConfig.redis})) :
-				new BullAdapter(new bull.Queue(item, redisConfig))
-		);
-		setQueues(queueList);
-		console.log('done!')
-	});
+	const keys = await client.keys(`${config.BULL_PREFIX}:*`);
+	const uniqKeys = new Set(keys.map(key => key.replace(/^.+?:(.+?):.+?$/, '$1')));
+	const queueList = Array.from(uniqKeys).sort().map(
+		(item) => config.BULL_VERSION === 'BULLMQ' ?
+			new BullMQAdapter(new bullmq.Queue(item, {connection: redisConfig.redis})) :
+			new BullAdapter(new bull.Queue(item, redisConfig))
+	);
+	setQueues(queueList);
+	console.log('🚀 done!')
 }
 
 setBullQueues();

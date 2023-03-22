@@ -38,7 +38,7 @@
     "morgan": "^1.10.0",
     "passport": "^0.6.0",
     "passport-local": "^1.0.0",
-    "redis": "^3.1.2"
+    "ioredis": "^5.3.1"
   },
   "author": {
     "name": "Venatum",
