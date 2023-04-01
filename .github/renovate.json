@@ -1,4 +1,8 @@
 {
+	"extends": [
+		"config:base",
+		":automergeMinor"
+	],
 	"baseBranches": ["master"],
 	"autodiscover": false,
 	"repositories": [
@@ -12,5 +16,20 @@
 	"automergeStrategy": "merge-commit",
 	"automergeType": "pr",
 	"ignoreTests": true,
-	"rebaseWhen": "conflicted"
+	"rebaseWhen": "conflicted",
+	"semanticCommitScope": "deps",
+	"packageRules": [
+		{
+			"depTypeList": ["dependencies"],
+			"semanticCommitType": "build"
+		},
+		{
+			"packageNames": ["semantic-release"],
+			"semanticCommitType": "build"
+		},
+		{
+			"matchDatasources": ["docker"],
+			"semanticCommitType": "build"
+		}
+	]
 }
