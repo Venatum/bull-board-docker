@@ -21,11 +21,11 @@ EXPOSE $PORT
 WORKDIR /home/node/
 
 COPY --chown=node:node ./package.json .
-COPY --chown=node:node ./yarn.lock .
+COPY --chown=node:node ./package-lock.json .
 
-RUN yarn install --production --frozen-lockfile
+RUN npm ci --only=production
 
 COPY --chown=node:node ./src ./src
 
-ENTRYPOINT ["yarn"]
+ENTRYPOINT ["npm"]
 CMD [ "start" ]

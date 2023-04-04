@@ -92,10 +92,10 @@ jobs:
 #        # against the sigstore community Fulcio instance.
 #        run: echo "${{ steps.meta.outputs.tags }}" | xargs -I {} cosign sign {}@${{ steps.build-and-push.outputs.digest }}
 
-      - name: Docker Hub Description
-        uses: peter-evans/dockerhub-description@v3
-        if: ${{ github.event_name != 'pull_request' }}
-        with:
-          username: ${{ env.REGISTRY_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: ${{ env.IMAGE_NAME }}
+#      - name: Docker Hub Description
+#        uses: peter-evans/dockerhub-description@v3
+#        if: ${{ github.event_name != 'pull_request' }}
+#        with:
+#          username: ${{ env.REGISTRY_USERNAME }}
+#          password: ${{ secrets.DOCKERHUB_TOKEN }}
+#          repository: ${{ env.IMAGE_NAME }}
