@@ -52,7 +52,7 @@
     "@semantic-release/github": "^9.0.4",
     "@semantic-release/release-notes-generator": "^11.0.4",
     "commitizen": "^4.3.0",
-    "conventional-changelog-conventionalcommits": "^6.1.0",
+    "conventional-changelog-conventionalcommits": "^7.0.0",
     "husky": "^8.0.3",
     "semantic-release": "^21.0.7"
   },
