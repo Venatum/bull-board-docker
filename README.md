@@ -1,10 +1,10 @@
 Docker image for [bull-board]. Allow you to monitor your bull queue without any coding!
 
-Supports both: bull and bullmq.
+Supports both bull and bullmq.
 
 ### Quick start with Docker
 ```
-docker run -p 3000:3000 venatum/bull-board
+docker run -p 3000:3000 venatum/bull-board:latest
 ```
 will run bull-board interface on `localhost:3000` and connect to your redis instance on `localhost:6379` without password.
 
@@ -13,8 +13,6 @@ To configure redis see "Environment variables" section.
 ### Quick start with docker-compose
 
 ```yaml
-version: "3"
-
 services:
     bullboard:
         container_name: bullboard
@@ -25,21 +23,30 @@ services:
 ```
 will run bull-board interface on `localhost:3000` and connect to your redis instance on `localhost:6379` without password.
 
-see "Example with docker-compose" section for example with env parameters
+see "Example with docker-compose" section, for example, with env parameters
 
 
 ### Environment variables
-* `REDIS_HOST` - host to connect to redis (localhost by default)
-* `REDIS_PORT` - redis port (6379 by default)
-* `REDIS_DB` - redis db to use ('0' by default)
-* `REDIS_USE_TLS` - enable TLS true or false (false by default)
+
+**Redis**
+* `REDIS_HOST` - host to connect to redis (`localhost` by default)
+* `REDIS_PORT` - redis port (`6379` by default)
+* `REDIS_DB` - redis db to use (`'0'` by default)
+* `REDIS_USE_TLS` - enable TLS true or false (`false` by default)
 * `REDIS_PASSWORD` - password to connect to redis (no password by default)
-* `BULL_PREFIX` - prefix to your bull queue name (bull by default)
-* `BULL_VERSION` - version of bull lib to use 'BULLMQ' or 'BULL' ('BULLMQ' by default)
-* `PROXY_PATH` - proxyPath for bull board, e.g. https://<server_name>/my-base-path/queues [docs] ('' by default)
+
+**Interface**
+* `PROXY_PATH` - proxyPath for bull board, e.g. https://<server_name>/my-base-path/queues [docs] (`''` by default)
 * `USER_LOGIN` - login to restrict access to bull-board interface (disabled by default)
 * `USER_PASSWORD` - password to restrict access to bull-board interface (disabled by default)
 
+**Queue setup**
+* `BULL_PREFIX` - prefix to your bull queue name (`bull` by default)
+* `BULL_VERSION` - version of bull lib to use 'BULLMQ' or 'BULL' (`BULLMQ` by default)
+* `BACKOFF_STARTING_DELAY` - The delay, in milliseconds, before starts the research for the first time (`500` by default)
+* `BACKOFF_MAX_DELAY` - The maximum delay, in milliseconds, between two consecutive attempts (`Infinity` by default)
+* `BACKOFF_TIME_MULTIPLE` - The `BACKOFF_STARTING_DELAY` is multiplied by the `BACKOFF_TIME_MULTIPLE` to increase the delay between reattempts (`2` by default)
+* `BACKOFF_NB_ATTEMPTS` - The maximum number of times to attempt the research (`10` by default)
 
 ### Restrict access with login and password
 
@@ -50,12 +57,10 @@ Only when both `USER_LOGIN` and `USER_PASSWORD` specified, access will be restri
 ### Example with docker-compose
 
 ```yaml
-version: "3"
-
 services:
     redis:
         container_name: redis
-        image: redis:5.0-alpine
+        image: redis:alpine
         restart: unless-stopped
         ports:
             - "6379:6379"
@@ -64,7 +69,7 @@ services:
 
     bullboard:
         container_name: bullboard
-        image: venatum/bull-board
+        image: venatum/bull-board:latest
         restart: unless-stopped
         environment:
             REDIS_HOST: redis
@@ -73,7 +78,7 @@ services:
             REDIS_USE_TLS: 'false'
             BULL_PREFIX: bull
         ports:
-                - "3000:3000"
+            - "3000:3000"
         depends_on:
             - redis
 

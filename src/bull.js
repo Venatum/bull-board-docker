@@ -34,17 +34,16 @@ async function getBullQueues() {
 async function bullMain() {
 	try {
 		const queueList = await backOff(() => getBullQueues(), {
-			// TODO: env variables
 			delayFirstAttempt: false,
 			jitter: "none",
-			maxDelay: Infinity,
-			numOfAttempts: 10,
+			startingDelay: config.BACKOFF_STARTING_DELAY,
+			maxDelay: config.BACKOFF_MAX_DELAY,
+			timeMultiple: config.BACKOFF_TIME_MULTIPLE,
+			numOfAttempts: config.BACKOFF_NB_ATTEMPTS,
 			retry: (e, attemptNumber) => {
-				console.log(`No queue ! Retry n°${attemptNumber}`);
+				console.log(`No queue! Retry n°${attemptNumber}`);
 				return true;
 			},
-			startingDelay: 100, // ms
-			timeMultiple: 2
 		});
 		setQueues(queueList);
 		console.log('🚀 done!')

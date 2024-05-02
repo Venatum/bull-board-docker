@@ -7,6 +7,7 @@ import { ensureLoggedIn } from 'connect-ensure-login';
 import {config} from "./config";
 import {authRouter} from './login';
 import {router} from "./bull";
+import {client} from "./redis";
 
 const app = express();
 
@@ -48,6 +49,24 @@ if (config.AUTH_ENABLED) {
 } else {
 	app.use(config.HOME_PAGE, router);
 }
+
+app.use('/healthcheck', (req, res) => {
+	// try {
+	// 	const redis = client.ping((e) => {
+	// 		console.log(e)
+	// 	})
+	// } catch (e) {
+	// 	console.log('toto', e);
+	// }
+	res.status(200).json({
+		status: 'ok',
+		info: {
+			redis: {
+				status: 'wip',
+			},
+		},
+	});
+});
 
 app.listen(config.PORT, () => {
 	console.log(`bull-board is started http://localhost:${config.PORT}${config.HOME_PAGE}`);
