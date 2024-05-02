@@ -23,6 +23,9 @@
   "scripts": {
     "start": "node -r esm .",
     "start:dev": "nodemon -r esm .",
+    "start:docker": "docker compose up --force-recreate --renew-anon-volumes --wait --detach",
+    "start:docker-deps": "npm run start:docker redis",
+    "stop:docker": "docker compose down -v",
     "commitlint": "commitlint --from origin/master",
     "commit": "cz"
   },
@@ -35,12 +38,13 @@
     "connect-ensure-login": "^0.1.1",
     "dotenv": "^16.4.5",
     "esm": "^3.2.25",
+    "exponential-backoff": "^3.1.1",
     "express": "^4.19.2",
     "express-session": "^1.18.0",
+    "ioredis": "^5.4.1",
     "morgan": "^1.10.0",
     "passport": "^0.7.0",
-    "passport-local": "^1.0.0",
-    "ioredis": "^5.4.1"
+    "passport-local": "^1.0.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",
@@ -54,6 +58,7 @@
     "commitizen": "^4.3.0",
     "conventional-changelog-conventionalcommits": "^7.0.2",
     "husky": "^9.0.11",
+    "nodemon": "^3.1.0",
     "semantic-release": "^23.0.8"
   },
   "author": {
