@@ -50,24 +50,6 @@ if (config.AUTH_ENABLED) {
 	app.use(config.HOME_PAGE, router);
 }
 
-app.use('/healthcheck', (req, res) => {
-	// try {
-	// 	const redis = client.ping((e) => {
-	// 		console.log(e)
-	// 	})
-	// } catch (e) {
-	// 	console.log('toto', e);
-	// }
-	res.status(200).json({
-		status: 'ok',
-		info: {
-			redis: {
-				status: 'wip',
-			},
-		},
-	});
-});
-
 app.listen(config.PORT, () => {
 	console.log(`bull-board is started http://localhost:${config.PORT}${config.HOME_PAGE}`);
 	console.log(`bull-board is fetching queue list, please wait...`);
