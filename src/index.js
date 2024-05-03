@@ -7,7 +7,6 @@ import { ensureLoggedIn } from 'connect-ensure-login';
 import {config} from "./config";
 import {authRouter} from './login';
 import {router} from "./bull";
-import {client} from "./redis";
 
 const app = express();
 
