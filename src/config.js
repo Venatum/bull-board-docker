@@ -23,4 +23,9 @@ export const config = {
 	AUTH_ENABLED: Boolean(process.env.USER_LOGIN && process.env.USER_PASSWORD),
 	HOME_PAGE: PROXY_PATH || '/',
 	LOGIN_PAGE: `${PROXY_PATH}/login`,
+
+	BACKOFF_STARTING_DELAY: process.env.BACKOFF_STARTING_DELAY || 500,
+	BACKOFF_MAX_DELAY: process.env.BACKOFF_MAX_DELAY || Infinity,
+	BACKOFF_TIME_MULTIPLE: process.env.BACKOFF_TIME_MULTIPLE || 2,
+	BACKOFF_NB_ATTEMPTS: process.env.BACKOFF_NB_ATTEMPTS || 10,
 };
