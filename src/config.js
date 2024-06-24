@@ -1,4 +1,5 @@
 import * as dotenv from 'dotenv'
+
 dotenv.config()
 
 function normalizePath(pathStr) {
@@ -29,7 +30,7 @@ export const config = {
 	BACKOFF_TIME_MULTIPLE: process.env.BACKOFF_TIME_MULTIPLE || 2,
 	BACKOFF_NB_ATTEMPTS: process.env.BACKOFF_NB_ATTEMPTS || 10,
 
-  SENTINEL_NAME: process.env.SENTINEL_NAME,
-  SENTINEL_HOSTS: process.env.SENTINEL_HOSTS,
-  MAX_RETRIES_PER_REQUEST: process.env.MAX_RETRIES_PER_REQUEST,
+	SENTINEL_NAME: process.env.SENTINEL_NAME,
+	SENTINEL_HOSTS: process.env.SENTINEL_HOSTS,
+	MAX_RETRIES_PER_REQUEST: process.env.MAX_RETRIES_PER_REQUEST,
 };
