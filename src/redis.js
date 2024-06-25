@@ -2,7 +2,7 @@ import {createClient} from 'ioredis';
 import {config} from "./config";
 
 const parseDSNToSentinels = (dsn) => {
-	const hostChain = dsn.split(',');
+	const hostChain = dsn.split(/,|;/);
 
 	return hostChain.map((host) => ({
 		host: host.split(':')[0],
@@ -14,7 +14,7 @@ export const redisConfig = {
 	redis: {
 		...(config.SENTINEL_HOSTS && {
 			sentinels: parseDSNToSentinels(config.SENTINEL_HOSTS),
-			name: config.SENTINEL_NAME || null,
+			name: config.SENTINEL_NAME,
 			maxRetriesPerRequest: config.MAX_RETRIES_PER_REQUEST || null,
 		}),
 		...(!config.SENTINEL_HOSTS && {
