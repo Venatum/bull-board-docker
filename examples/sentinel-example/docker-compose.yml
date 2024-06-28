@@ -1,0 +1,54 @@
+name: bull-board-sentinel-example
+services:
+  bullboard:
+    container_name: bullboard
+    image: venatum/bull-board:latest
+    environment:
+      BULL_VERSION: BULL
+      SENTINEL_NAME: Test
+      SENTINEL_HOSTS: "redis-master:6379;redis-sentinel:26379"
+    restart: unless-stopped
+    depends_on:
+      redis-master:
+        condition: service_healthy
+      redis-sentinel:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+
+  # https://hub.docker.com/r/bitnami/redis/
+  redis-master:
+    container_name: redis-master
+    image: bitnami/redis:latest
+    environment:
+      ALLOW_EMPTY_PASSWORD: yes
+      REDIS_SENTINEL_MASTER_NAME: redis-master
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  # https://hub.docker.com/r/bitnami/redis-sentinel/
+  redis-sentinel:
+    container_name: redis-sentinel
+    image: bitnami/redis-sentinel:latest
+    environment:
+      ALLOW_EMPTY_PASSWORD: yes
+      REDIS_MASTER_HOST: redis-master
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "26379", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    depends_on:
+      redis-master:
+        condition: service_healthy
+    ports:
+      - "26379:26379"
