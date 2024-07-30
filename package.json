@@ -30,11 +30,11 @@
     "commit": "cz"
   },
   "dependencies": {
-    "@bull-board/api": "^5.21.0",
-    "@bull-board/express": "^5.21.0",
+    "@bull-board/api": "^5.21.1",
+    "@bull-board/express": "^5.21.1",
     "body-parser": "^1.20.2",
     "bull": "^4.15.1",
-    "bullmq": "^5.8.7",
+    "bullmq": "^5.10.1",
     "connect-ensure-login": "^0.1.1",
     "dotenv": "^16.4.5",
     "esm": "^3.2.25",
