@@ -1,20 +1,26 @@
 name: bull-board-sentinel-example
+
+networks:
+  app-tier:
+    driver: bridge
+
 services:
   bullboard:
     container_name: bullboard
     image: venatum/bull-board:latest
     environment:
       BULL_VERSION: BULL
-      SENTINEL_NAME: Test
-      SENTINEL_HOSTS: "redis-master:6379;redis-sentinel:26379"
+      SENTINEL_NAME: mymaster
+#      SENTINEL_HOSTS: "redis-sentinel:26379"
+      SENTINEL_HOSTS: "redis-master:6379;redis-slave:6379"
     restart: unless-stopped
     depends_on:
-      redis-master:
-        condition: service_healthy
       redis-sentinel:
         condition: service_healthy
     ports:
       - "3000:3000"
+    networks:
+      - app-tier
 
   # https://hub.docker.com/r/bitnami/redis/
   redis-master:
@@ -22,7 +28,9 @@ services:
     image: bitnami/redis:latest
     environment:
       ALLOW_EMPTY_PASSWORD: yes
-      REDIS_SENTINEL_MASTER_NAME: redis-master
+      REDIS_REPLICATION_MODE: master
+#      REDIS_REPLICA_IP: redis-sentinel
+#      REDIS_REPLICA_PORT: 26379
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -31,14 +39,33 @@ services:
       start_period: 10s
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6379"
+    networks:
+      - app-tier
+  redis-slave:
+    container_name: redis-slave
+    image: bitnami/redis:latest
+    environment:
+      ALLOW_EMPTY_PASSWORD: yes
+      REDIS_REPLICATION_MODE: slave
+      REDIS_MASTER_HOST: redis-master
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    ports:
+      - "6379"
+    networks:
+      - app-tier
 
   # https://hub.docker.com/r/bitnami/redis-sentinel/
   redis-sentinel:
     container_name: redis-sentinel
     image: bitnami/redis-sentinel:latest
     environment:
-      ALLOW_EMPTY_PASSWORD: yes
       REDIS_MASTER_HOST: redis-master
     healthcheck:
       test: ["CMD", "redis-cli", "-p", "26379", "ping"]
@@ -50,5 +77,10 @@ services:
     depends_on:
       redis-master:
         condition: service_healthy
+      redis-slave:
+        condition: service_healthy
     ports:
-      - "26379:26379"
+#      - '26379-26381:26379'
+      - '26379:26379'
+    networks:
+      - app-tier
