@@ -16,10 +16,14 @@ export const router = serverAdapter.getRouter();
 async function getBullQueues() {
 	const keys = await client.keys(`${config.BULL_PREFIX}:*`);
 	const uniqKeys = new Set(keys.map(key => key.replace(/^.+?:(.+?):.+?$/, '$1')));
+
+	// This increases the number of connections.
+	// Example: on a cluster I went from an average of 100 to 28k
 	// const uniqKeys = new Set(keys.map(key => key.replace(
 	// 	new RegExp(`^${config.BULL_PREFIX}:(.+):[^:]+$`),
 	// 	'$1'
 	// )));
+
 	const queueList = Array.from(uniqKeys).sort().map(
 		(item) => config.BULL_VERSION === 'BULLMQ' ?
 			new BullMQAdapter(new bullmq.Queue(item, {
