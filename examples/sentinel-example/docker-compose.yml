@@ -1,7 +1,7 @@
 name: bull-board-sentinel-example
 
 networks:
-  app-tier:
+  redis-network:
     driver: bridge
 
 services:
@@ -11,17 +11,23 @@ services:
     environment:
       BULL_VERSION: BULL
       SENTINEL_NAME: mymaster
-#      SENTINEL_HOSTS: "redis-sentinel:26379"
-      SENTINEL_HOSTS: "redis-master:6379;redis-slave:6379"
+      SENTINEL_HOSTS: "redis-sentinel1:26379;redis-sentinel2:26380;redis-sentinel3:26381"
     restart: unless-stopped
-    depends_on:
-      redis-sentinel:
-        condition: service_healthy
     ports:
       - "3000:3000"
     networks:
-      - app-tier
+      - redis-network
+    depends_on:
+      redis-sentinel1:
+        condition: service_healthy
+      redis-sentinel2:
+        condition: service_healthy
+      redis-sentinel3:
+        condition: service_healthy
 
+  ###############
+  ##   Redis   ##
+  ###############
   # https://hub.docker.com/r/bitnami/redis/
   redis-master:
     container_name: redis-master
@@ -29,8 +35,6 @@ services:
     environment:
       ALLOW_EMPTY_PASSWORD: yes
       REDIS_REPLICATION_MODE: master
-#      REDIS_REPLICA_IP: redis-sentinel
-#      REDIS_REPLICA_PORT: 26379
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -39,11 +43,12 @@ services:
       start_period: 10s
     restart: unless-stopped
     ports:
-      - "6379"
+      - "6379:6379"
     networks:
-      - app-tier
-  redis-slave:
-    container_name: redis-slave
+      - redis-network
+
+  redis-slave1:
+    container_name: redis-slave1
     image: bitnami/redis:latest
     environment:
       ALLOW_EMPTY_PASSWORD: yes
@@ -56,17 +61,42 @@ services:
       retries: 5
       start_period: 10s
     restart: unless-stopped
-    ports:
-      - "6379"
     networks:
-      - app-tier
+      - redis-network
+    depends_on:
+      redis-master:
+        condition: service_healthy
 
+  redis-slave2:
+    container_name: redis-slave2
+    image: bitnami/redis:latest
+    environment:
+      ALLOW_EMPTY_PASSWORD: yes
+      REDIS_REPLICATION_MODE: slave
+      REDIS_MASTER_HOST: redis-master
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - redis-network
+    depends_on:
+      redis-master:
+        condition: service_healthy
+
+  ###############
+  ## Sentinels ##
+  ###############
   # https://hub.docker.com/r/bitnami/redis-sentinel/
-  redis-sentinel:
-    container_name: redis-sentinel
+  redis-sentinel1:
+    container_name: redis-sentinel1
     image: bitnami/redis-sentinel:latest
     environment:
       REDIS_MASTER_HOST: redis-master
+      REDIS_SENTINEL_PORT_NUMBER: 26379
     healthcheck:
       test: ["CMD", "redis-cli", "-p", "26379", "ping"]
       interval: 10s
@@ -74,13 +104,64 @@ services:
       retries: 5
       start_period: 10s
     restart: unless-stopped
+    ports:
+      - '26379:26379'
+    networks:
+      - redis-network
     depends_on:
       redis-master:
         condition: service_healthy
-      redis-slave:
+      redis-slave1:
         condition: service_healthy
+      redis-slave2:
+        condition: service_healthy
+
+  redis-sentinel2:
+    container_name: redis-sentinel2
+    image: bitnami/redis-sentinel:latest
+    environment:
+      REDIS_MASTER_HOST: redis-master
+      REDIS_SENTINEL_PORT_NUMBER: 26380
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "26380", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
     ports:
-#      - '26379-26381:26379'
-      - '26379:26379'
+      - '26380:26379'
     networks:
-      - app-tier
+      - redis-network
+    depends_on:
+      redis-master:
+        condition: service_healthy
+      redis-slave1:
+        condition: service_healthy
+      redis-slave2:
+        condition: service_healthy
+
+  redis-sentinel3:
+    container_name: redis-sentinel3
+    image: bitnami/redis-sentinel:latest
+    environment:
+      REDIS_MASTER_HOST: redis-master
+      REDIS_SENTINEL_PORT_NUMBER: 26381
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "26381", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    ports:
+      - '26381:26379'
+    networks:
+      - redis-network
+    depends_on:
+      redis-master:
+        condition: service_healthy
+      redis-slave1:
+        condition: service_healthy
+      redis-slave2:
+        condition: service_healthy

@@ -1,4 +1,5 @@
 name: bull-board-demo-bull-example
+
 services:
   bullboard:
     image: venatum/bull-board:latest

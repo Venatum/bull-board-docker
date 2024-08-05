@@ -25,6 +25,10 @@ will run bull-board interface on `localhost:3000` and connect to your redis inst
 
 see "Example with docker-compose" section, for example, with env parameters
 
+### Sentinel
+
+It is now possible to use the BullBoard image with Redis Sentinel mode.
+Please note that on the interface, the Redis server info button will not work. Feel free to contribute to the development directly at [felixmosh/bull-board](https://github.com/felixmosh/bull-board)
 
 ### Environment variables
 
