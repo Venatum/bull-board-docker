@@ -1,22 +1,27 @@
+name: bull-board-demo-bull-example
+
 services:
   bullboard:
-    container_name: bullboard
-    build:
-      dockerfile: ./Dockerfile
-      context: .
+    image: venatum/bull-board:latest
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
-#      BULL_VERSION: BULL
+      BULL_VERSION: BULL
     restart: unless-stopped
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     ports:
       - "3000:3000"
 
   redis:
     container_name: redis
     image: redis:alpine
+    healthcheck:
+      test: [ 'CMD-SHELL', 'nc -z 127.0.0.1 6379 || exit 1' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
     restart: unless-stopped
     ports:
       - "6379:6379"
