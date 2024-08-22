@@ -8,6 +8,11 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
 #      BULL_VERSION: BULL
+    healthcheck:
+      test: [ 'CMD-SHELL', 'wget --no-verbose --tries=1 --spider http://localhost:3000/healthcheck || exit 1']
+      interval: 10s
+      timeout: 10s
+      retries: 5
     restart: unless-stopped
     depends_on:
       - redis

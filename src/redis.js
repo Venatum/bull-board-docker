@@ -22,6 +22,9 @@ export const redisConfig = {
 			host: config.REDIS_HOST,
 		}),
 		db: config.REDIS_DB,
+		...(config.REDIS_USER && {
+			user: config.REDIS_USER
+		}),
 		...(config.REDIS_PASSWORD && {
 			password: config.REDIS_PASSWORD
 		}),

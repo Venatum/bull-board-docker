@@ -37,6 +37,7 @@ Please note that on the interface, the Redis server info button will not work. F
 * `REDIS_PORT` - redis port (`6379` by default)
 * `REDIS_DB` - redis db to use (`'0'` by default)
 * `REDIS_USE_TLS` - enable TLS true or false (`false` by default)
+* `REDIS_USER` - user to connect to redis (no user by default)
 * `REDIS_PASSWORD` - password to connect to redis (no password by default)
 * `SENTINEL_NAME` - name of sentinel instance (required with sentinel)
 * `SENTINEL_HOSTS` - a string containing a list of replica servers (e.g. '1.redis:26379,2.redis:26379,3.redis:26379'), overrides `REDIS_HOST` + `REDIS_PORT` configuration (you can use `,` or `;`)
@@ -60,6 +61,27 @@ Please note that on the interface, the Redis server info button will not work. F
 To restrict access to bull-board use `USER_LOGIN` and `USER_PASSWORD` env vars.
 Only when both `USER_LOGIN` and `USER_PASSWORD` specified, access will be restricted with login/password
 
+### Healthcheck
+
+A Healthcheck based on NestJS is available to monitor the status of the container and the Redis service. `/healthcheck`
+```json
+{
+	"status": "ok",
+	"info": {
+		"redis": {
+			"status": "up",
+			"description": "Based on the Redis PING/PONG system"
+		}
+	}
+}
+```
+
+| Field     | Description                                                                                                        | Type            |
+|-----------|--------------------------------------------------------------------------------------------------------------------|-----------------|
+| `status`  | 	Indicates the overall health status. If any health indicator fails, the status will be 'error'.                   | 'ok' or 'error' |
+| `info`    | 	Object containing information of each health indicator which is of status 'up', or in other words "healthy".	     | object          |
+| `error`   | 	String containing information of each health indicator which is of status 'down', or in other words "unhealthy".	 | string          |
+| `details` | 	Object containing all information of each health indicator	                                                       | object          |
 
 ### Example with docker-compose
 
