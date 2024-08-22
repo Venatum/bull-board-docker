@@ -12,6 +12,7 @@ export const config = {
 	REDIS_PORT: process.env.REDIS_PORT || 6379,
 	REDIS_HOST: process.env.REDIS_HOST || 'localhost',
 	REDIS_DB: process.env.REDIS_DB || '0',
+	REDIS_USER: process.env.REDIS_USER,
 	REDIS_PASSWORD: process.env.REDIS_PASSWORD,
 	REDIS_USE_TLS: process.env.REDIS_USE_TLS,
 	BULL_PREFIX: process.env.BULL_PREFIX || 'bull',
