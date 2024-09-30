@@ -1,5 +1,11 @@
-#FROM node:20-alpine
-FROM node:lts-alpine3.20
+FROM node:20-alpine
+
+RUN apk update && \
+    apk add --no-cache \
+        python3 \
+        make \
+        g++ \
+        bash
 
 USER node
 
