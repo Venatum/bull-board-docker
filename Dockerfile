@@ -1,4 +1,5 @@
-FROM node:20-alpine
+#FROM node:20-alpine
+FROM node:lts-alpine3.20
 
 USER node
 
