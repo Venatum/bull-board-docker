@@ -34,7 +34,7 @@
     "@bull-board/express": "^6.0.0",
     "body-parser": "^1.20.3",
     "bull": "^4.16.3",
-    "bullmq": "^5.13.2",
+    "bullmq": "^5.14.0",
     "connect-ensure-login": "^0.1.1",
     "dotenv": "^16.4.5",
     "esm": "^3.2.25",
@@ -53,13 +53,13 @@
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.0",
     "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^10.3.5",
+    "@semantic-release/github": "^11.0.0",
     "@semantic-release/release-notes-generator": "^14.0.1",
-    "commitizen": "^4.3.0",
+    "commitizen": "^4.3.1",
     "conventional-changelog-conventionalcommits": "^8.0.0",
     "husky": "^9.1.6",
     "nodemon": "^3.1.7",
-    "semantic-release": "^24.1.1"
+    "semantic-release": "^24.1.2"
   },
   "author": {
     "name": "Vincent LE QUEC (Venatum)",
