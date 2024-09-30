@@ -30,8 +30,8 @@
     "commit": "cz"
   },
   "dependencies": {
-    "@bull-board/api": "^5.23.0",
-    "@bull-board/express": "^5.23.0",
+    "@bull-board/api": "^6.0.0",
+    "@bull-board/express": "^6.0.0",
     "body-parser": "^1.20.3",
     "bull": "^4.16.3",
     "bullmq": "^5.13.2",
