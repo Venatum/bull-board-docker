@@ -1,12 +1,5 @@
 FROM node:20-alpine
 
-RUN apk update && \
-    apk add --no-cache \
-        python3 \
-        make \
-        g++ \
-        bash
-
 USER node
 
 ENV NODE_ENV=production
