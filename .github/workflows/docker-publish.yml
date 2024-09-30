@@ -12,7 +12,8 @@ env:
   REGISTRY_USERNAME: venatum
   IMAGE_NAME: venatum/bull-board
 #  TARGET_PLATFORMS: 'linux/amd64,linux/arm64,linux/arm'
-  TARGET_PLATFORMS: 'linux/amd64,linux/arm64'
+#  TARGET_PLATFORMS: 'linux/amd64,linux/arm64'
+  TARGET_PLATFORMS: 'linux/amd64,linux/arm64,linux/arm/v8'
 
 jobs:
   build:
