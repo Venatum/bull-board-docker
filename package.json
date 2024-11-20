@@ -13,6 +13,7 @@
     "dashboard",
     "docker"
   ],
+  "type": "module",
   "bugs": {
     "url": "https://github.com/Venatum/bull-board-docker/issues"
   },
@@ -21,8 +22,8 @@
     "url": "git+https://github.com/Venatum/bull-board-docker.git"
   },
   "scripts": {
-    "start": "node -r esm .",
-    "start:dev": "nodemon -r esm .",
+    "start": "node .",
+    "start:dev": "nodemon .",
     "start:docker": "docker compose up --force-recreate --renew-anon-volumes --wait --detach",
     "start:docker-deps": "npm run start:docker redis",
     "stop:docker": "docker compose down -v",
@@ -37,7 +38,6 @@
     "bullmq": "^5.28.1",
     "connect-ensure-login": "^0.1.1",
     "dotenv": "^16.4.5",
-    "esm": "^3.2.25",
     "exponential-backoff": "^3.1.1",
     "express": "^4.21.1",
     "express-session": "^1.18.1",
@@ -74,5 +74,11 @@
     "commitizen": {
       "path": "cz-conventional-changelog"
     }
+  },
+  "engines": {
+    "node": ">=22",
+    "npm": ">=10",
+    "pnpm": "please use npm",
+    "yarn": "please use npm"
   }
 }
