@@ -30,11 +30,11 @@
     "commit": "cz"
   },
   "dependencies": {
-    "@bull-board/api": "^6.5.2",
-    "@bull-board/express": "^6.5.2",
+    "@bull-board/api": "^6.5.3",
+    "@bull-board/express": "^6.5.3",
     "body-parser": "^1.20.3",
     "bull": "^4.16.4",
-    "bullmq": "^5.26.2",
+    "bullmq": "^5.28.1",
     "connect-ensure-login": "^0.1.1",
     "dotenv": "^16.4.5",
     "esm": "^3.2.25",
@@ -47,9 +47,9 @@
     "passport-local": "^1.0.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.5.0",
-    "@commitlint/config-conventional": "^19.5.0",
-    "@commitlint/prompt": "^19.5.0",
+    "@commitlint/cli": "^19.6.0",
+    "@commitlint/config-conventional": "^19.6.0",
+    "@commitlint/prompt": "^19.6.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.0",
     "@semantic-release/git": "^10.0.1",
@@ -57,7 +57,7 @@
     "@semantic-release/release-notes-generator": "^14.0.1",
     "commitizen": "^4.3.1",
     "conventional-changelog-conventionalcommits": "^8.0.0",
-    "husky": "^9.1.6",
+    "husky": "^9.1.7",
     "nodemon": "^3.1.7",
     "semantic-release": "^24.2.0"
   },
