@@ -39,6 +39,7 @@ Please note that on the interface, the Redis server info button will not work. F
 * `REDIS_USE_TLS` - enable TLS true or false (`false` by default)
 * `REDIS_USER` - user to connect to redis (no user by default)
 * `REDIS_PASSWORD` - password to connect to redis (no password by default)
+* `REDIS_FAMILY` - either 4 or 6, defaults to 4
 * `SENTINEL_NAME` - name of sentinel instance (required with sentinel)
 * `SENTINEL_HOSTS` - a string containing a list of replica servers (e.g. '1.redis:26379,2.redis:26379,3.redis:26379'), overrides `REDIS_HOST` + `REDIS_PORT` configuration (you can use `,` or `;`)
 * `MAX_RETRIES_PER_REQUEST` - makes sure commands won't wait forever when the connection is down (disabled `null` by default)

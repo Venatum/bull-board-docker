@@ -20,6 +20,7 @@ export const redisConfig = {
 		...(!config.SENTINEL_HOSTS && {
 			port: config.REDIS_PORT,
 			host: config.REDIS_HOST,
+			family: config.REDIS_FAMILY,
 		}),
 		db: config.REDIS_DB,
 		...(config.REDIS_USER && {
