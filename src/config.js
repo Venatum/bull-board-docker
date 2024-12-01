@@ -15,7 +15,7 @@ export const config = {
 	REDIS_USER: process.env.REDIS_USER,
 	REDIS_PASSWORD: process.env.REDIS_PASSWORD,
 	REDIS_USE_TLS: process.env.REDIS_USE_TLS,
-	REDIS_FAMILY: Number(process.env.REDIS_FAMILY) || 4,
+	REDIS_FAMILY: Number(process.env.REDIS_FAMILY) || 0,
 	BULL_PREFIX: process.env.BULL_PREFIX || 'bull',
 	BULL_VERSION: process.env.BULL_VERSION || 'BULLMQ',
 	PORT: process.env.PORT || 3000,
