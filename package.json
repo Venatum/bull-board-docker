@@ -61,6 +61,13 @@
     "nodemon": "^3.1.9",
     "semantic-release": "^24.2.1"
   },
+  "engines": {
+    "yarn": "please use npm",
+    "npm": ">=9",
+    "node": ">=20",
+    "pnpm": "please use npm",
+    "bun": "please use npm"
+  },
   "author": {
     "name": "Vincent LE QUEC (Venatum)",
     "email": "https://github.com/Venatum"
