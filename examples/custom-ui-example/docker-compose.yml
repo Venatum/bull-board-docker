@@ -1,0 +1,31 @@
+name: bull-board-custom-ui-example
+
+services:
+  bullboard:
+    image: venatum/bull-board:latest
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      BULL_VERSION: BULL
+      BULL_BOARD_TITLE: "Lorem ipsum"
+      BULL_BOARD_LOGO_PATH: "https://picsum.photos/200"
+      BULL_BOARD_FAVICON: "https://picsum.photos/200"
+      BULL_BOARD_LOCALE: "fr-FR"
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+
+  redis:
+    container_name: redis
+    image: redis:alpine
+    healthcheck:
+      test: [ 'CMD-SHELL', 'nc -z 127.0.0.1 6379 || exit 1' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    ports:
+      - "6379:6379"

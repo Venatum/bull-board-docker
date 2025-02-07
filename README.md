@@ -57,6 +57,19 @@ Please note that on the interface, the Redis server info button will not work. F
 * `BACKOFF_TIME_MULTIPLE` - The `BACKOFF_STARTING_DELAY` is multiplied by the `BACKOFF_TIME_MULTIPLE` to increase the delay between reattempts (`2` by default)
 * `BACKOFF_NB_ATTEMPTS` - The maximum number of times to attempt the research (`10` by default)
 
+**BullBoard UI** based on [felixmosh/bull-board](https://github.com/felixmosh/bull-board/tree/master?tab=readme-ov-file#board-options)
+> Default values come from the original project
+* `BULL_BOARD_TITLE` - The Board and page titles (`Bull Dashboard` by default)
+* `BULL_BOARD_LOGO_PATH` - Allows you to specify a different logo (`empty` by default)
+* `BULL_BOARD_LOGO_WIDTH` - `BULL_BOARD_LOGO_PATH` is required
+* `BULL_BOARD_LOGO_HEIGHT` - `BULL_BOARD_LOGO_PATH` is required
+* `BULL_BOARD_FAVICON` - Allows you to specify the default favicon (`empty` by default)
+* `BULL_BOARD_FAVICON_ALTERNATIVE` - `BULL_BOARD_FAVICON` is required
+* `BULL_BOARD_LOCALE` - The locale to use
+* `BULL_BOARD_DATE_FORMATS_SHORT` - The date format to use
+* `BULL_BOARD_DATE_FORMATS_COMMON` - The date format to use
+* `BULL_BOARD_DATE_FORMATS_FULL` - The date format to use
+
 ### Restrict access with login and password
 
 To restrict access to bull-board use `USER_LOGIN` and `USER_PASSWORD` env vars.
