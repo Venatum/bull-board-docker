@@ -6,8 +6,8 @@ import * as bullmq from "bullmq";
 import * as bull from "bullmq";
 import {backOff} from "exponential-backoff";
 
-import {client, redisConfig} from "./redis";
-import {config} from "./config";
+import {client, redisConfig} from "./redis.js";
+import {config} from "./config.js";
 
 const serverAdapter = new ExpressAdapter();
 const {setQueues} = createBullBoard({
