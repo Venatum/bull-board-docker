@@ -4,13 +4,42 @@ import {BullMQAdapter} from "@bull-board/api/bullMQAdapter";
 import {BullAdapter} from "@bull-board/api/bullAdapter";
 import * as bullmq from "bullmq";
 import * as bull from "bullmq";
-import { backOff } from "exponential-backoff";
+import {backOff} from "exponential-backoff";
 
 import {client, redisConfig} from "./redis";
 import {config} from "./config";
 
 const serverAdapter = new ExpressAdapter();
-const {setQueues} = createBullBoard({queues: [], serverAdapter});
+const {setQueues} = createBullBoard({
+	queues: [],
+	serverAdapter,
+	options: {
+		uiConfig: {
+			...(config.BULL_BOARD_TITLE && {boardTitle: config.BULL_BOARD_TITLE}),
+			...(config.BULL_BOARD_LOGO_PATH && {
+				boardLogo: {
+					path: config.BULL_BOARD_LOGO_PATH
+				},
+				...(config.BULL_BOARD_LOGO_WIDTH && {width: config.BULL_BOARD_LOGO_WIDTH}),
+				...(config.BULL_BOARD_LOGO_HEIGHT && {height: config.BULL_BOARD_LOGO_HEIGHT}),
+			}),
+			...(config.BULL_BOARD_FAVICON && {
+				favIcon: {
+					default: config.BULL_BOARD_FAVICON
+				},
+				...(config.BULL_BOARD_FAVICON_ALTERNATIVE && {alternative: config.BULL_BOARD_FAVICON_ALTERNATIVE}),
+			}),
+			locale: {
+				...(config.BULL_BOARD_LOCALE && {lng: config.BULL_BOARD_LOCALE}),
+			},
+			dateFormats: {
+				...(config.BULL_BOARD_DATE_FORMATS_SHORT && {short: config.BULL_BOARD_DATE_FORMATS_SHORT}),
+				...(config.BULL_BOARD_DATE_FORMATS_COMMON && {common: config.BULL_BOARD_DATE_FORMATS_COMMON}),
+				...(config.BULL_BOARD_DATE_FORMATS_FULL && {full: config.BULL_BOARD_DATE_FORMATS_FULL}),
+			}
+		}
+	}
+});
 export const router = serverAdapter.getRouter();
 
 async function getBullQueues() {

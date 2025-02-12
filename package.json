@@ -31,35 +31,42 @@
     "commit": "cz"
   },
   "dependencies": {
-    "@bull-board/api": "^6.5.3",
-    "@bull-board/express": "^6.5.3",
+    "@bull-board/api": "^6.7.7",
+    "@bull-board/express": "^6.7.7",
     "body-parser": "^1.20.3",
-    "bull": "^4.16.4",
-    "bullmq": "^5.28.1",
+    "bull": "^4.16.5",
+    "bullmq": "^5.40.2",
     "connect-ensure-login": "^0.1.1",
-    "dotenv": "^16.4.5",
-    "exponential-backoff": "^3.1.1",
-    "express": "^4.21.1",
+    "dotenv": "^16.4.7",
+    "exponential-backoff": "^3.1.2",
+    "express": "^4.21.2",
     "express-session": "^1.18.1",
-    "ioredis": "^5.4.1",
+    "ioredis": "^5.5.0",
     "morgan": "^1.10.0",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.6.0",
-    "@commitlint/config-conventional": "^19.6.0",
-    "@commitlint/prompt": "^19.6.0",
+    "@commitlint/cli": "^19.7.1",
+    "@commitlint/config-conventional": "^19.7.1",
+    "@commitlint/prompt": "^19.7.1",
     "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/commit-analyzer": "^13.0.0",
+    "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^11.0.1",
-    "@semantic-release/release-notes-generator": "^14.0.1",
+    "@semantic-release/release-notes-generator": "^14.0.3",
     "commitizen": "^4.3.1",
     "conventional-changelog-conventionalcommits": "^8.0.0",
     "husky": "^9.1.7",
-    "nodemon": "^3.1.7",
-    "semantic-release": "^24.2.0"
+    "nodemon": "^3.1.9",
+    "semantic-release": "^24.2.1"
+  },
+  "engines": {
+    "yarn": "please use npm",
+    "npm": ">=10",
+    "node": ">=22",
+    "pnpm": "please use npm",
+    "bun": "please use npm"
   },
   "author": {
     "name": "Vincent LE QUEC (Venatum)",
@@ -74,11 +81,5 @@
     "commitizen": {
       "path": "cz-conventional-changelog"
     }
-  },
-  "engines": {
-    "node": ">=22",
-    "npm": ">=10",
-    "pnpm": "please use npm",
-    "yarn": "please use npm"
   }
 }
