@@ -4,10 +4,10 @@ import session from 'express-session';
 import bodyParser from 'body-parser';
 import { ensureLoggedIn } from 'connect-ensure-login';
 
-import {config} from "./config";
-import {authRouter} from './login';
-import {router} from "./bull";
-import {client} from "./redis";
+import {config} from "./config.js";
+import {authRouter} from './login.js';
+import {router} from "./bull.js";
+import {client} from "./redis.js";
 
 const app = express();
 
