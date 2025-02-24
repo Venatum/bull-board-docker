@@ -2,7 +2,7 @@ name: bull-board-debug
 
 services:
   bullboard:
-    image: venatum/bull-board:2.1.8
+    image: venatum/bull-board:2.2.1
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
