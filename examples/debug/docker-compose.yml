@@ -1,0 +1,27 @@
+name: bull-board-debug
+
+services:
+  bullboard:
+    image: venatum/bull-board:2.1.8
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      BULL_VERSION: BULLMQ
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+
+  redis:
+    container_name: redis
+    image: redis:7.0.15-alpine
+    healthcheck:
+      test: [ 'CMD-SHELL', 'nc -z 127.0.0.1 6379 || exit 1' ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    ports:
+      - "6379:6379"

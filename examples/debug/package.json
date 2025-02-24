@@ -1,0 +1,26 @@
+{
+	"name": "debug",
+	"version": "1.0.0",
+	"main": "index.js",
+	"scripts": {
+		"start": "node -r esm index.js"
+	},
+	"dependencies": {
+		"bull": "^4.16.5",
+		"esm": "^3.2.25",
+		"ioredis": "^5.5.0"
+	},
+	"engines": {
+		"yarn": "please use npm",
+		"npm": ">=9",
+		"node": ">=20",
+		"pnpm": "please use npm",
+		"bun": "please use npm"
+	},
+	"author": {
+		"name": "Vincent LE QUEC (Venatum)",
+		"email": "https://github.com/Venatum"
+	},
+	"license": "ISC",
+	"description": ""
+}
