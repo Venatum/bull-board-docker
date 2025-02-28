@@ -3,6 +3,8 @@ import {ExpressAdapter} from "@bull-board/express";
 import {BullMQAdapter} from "@bull-board/api/bullMQAdapter";
 import {BullAdapter} from "@bull-board/api/bullAdapter";
 import * as bullmq from "bullmq";
+// TODO: we have a bug over here !
+// import * as bull from "bull";
 import * as bull from "bullmq";
 import {backOff} from "exponential-backoff";
 
