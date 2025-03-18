@@ -1,5 +1,6 @@
 import {createClient} from 'ioredis';
-import {config} from "./config";
+
+import {config} from "./config.js";
 
 const parseDSNToSentinels = (dsn) => {
 	const hostChain = dsn.split(/,|;/);
