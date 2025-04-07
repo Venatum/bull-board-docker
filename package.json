@@ -39,7 +39,7 @@
     "dotenv": "^16.4.7",
     "esm": "^3.2.25",
     "exponential-backoff": "^3.1.2",
-    "express": "^4.21.2",
+    "express": "^5.0.0",
     "express-session": "^1.18.1",
     "ioredis": "^5.6.0",
     "morgan": "^1.10.0",
