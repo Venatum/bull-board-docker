@@ -2,7 +2,7 @@ import passport from 'passport';
 import {Strategy as LocalStrategy} from 'passport-local';
 import express from 'express';
 
-import {config} from "./config";
+import {config} from "./config.js";
 
 export const authRouter = express.Router();
 
