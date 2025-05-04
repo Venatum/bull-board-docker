@@ -41,7 +41,8 @@ Please note that on the interface, the Redis server info button will not work. F
 * `REDIS_PASSWORD` - password to connect to redis (no password by default)
 * `REDIS_FAMILY` - IP Stack version (one of 4 | 6 | 0) (`0` by default)
 * `SENTINEL_NAME` - name of sentinel instance (required with sentinel)
-* `SENTINEL_HOSTS` - a string containing a list of replica servers (e.g. '1.redis:26379,2.redis:26379,3.redis:26379'), overrides `REDIS_HOST` + `REDIS_PORT` configuration (you can use `,` or `;`)
+* `SENTINEL_HOSTS` - a string containing a list of sentinel servers (e.g. '1.redis:26379,2.redis:26379,3.redis:26379'), overrides `REDIS_HOST` + `REDIS_PORT` configuration (you can use `,` or `;`)
+* `SENTINEL_PASSWORD` - password to connect to sentinel (no password by default)
 * `MAX_RETRIES_PER_REQUEST` - makes sure commands won't wait forever when the connection is down (disabled `null` by default)
 
 **Interface**
