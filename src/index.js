@@ -78,7 +78,7 @@ app.use('/healthcheck', async (req, res) => {
 	});
 });
 
-app.listen(config.PORT, () => {
-	console.log(`bull-board is started http://localhost:${config.PORT}${config.HOME_PAGE}`);
+app.listen(config.PORT, config.HOSTNAME, () => {
+	console.log(`bull-board is started http://${config.HOSTNAME}:${config.PORT}${config.HOME_PAGE}`);
 	console.log(`bull-board is fetching queue list, please wait...`);
 });

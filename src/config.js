@@ -30,6 +30,7 @@ export const config = {
 	BACKOFF_NB_ATTEMPTS: process.env.BACKOFF_NB_ATTEMPTS || 10,
 
 	// App configuration
+	HOSTNAME: process.env.HOSTNAME || "localhost",
 	PORT: process.env.PORT || 3000,
 	PROXY_PATH: PROXY_PATH,
 	USER_LOGIN: process.env.USER_LOGIN,
