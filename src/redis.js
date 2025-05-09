@@ -14,6 +14,7 @@ export const redisConfig = {
 	redis: {
 		...(config.SENTINEL_HOSTS && {
 			sentinels: parseDSNToSentinels(config.SENTINEL_HOSTS),
+			sentinelPassword: config.SENTINEL_PASSWORD,
 			name: config.SENTINEL_NAME,
 			maxRetriesPerRequest: config.MAX_RETRIES_PER_REQUEST || null,
 		}),
