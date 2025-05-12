@@ -32,7 +32,7 @@
   "dependencies": {
     "@bull-board/api": "^6.9.6",
     "@bull-board/express": "^6.9.6",
-    "body-parser": "^1.20.3",
+    "body-parser": "^2.0.0",
     "bull": "^4.16.5",
     "bullmq": "^5.52.2",
     "connect-ensure-login": "^0.1.1",
