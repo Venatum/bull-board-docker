@@ -30,7 +30,7 @@ export const config = {
 	BACKOFF_NB_ATTEMPTS: process.env.BACKOFF_NB_ATTEMPTS || 10,
 
 	// App configuration
-	BULL_BOARD_HOSTNAME: process.env.BULL_BOARD_HOSTNAME || "localhost",
+	BULL_BOARD_HOSTNAME: process.env.BULL_BOARD_HOSTNAME || "0.0.0.0",
 	PORT: process.env.PORT || 3000,
 	PROXY_PATH: PROXY_PATH,
 	USER_LOGIN: process.env.USER_LOGIN,

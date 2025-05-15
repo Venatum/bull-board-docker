@@ -46,7 +46,7 @@ Please note that on the interface, the Redis server info button will not work. F
 
 **Interface**
 
-* `BULL_BOARD_HOSTNAME` - host to bind the server to (`localhost` by default)
+* `BULL_BOARD_HOSTNAME` - host to bind the server to (`0.0.0.0` by default)
 * `PORT` - port to bind the server to (`3000` by default)
 * `PROXY_PATH` - proxyPath for bull board, e.g. https://<server_name>/my-base-path/queues [docs] (`''` by default)
 * `USER_LOGIN` - login to restrict access to bull-board interface (disabled by default)
