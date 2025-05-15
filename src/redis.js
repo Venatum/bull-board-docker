@@ -11,6 +11,8 @@ const parseDSNToSentinels = (dsn) => {
 }
 
 export const redisConfig = {
+	// TODO: Improve Redis configuration
+	// 	https://redis.github.io/ioredis/index.html#RedisOptions
 	redis: {
 		...(config.SENTINEL_HOSTS && {
 			sentinels: parseDSNToSentinels(config.SENTINEL_HOSTS),
