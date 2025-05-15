@@ -2,10 +2,8 @@ import {createBullBoard} from "@bull-board/api";
 import {ExpressAdapter} from "@bull-board/express";
 import {BullMQAdapter} from "@bull-board/api/bullMQAdapter";
 import {BullAdapter} from "@bull-board/api/bullAdapter";
-import * as bullmq from "bullmq";
-// TODO: we have a bug over here !
-// import * as bull from "bull";
-import * as bull from "bullmq";
+import { Queue } from 'bullmq';
+import Bull from 'bull';
 import {backOff} from "exponential-backoff";
 
 import {client, redisConfig} from "./redis";
@@ -57,11 +55,11 @@ async function getBullQueues() {
 
 	const queueList = Array.from(uniqKeys).sort().map(
 		(item) => config.BULL_VERSION === 'BULLMQ' ?
-			new BullMQAdapter(new bullmq.Queue(item, {
+			new BullMQAdapter(new Queue(item, {
 				connection: redisConfig.redis,
 			}, client.connection)) :
-			new BullAdapter(new bull.Queue(item, {
-				connection: redisConfig.redis,
+			new BullAdapter(new Bull(item, {
+				redis: redisConfig.redis,
 			}, client.connection))
 	);
 	if (queueList.length === 0) {
