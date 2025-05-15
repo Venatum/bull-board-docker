@@ -37,7 +37,7 @@ Please note that on the interface, the Redis server info button will not work. F
 * `REDIS_PORT` - redis port (`6379` by default)
 * `REDIS_DB` - redis db to use (`'0'` by default)
 * `REDIS_USE_TLS` - enable TLS true or false (`false` by default)
-* `REDIS_USER` - user to connect to redis (no user by default)
+* `REDIS_USER` - user to connect to redis (no user by default, Redis 6+)
 * `REDIS_PASSWORD` - password to connect to redis (no password by default)
 * `REDIS_FAMILY` - IP Stack version (one of 4 | 6 | 0) (`0` by default)
 * `SENTINEL_NAME` - name of sentinel instance (required with sentinel)
@@ -46,7 +46,7 @@ Please note that on the interface, the Redis server info button will not work. F
 
 **Interface**
 
-[//]: # (* `HOSTNAME` - host to bind the server to &#40;`localhost` by default&#41;)
+* `BULL_BOARD_HOSTNAME` - host to bind the server to (`localhost` by default)
 * `PORT` - port to bind the server to (`3000` by default)
 * `PROXY_PATH` - proxyPath for bull board, e.g. https://<server_name>/my-base-path/queues [docs] (`''` by default)
 * `USER_LOGIN` - login to restrict access to bull-board interface (disabled by default)
