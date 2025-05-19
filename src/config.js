@@ -19,6 +19,7 @@ export const config = {
 	REDIS_FAMILY: Number(process.env.REDIS_FAMILY) || 0,
 	SENTINEL_NAME: process.env.SENTINEL_NAME,
 	SENTINEL_HOSTS: process.env.SENTINEL_HOSTS,
+	SENTINEL_PASSWORD: process.env.SENTINEL_PASSWORD,
 	MAX_RETRIES_PER_REQUEST: process.env.MAX_RETRIES_PER_REQUEST,
 
 	// Queue configuration
