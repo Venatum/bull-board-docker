@@ -12,6 +12,8 @@ services:
       BULL_VERSION: BULL
       SENTINEL_NAME: mymaster
       SENTINEL_HOSTS: "redis-sentinel1:26379;redis-sentinel2:26380;redis-sentinel3:26381"
+      REDIS_PASSWORD: password
+      SENTINEL_PASSWORD: sentinel-password
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -35,6 +37,7 @@ services:
     environment:
       ALLOW_EMPTY_PASSWORD: yes
       REDIS_REPLICATION_MODE: master
+      REDIS_PASSWORD: password
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -54,6 +57,8 @@ services:
       ALLOW_EMPTY_PASSWORD: yes
       REDIS_REPLICATION_MODE: slave
       REDIS_MASTER_HOST: redis-master
+      REDIS_MASTER_PASSWORD: password
+      REDIS_PASSWORD: password
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -74,6 +79,8 @@ services:
       ALLOW_EMPTY_PASSWORD: yes
       REDIS_REPLICATION_MODE: slave
       REDIS_MASTER_HOST: redis-master
+      REDIS_MASTER_PASSWORD: password
+      REDIS_PASSWORD: password
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -97,6 +104,7 @@ services:
     environment:
       REDIS_MASTER_HOST: redis-master
       REDIS_SENTINEL_PORT_NUMBER: 26379
+      REDIS_SENTINEL_PASSWORD: sentinel-password
     healthcheck:
       test: ["CMD", "redis-cli", "-p", "26379", "ping"]
       interval: 10s
@@ -122,6 +130,7 @@ services:
     environment:
       REDIS_MASTER_HOST: redis-master
       REDIS_SENTINEL_PORT_NUMBER: 26380
+      REDIS_SENTINEL_PASSWORD: sentinel-password
     healthcheck:
       test: ["CMD", "redis-cli", "-p", "26380", "ping"]
       interval: 10s
@@ -147,6 +156,7 @@ services:
     environment:
       REDIS_MASTER_HOST: redis-master
       REDIS_SENTINEL_PORT_NUMBER: 26381
+      REDIS_SENTINEL_PASSWORD: sentinel-password
     healthcheck:
       test: ["CMD", "redis-cli", "-p", "26381", "ping"]
       interval: 10s
