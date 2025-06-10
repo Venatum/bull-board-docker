@@ -13,7 +13,7 @@ export const config = {
 	REDIS_PORT: process.env.REDIS_PORT || 6379,
 	REDIS_HOST: process.env.REDIS_HOST || 'localhost',
 	REDIS_DB: process.env.REDIS_DB || '0',
-	REDIS_USER: process.env.REDIS_USER,
+	REDIS_USER: process.env.REDIS_USER, // Redis 6+ requires a username and password to be set
 	REDIS_PASSWORD: process.env.REDIS_PASSWORD,
 	REDIS_USE_TLS: process.env.REDIS_USE_TLS,
 	REDIS_FAMILY: Number(process.env.REDIS_FAMILY) || 0,
@@ -30,6 +30,7 @@ export const config = {
 	BACKOFF_NB_ATTEMPTS: process.env.BACKOFF_NB_ATTEMPTS || 10,
 
 	// App configuration
+	BULL_BOARD_HOSTNAME: process.env.BULL_BOARD_HOSTNAME || "0.0.0.0",
 	PORT: process.env.PORT || 3000,
 	PROXY_PATH: PROXY_PATH,
 	USER_LOGIN: process.env.USER_LOGIN,

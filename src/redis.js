@@ -12,6 +12,8 @@ const parseDSNToSentinels = (dsn) => {
 }
 
 export const redisConfig = {
+	// TODO: Improve Redis configuration
+	// 	https://redis.github.io/ioredis/index.html#RedisOptions
 	redis: {
 		...(config.SENTINEL_HOSTS && {
 			sentinels: parseDSNToSentinels(config.SENTINEL_HOSTS),
@@ -25,7 +27,8 @@ export const redisConfig = {
 		}),
 		db: config.REDIS_DB,
 		...(config.REDIS_USER && {
-			user: config.REDIS_USER
+			// Redis 6+ requires a username and password to be set
+			username: config.REDIS_USER
 		}),
 		...(config.REDIS_PASSWORD && {
 			password: config.REDIS_PASSWORD
