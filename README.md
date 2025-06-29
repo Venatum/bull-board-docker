@@ -121,9 +121,6 @@ npm run test:watch
 
 # Run tests with coverage report
 npm run test:coverage
-
-# Run tests in Docker environment
-npm run test:docker
 ```
 
 ### Healthcheck
