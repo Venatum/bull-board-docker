@@ -71,11 +71,11 @@ describe('Bull Queue Setup', () => {
     }));
 
     jest.doMock('exponential-backoff', () => ({
-      backOff: jest.fn().mockImplementation((fn, options) => fn()),
+      backOff: jest.fn().mockImplementation((fn) => fn()),
     }));
 
     // Import the module to test
-    const bull = require('../../src/bull');
+    require('../../src/bull');
 
     // We don't need to call bullMain for this test as we're just testing the initial setup
     // which happens when the module is imported
@@ -157,7 +157,7 @@ describe('Bull Queue Setup', () => {
     }));
 
     jest.doMock('exponential-backoff', () => ({
-      backOff: jest.fn().mockImplementation((fn, options) => fn()),
+      backOff: jest.fn().mockImplementation((fn) => fn()),
     }));
 
     // Import the module to test
@@ -240,7 +240,7 @@ describe('Bull Queue Setup', () => {
     }));
 
     jest.doMock('exponential-backoff', () => ({
-      backOff: jest.fn().mockImplementation((fn, options) => fn()),
+      backOff: jest.fn().mockImplementation((fn) => fn()),
     }));
 
     // Import the module to test
@@ -321,7 +321,7 @@ describe('Bull Queue Setup', () => {
     }));
 
     jest.doMock('exponential-backoff', () => ({
-      backOff: jest.fn().mockImplementation((fn, options) => fn()),
+      backOff: jest.fn().mockImplementation((fn) => fn()),
     }));
 
     // Mock console.error to verify it's called
