@@ -27,14 +27,17 @@
     "start:docker-deps": "npm run start:docker redis",
     "stop:docker": "docker compose down -v",
     "commitlint": "commitlint --from origin/master",
-    "commit": "cz"
+    "commit": "cz",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "@bull-board/api": "^6.9.6",
-    "@bull-board/express": "^6.9.6",
+    "@bull-board/api": "^6.10.1",
+    "@bull-board/express": "^6.10.1",
     "body-parser": "^1.20.3",
     "bull": "^4.16.5",
-    "bullmq": "^5.52.2",
+    "bullmq": "^5.53.2",
     "connect-ensure-login": "^0.1.1",
     "dotenv": "^16.5.0",
     "esm": "^3.2.25",
@@ -47,19 +50,25 @@
     "passport-local": "^1.0.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.27.4",
+    "@babel/preset-env": "^7.27.2",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@commitlint/prompt": "^19.8.1",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^11.0.2",
+    "@semantic-release/github": "^11.0.3",
     "@semantic-release/release-notes-generator": "^14.0.3",
+    "babel-jest": "^29.7.0",
     "commitizen": "^4.3.1",
     "conventional-changelog-conventionalcommits": "^8.0.0",
     "husky": "^9.1.7",
+    "jest": "^29.7.0",
+    "jest-mock-extended": "^3.0.7",
     "nodemon": "^3.1.10",
-    "semantic-release": "^24.2.3"
+    "semantic-release": "^24.2.5",
+    "supertest": "^6.3.4"
   },
   "engines": {
     "yarn": "please use npm",

@@ -99,6 +99,33 @@ Please note that on the interface, the Redis server info button will not work. F
 To restrict access to bull-board use `USER_LOGIN` and `USER_PASSWORD` env vars.
 Only when both `USER_LOGIN` and `USER_PASSWORD` specified, access will be restricted with login/password
 
+### Testing
+
+The project includes a comprehensive test suite using Jest. The tests cover all major components of the application:
+
+- Redis configuration and client
+- Bull queue setup
+- Express application setup and routes
+- Health check endpoint
+- Configuration loading
+- Authentication
+
+To run the tests:
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode (useful during development)
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+
+# Run tests in Docker environment
+npm run test:docker
+```
+
 ### Healthcheck
 
 A Healthcheck based on NestJS is available to monitor the status of the container and the Redis service. `/healthcheck`
