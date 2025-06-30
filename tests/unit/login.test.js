@@ -173,7 +173,7 @@ describe('Authentication', () => {
     const passport = require('passport');
 
     // Import the module to test
-    const { authRouter } = require('../../src/login');
+    require('../../src/login');
 
     // Verify that router.route was called with the correct path
     expect(express.Router().route).toHaveBeenCalledWith('/');
