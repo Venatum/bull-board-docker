@@ -54,5 +54,4 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           threshold: 80
-          skip-step: all
           coverage-file: ./coverage/coverage-final.json
