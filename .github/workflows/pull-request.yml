@@ -54,4 +54,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           threshold: 80
+          package-manager: npm
+          test-script: npm run test:coverage
+          skip-step: all
           coverage-file: ./coverage/coverage-final.json
