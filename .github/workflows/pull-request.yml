@@ -48,3 +48,13 @@ jobs:
           name: coverage-report
           path: coverage/
           retention-days: 7
+
+      - name: Report coverage to PR
+        uses: ArtiomTr/jest-coverage-report-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          threshold: 80
+          package-manager: npm
+          test-script: test:coverage
+          skip-step: all
+          coverage-file: ./coverage/coverage-final.json
