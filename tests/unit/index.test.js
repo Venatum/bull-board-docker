@@ -1,267 +1,273 @@
-import {jest} from '@jest/globals';
-
-// Create mock app for testing
-const mockApp = {
-	set: jest.fn(),
-	use: jest.fn(),
-	listen: jest.fn().mockImplementation((port, hostname, callback) => {
-		if (callback) callback();
-		return {on: jest.fn()};
-	}),
-	get: jest.fn(),
-};
-
-// Create mock router
-const mockRouter = {
-	get: jest.fn(),
-	post: jest.fn(),
-};
-
-// Mock express
-jest.mock('express', () => {
-	const express = jest.fn(() => mockApp);
-	express.Router = jest.fn(() => mockRouter);
-	return express;
-});
-
-// Mock morgan
-jest.mock('morgan', () => {
-	return jest.fn().mockReturnValue('morgan-middleware');
-});
-
-jest.mock('express-session', () => {
-	return jest.fn().mockReturnValue('session-middleware');
-});
-
-jest.mock('passport', () => ({
-	initialize: jest.fn().mockReturnValue('passport-init-middleware'),
-	session: jest.fn().mockReturnValue('passport-session-middleware'),
-}));
-
-jest.mock('body-parser', () => ({
-	urlencoded: jest.fn().mockReturnValue('body-parser-middleware'),
-}));
-
-jest.mock('connect-ensure-login', () => ({
-	ensureLoggedIn: jest.fn().mockReturnValue('ensure-logged-in-middleware'),
-}));
-
-jest.mock('../../src/config', () => ({
-	config: {
-		PORT: 3000,
-		BULL_BOARD_HOSTNAME: 'localhost',
-		HOME_PAGE: '/',
-		LOGIN_PAGE: '/login',
-		AUTH_ENABLED: false,
-		PROXY_PATH: '/proxy',
-	},
-}));
-
-jest.mock('../../src/login', () => ({
-	authRouter: 'auth-router',
-}));
-
-jest.mock('../../src/bull', () => ({
-	router: 'bull-router',
-}));
-
-jest.mock('../../src/redis', () => ({
-	client: {
-		ping: jest.fn().mockResolvedValue('PONG'),
-		on: jest.fn(),
-	},
-}));
+import { jest } from '@jest/globals';
 
 describe('Express Application', () => {
-	beforeEach(() => {
-		// Clear all mocks before each test
-		jest.clearAllMocks();
+  // Common mocks
+  let mockApp;
+  let mockRouter;
+  let consoleSpy;
 
-		// Reset modules to ensure clean imports
-		jest.resetModules();
+  // Default config
+  const defaultConfig = {
+    PORT: 3000,
+    BULL_BOARD_HOSTNAME: 'localhost',
+    HOME_PAGE: '/',
+    LOGIN_PAGE: '/login',
+    AUTH_ENABLED: false,
+    PROXY_PATH: '/proxy',
+  };
 
-		// Reset mock app and router
-		Object.values(mockApp).forEach(mock => {
-			if (typeof mock === 'function' && mock.mockClear) {
-				mock.mockClear();
-			}
-		});
+  // Helper function to setup common mocks
+  const setupCommonMocks = (config = defaultConfig, redisPingResponse = 'PONG') => {
+    // Create mock app for testing
+    mockApp = {
+      set: jest.fn(),
+      use: jest.fn(),
+      listen: jest.fn().mockImplementation((port, hostname, callback) => {
+        if (callback) callback();
+        return { on: jest.fn() };
+      }),
+      get: jest.fn(),
+    };
 
-		Object.values(mockRouter).forEach(mock => {
-			if (typeof mock === 'function' && mock.mockClear) {
-				mock.mockClear();
-			}
-		});
+    // Create mock router
+    mockRouter = {
+      get: jest.fn(),
+      post: jest.fn(),
+    };
 
-		// Mock console.log to prevent output during tests
-		jest.spyOn(console, 'log').mockImplementation();
-	});
+    // Mock express
+    jest.doMock('express', () => {
+      const express = jest.fn(() => mockApp);
+      express.Router = jest.fn(() => mockRouter);
+      return express;
+    });
 
-	afterEach(() => {
-		// Restore console.log
-		console.log.mockRestore();
-	});
+    // Mock morgan
+    jest.doMock('morgan', () => {
+      return jest.fn().mockReturnValue('morgan-middleware');
+    });
 
-	it('should set up the Express application correctly', () => {
-		// Import the module to test
-		require('../../src/index');
+    // Mock express-session
+    jest.doMock('express-session', () => {
+      return jest.fn().mockReturnValue('session-middleware');
+    });
 
-		// Use the mockApp directly
-		const app = mockApp;
+    // Mock passport
+    jest.doMock('passport', () => ({
+      initialize: jest.fn().mockReturnValue('passport-init-middleware'),
+      session: jest.fn().mockReturnValue('passport-session-middleware'),
+    }));
 
-		// Verify that app.set was called with the correct arguments
-		expect(app.set).toHaveBeenCalledWith('views', expect.stringContaining('/views'));
-		expect(app.set).toHaveBeenCalledWith('view engine', 'ejs');
+    // Mock body-parser
+    jest.doMock('body-parser', () => ({
+      urlencoded: jest.fn().mockReturnValue('body-parser-middleware'),
+    }));
 
-		// Verify that app.use was called with the correct middleware
-		expect(app.use).toHaveBeenCalledWith('session-middleware');
-		expect(app.use).toHaveBeenCalledWith('passport-init-middleware');
-		expect(app.use).toHaveBeenCalledWith('passport-session-middleware');
-		expect(app.use).toHaveBeenCalledWith('body-parser-middleware');
+    // Mock connect-ensure-login
+    jest.doMock('connect-ensure-login', () => ({
+      ensureLoggedIn: jest.fn().mockReturnValue('ensure-logged-in-middleware'),
+    }));
 
-		// Verify that app.listen was called with the correct arguments
-		expect(app.listen).toHaveBeenCalledWith(3000, 'localhost', expect.any(Function));
-	});
+    // Mock config
+    jest.doMock('../../src/config', () => ({
+      config,
+    }));
 
-	it('should set up routes correctly when authentication is disabled', () => {
-		// Import the module to test
-		require('../../src/index');
+    // Mock login
+    jest.doMock('../../src/login', () => ({
+      authRouter: 'auth-router',
+    }));
 
-		// Use the mockApp directly
-		const app = mockApp;
+    // Mock bull
+    jest.doMock('../../src/bull', () => ({
+      router: 'bull-router',
+    }));
 
-		// Verify that app.use was called with the correct routes
-		expect(app.use).toHaveBeenCalledWith('/', 'bull-router');
+    // Mock redis
+    const redisMock = {
+      client: {
+        ping: jest.fn().mockResolvedValue(redisPingResponse),
+        on: jest.fn(),
+      },
+    };
 
-		// Verify that app.use was not called with auth router
-		const authRouterCall = app.use.mock.calls.find(call => call[0] === '/login' && call[1] === 'auth-router');
-		expect(authRouterCall).toBeUndefined();
-	});
+    jest.doMock('../../src/redis', () => redisMock);
 
-	it('should set up routes correctly when authentication is enabled', () => {
-		// Mock config with authentication enabled
-		jest.mock('../../src/config', () => ({
-			config: {
-				PORT: 3000,
-				BULL_BOARD_HOSTNAME: 'localhost',
-				HOME_PAGE: '/',
-				LOGIN_PAGE: '/login',
-				AUTH_ENABLED: true,
-				PROXY_PATH: '/proxy',
-			},
-		}));
+    return redisMock;
+  };
 
-		// Import the module to test
-		jest.isolateModules(() => {
-			require('../../src/index');
-		});
+  beforeEach(() => {
+    // Clear all mocks before each test
+    jest.clearAllMocks();
 
-		// Use the mockApp directly
-		const app = mockApp;
+    // Reset modules to ensure clean imports
+    jest.resetModules();
 
-		// Verify that app.use was called with the correct routes
-		expect(app.use).toHaveBeenCalledWith('/login', 'auth-router');
-		expect(app.use).toHaveBeenCalledWith('/', 'ensure-logged-in-middleware', 'bull-router');
-	});
+    // Mock console.log to prevent output during tests
+    consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+  });
 
-	it('should set up proxy path middleware when PROXY_PATH is configured', () => {
-		// Import the module to test
-		require('../../src/index');
+  afterEach(() => {
+    // Restore console.log
+    if (consoleSpy) {
+      consoleSpy.mockRestore();
+      consoleSpy = undefined;
+    }
+  });
 
-		// Use the mockApp directly
-		// Find the middleware function that sets req.proxyUrl
-		const proxyMiddleware = mockApp.use.mock.calls.find(call => typeof call[0] === 'function')[0];
+  describe('Application Setup', () => {
+    it('should set up the Express application correctly', () => {
+      // Setup mocks
+      setupCommonMocks();
 
-		// Create mock request and response objects
-		const req = {};
-		const res = {};
-		const next = jest.fn();
+      // Import the module to test
+      require('../../src/index');
 
-		// Call the middleware
-		proxyMiddleware(req, res, next);
+      // Verify that app.set was called with the correct arguments
+      expect(mockApp.set).toHaveBeenCalledWith('views', expect.stringContaining('/views'));
+      expect(mockApp.set).toHaveBeenCalledWith('view engine', 'ejs');
 
-		// Verify that req.proxyUrl was set correctly
-		expect(req.proxyUrl).toBe('/proxy');
+      // Verify that app.use was called with the correct middleware
+      expect(mockApp.use).toHaveBeenCalledWith('session-middleware');
+      expect(mockApp.use).toHaveBeenCalledWith('passport-init-middleware');
+      expect(mockApp.use).toHaveBeenCalledWith('passport-session-middleware');
+      expect(mockApp.use).toHaveBeenCalledWith('body-parser-middleware');
 
-		// Verify that next was called
-		expect(next).toHaveBeenCalled();
-	});
+      // Verify that app.listen was called with the correct arguments
+      expect(mockApp.listen).toHaveBeenCalledWith(3000, 'localhost', expect.any(Function));
+    });
+  });
 
-	it('should set up health check endpoint', async () => {
-		// Import the module to test
-		require('../../src/index');
+  describe('Routing', () => {
+    it('should set up routes correctly when authentication is disabled', () => {
+      // Setup mocks with authentication disabled
+      setupCommonMocks();
 
-		// Use the mockApp directly
-		// Get the health check middleware
-		const healthCheckMiddleware = mockApp.use.mock.calls.find(call => call[0] === '/healthcheck')[1];
-		expect(healthCheckMiddleware).toBeDefined();
+      // Import the module to test
+      require('../../src/index');
 
-		// Create mock request and response objects
-		const req = {};
-		const res = {
-			status: jest.fn().mockReturnThis(),
-			json: jest.fn(),
-		};
+      // Verify that app.use was called with the correct routes
+      expect(mockApp.use).toHaveBeenCalledWith('/', 'bull-router');
 
-		// Mock Redis client to return PONG
-		const {client} = require('../../src/redis');
-		client.ping.mockResolvedValue('PONG');
+      // Verify that app.use was not called with auth router
+      const authRouterCall = mockApp.use.mock.calls.find(call => call[0] === '/login' && call[1] === 'auth-router');
+      expect(authRouterCall).toBeUndefined();
+    });
 
-		// Call the middleware
-		await healthCheckMiddleware(req, res);
+    it('should set up routes correctly when authentication is enabled', () => {
+      // Setup mocks with authentication enabled
+      setupCommonMocks({
+        ...defaultConfig,
+        AUTH_ENABLED: true,
+      });
 
-		// Verify that res.status and res.json were called with the correct arguments
-		expect(res.status).toHaveBeenCalledWith(200);
-		expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-			status: 'ok',
-			info: expect.objectContaining({
-				redis: expect.objectContaining({
-					status: 'up',
-					description: expect.any(String),
-				}),
-			}),
-		}));
-	});
+      // Import the module to test
+      require('../../src/index');
 
-	it('should handle Redis error in health check endpoint', async () => {
-		// Mock Redis client to throw an error
-		const {client} = require('../../src/redis');
-		client.ping.mockRejectedValue(new Error('Redis connection error'));
+      // Verify that app.use was called with the correct routes
+      expect(mockApp.use).toHaveBeenCalledWith('/login', 'auth-router');
+      expect(mockApp.use).toHaveBeenCalledWith('/', 'ensure-logged-in-middleware', 'bull-router');
+    });
 
-		// Import the module to test
-		jest.isolateModules(() => {
-			require('../../src/index');
-		});
+    it('should set up proxy path middleware when PROXY_PATH is configured', () => {
+      // Setup mocks
+      setupCommonMocks();
 
-		// Use the mockApp directly
-		// Find the health check route handler
-		const healthCheckRoute = mockApp.use.mock.calls.find(call => call[0] === '/healthcheck');
-		expect(healthCheckRoute).toBeDefined();
+      // Import the module to test
+      require('../../src/index');
 
-		// Create a mock request handler
-		const handler = healthCheckRoute[1];
+      // Find the middleware function that sets req.proxyUrl
+      const proxyMiddleware = mockApp.use.mock.calls.find(call => typeof call[0] === 'function')[0];
+      expect(proxyMiddleware).toBeDefined();
 
-		// Create mock request and response objects
-		const req = {};
-		const res = {
-			status: jest.fn().mockReturnThis(),
-			json: jest.fn(),
-		};
+      // Create mock request and response objects
+      const req = {};
+      const res = {};
+      const next = jest.fn();
 
-		// Call the handler
-		await handler(req, res);
+      // Call the middleware
+      proxyMiddleware(req, res, next);
 
-		// Verify that res.status and res.json were called with the correct arguments
-		expect(res.status).toHaveBeenCalledWith(200);
-		expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-			status: 'error',
-			info: expect.objectContaining({
-				redis: expect.objectContaining({
-					status: undefined,
-					description: expect.any(String),
-					error: 'Redis connection error',
-				}),
-			}),
-		}));
-	});
+      // Verify that req.proxyUrl was set correctly
+      expect(req.proxyUrl).toBe('/proxy');
+
+      // Verify that next was called
+      expect(next).toHaveBeenCalled();
+    });
+  });
+
+  describe('Health Check', () => {
+    it('should set up health check endpoint with successful Redis connection', async () => {
+      // Setup mocks with successful Redis ping
+      setupCommonMocks();
+
+      // Import the module to test
+      require('../../src/index');
+
+      // Get the health check middleware
+      const healthCheckMiddleware = mockApp.use.mock.calls.find(call => call[0] === '/healthcheck')[1];
+      expect(healthCheckMiddleware).toBeDefined();
+
+      // Create mock request and response objects
+      const req = {};
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      };
+
+      // Call the middleware
+      await healthCheckMiddleware(req, res);
+
+      // Verify that res.status and res.json were called with the correct arguments
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        status: 'ok',
+        info: expect.objectContaining({
+          redis: expect.objectContaining({
+            status: 'up',
+            description: expect.any(String),
+          }),
+        }),
+      }));
+    });
+
+    it('should handle Redis error in health check endpoint', async () => {
+      // Setup mocks with Redis error
+      const redisMock = setupCommonMocks(defaultConfig);
+      redisMock.client.ping.mockRejectedValue(new Error('Redis connection error'));
+
+      // Import the module to test
+      require('../../src/index');
+
+      // Find the health check route handler
+      const healthCheckRoute = mockApp.use.mock.calls.find(call => call[0] === '/healthcheck');
+      expect(healthCheckRoute).toBeDefined();
+
+      // Get the handler
+      const handler = healthCheckRoute[1];
+
+      // Create mock request and response objects
+      const req = {};
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      };
+
+      // Call the handler
+      await handler(req, res);
+
+      // Verify that res.status and res.json were called with the correct arguments
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        status: 'error',
+        info: expect.objectContaining({
+          redis: expect.objectContaining({
+            status: undefined,
+            description: expect.any(String),
+            error: 'Redis connection error',
+          }),
+        }),
+      }));
+    });
+  });
 });

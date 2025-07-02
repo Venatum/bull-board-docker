@@ -1,21 +1,13 @@
 import { jest } from '@jest/globals';
 
-// Mock setup
-let mockClient;
-let createClientMock;
+describe('Redis Client', () => {
+  // Common mocks
+  let mockClient;
+  let createClientMock;
+  let consoleSpy;
 
-// Mock the ioredis module
-jest.mock('ioredis', () => {
-  const originalModule = jest.requireActual('ioredis');
-  return {
-    ...originalModule,
-    createClient: jest.fn(),
-  };
-});
-
-// Mock the config module
-jest.mock('../../src/config', () => ({
-  config: {
+  // Default config
+  const defaultConfig = {
     REDIS_PORT: 6379,
     REDIS_HOST: 'localhost',
     REDIS_DB: '0',
@@ -27,10 +19,25 @@ jest.mock('../../src/config', () => ({
     REDIS_NO_DELAY: true,
     REDIS_ENABLE_OFFLINE_QUEUE: true,
     REDIS_ENABLE_READY_CHECK: true,
-  },
-}));
+  };
 
-describe('Redis Client', () => {
+  // Helper function to setup common mocks
+  const setupCommonMocks = (config = defaultConfig) => {
+    // Mock the ioredis module
+    jest.doMock('ioredis', () => {
+      const originalModule = jest.requireActual('ioredis');
+      return {
+        ...originalModule,
+        createClient: createClientMock,
+      };
+    });
+
+    // Mock the config module
+    jest.doMock('../../src/config', () => ({
+      config,
+    }));
+  };
+
   beforeEach(() => {
     // Clear all mocks before each test
     jest.clearAllMocks();
@@ -41,116 +48,109 @@ describe('Redis Client', () => {
     // Set up the mock client
     mockClient = { on: jest.fn() };
 
-    // Get the createClient mock
-    createClientMock = require('ioredis').createClient;
-    createClientMock.mockReturnValue(mockClient);
+    // Set up the createClient mock
+    createClientMock = jest.fn().mockReturnValue(mockClient);
+
+    // Setup common mocks with default config
+    setupCommonMocks();
   });
 
-  it('should create a Redis client with the correct configuration', () => {
-    // Import the module to test
-    const { redisConfig } = require('../../src/redis');
-
-    // Verify that createClient was called with the correct configuration
-    expect(createClientMock).toHaveBeenCalledWith(redisConfig.redis);
-
-    // Verify the Redis configuration
-    expect(redisConfig.redis).toEqual(expect.objectContaining({
-      port: 6379,
-      host: 'localhost',
-      db: '0',
-      username: 'testuser',
-      password: 'testpassword',
-      tls: false,
-      keepAlive: 5000,
-      noDelay: true,
-      enableOfflineQueue: true,
-      enableReadyCheck: true,
-    }));
+  afterEach(() => {
+    // Restore console.log if it was mocked
+    if (consoleSpy) {
+      consoleSpy.mockRestore();
+      consoleSpy = undefined;
+    }
   });
 
-  it('should register an error handler for the Redis client', () => {
-    // Mock console.log to verify it's called
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+  describe('Basic Configuration', () => {
+    it('should create a Redis client with the correct configuration', () => {
+      // Import the module to test
+      const { redisConfig } = require('../../src/redis');
 
-    // Import the module to test
-    require('../../src/redis');
+      // Verify that createClient was called with the correct configuration
+      expect(createClientMock).toHaveBeenCalledWith(redisConfig.redis);
 
-    // Verify that the on method was called with 'error'
-    expect(mockClient.on).toHaveBeenCalledWith('error', expect.any(Function));
+      // Verify the Redis configuration
+      expect(redisConfig.redis).toEqual(expect.objectContaining({
+        port: 6379,
+        host: 'localhost',
+        db: '0',
+        username: 'testuser',
+        password: 'testpassword',
+        tls: false,
+        keepAlive: 5000,
+        noDelay: true,
+        enableOfflineQueue: true,
+        enableReadyCheck: true,
+      }));
+    });
 
-    // Get the error callback
-    const errorCallback = mockClient.on.mock.calls.find(call => call[0] === 'error')[1];
+    it('should register an error handler for the Redis client', () => {
+      // Mock console.log to verify it's called
+      consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 
-    // Simulate an error event
-    const error = new Error('Redis connection error');
-    errorCallback(error);
+      // Import the module to test
+      require('../../src/redis');
 
-    // Verify that console.log was called with the error
-    expect(consoleSpy).toHaveBeenCalledWith('Redis Client Error', error);
+      // Verify that the on method was called with 'error'
+      expect(mockClient.on).toHaveBeenCalledWith('error', expect.any(Function));
 
-    // Restore console.log
-    consoleSpy.mockRestore();
+      // Get the error callback
+      const errorCallback = mockClient.on.mock.calls.find(call => call[0] === 'error')[1];
+
+      // Simulate an error event
+      const error = new Error('Redis connection error');
+      errorCallback(error);
+
+      // Verify that console.log was called with the error
+      expect(consoleSpy).toHaveBeenCalledWith('Redis Client Error', error);
+    });
   });
 
-  it('should parse DSN to sentinels correctly', () => {
-    // Reset modules and set up mocks
-    jest.resetModules();
-
-    // Mock the config module with sentinel configuration
-    jest.mock('../../src/config', () => ({
-      config: {
+  describe('Sentinel Configuration', () => {
+    it('should parse DSN to sentinels correctly', () => {
+      // Setup mocks with sentinel configuration
+      setupCommonMocks({
         SENTINEL_HOSTS: 'host1:26379,host2:26379',
         SENTINEL_NAME: 'mymaster',
         SENTINEL_ROLE: 'master',
-      },
-    }));
+      });
 
-    // Set up the createClient mock again after resetting modules
-    const ioredis = require('ioredis');
-    ioredis.createClient = jest.fn().mockReturnValue({ on: jest.fn() });
+      // Import the module to test
+      const { redisConfig } = require('../../src/redis');
 
-    // Import the module to test
-    const { redisConfig } = require('../../src/redis');
+      // Verify the sentinel configuration
+      expect(redisConfig.redis).toEqual(expect.objectContaining({
+        sentinels: [
+          { host: 'host1', port: 26379 },
+          { host: 'host2', port: 26379 },
+        ],
+        name: 'mymaster',
+        role: 'master',
+      }));
+    });
 
-    // Verify the sentinel configuration
-    expect(redisConfig.redis).toEqual(expect.objectContaining({
-      sentinels: [
-        { host: 'host1', port: 26379 },
-        { host: 'host2', port: 26379 },
-      ],
-      name: 'mymaster',
-      role: 'master',
-    }));
-  });
-
-  it('should handle semicolon-separated DSN', () => {
-    // Reset modules and set up mocks
-    jest.resetModules();
-
-    // Mock the config module with semicolon-separated sentinel configuration
-    jest.mock('../../src/config', () => ({
-      config: {
+    it('should handle semicolon-separated DSN', () => {
+      // Setup mocks with semicolon-separated sentinel configuration
+      setupCommonMocks({
         SENTINEL_HOSTS: 'host1:26379;host2:26379',
         SENTINEL_NAME: 'mymaster',
         SENTINEL_ROLE: 'master',
-      },
-    }));
+      });
 
-    // Set up the createClient mock again after resetting modules
-    const ioredis = require('ioredis');
-    ioredis.createClient = jest.fn().mockReturnValue({ on: jest.fn() });
+      // Import the module to test
+      const { redisConfig } = require('../../src/redis');
 
-    // Import the module to test
-    const { redisConfig } = require('../../src/redis');
-
-    // Verify the sentinel configuration
-    expect(redisConfig.redis).toEqual(expect.objectContaining({
-      sentinels: [
-        { host: 'host1', port: 26379 },
-        { host: 'host2', port: 26379 },
-      ],
-      name: 'mymaster',
-      role: 'master',
-    }));
+      // Verify the sentinel configuration
+      expect(redisConfig.redis).toEqual(expect.objectContaining({
+        sentinels: [
+          { host: 'host1', port: 26379 },
+          { host: 'host2', port: 26379 },
+        ],
+        name: 'mymaster',
+        role: 'master',
+      }));
+    });
   });
 });

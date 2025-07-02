@@ -4,49 +4,73 @@ process.env.NODE_ENV = 'test';
 import { jest } from '@jest/globals';
 
 describe('Bull Queue Setup', () => {
-  beforeEach(() => {
-    // Clear all mocks before each test
-    jest.clearAllMocks();
+  // Common mocks
+  let QueueMock;
+  let BullMock;
+  let setQueuesMock;
+  let createBullBoardMock;
+  let ExpressAdapterMock;
+  let BullMQAdapterMock;
+  let BullAdapterMock;
+  let clientKeysMock;
+  let consoleSpy;
 
-    // Reset modules to ensure clean imports
-    jest.resetModules();
-  });
+  // Default config
+  const defaultConfig = {
+    BULL_PREFIX: 'bull',
+    BULL_VERSION: 'BULLMQ',
+    BACKOFF_STARTING_DELAY: 500,
+    BACKOFF_MAX_DELAY: Infinity,
+    BACKOFF_TIME_MULTIPLE: 2,
+    BACKOFF_NB_ATTEMPTS: 10,
+    BULL_BOARD_TITLE: 'Test Bull Board',
+  };
 
-  it('should create a Bull board with the correct configuration', async () => {
-    // Mock all dependencies
+  // Helper function to setup common mocks
+  const setupCommonMocks = (config = defaultConfig, queueKeys = ['bull:queue1:jobs', 'bull:queue2:jobs']) => {
+    // Setup BullMQ mock
+    QueueMock = jest.fn();
     jest.doMock('bullmq', () => ({
-      Queue: jest.fn(),
+      Queue: QueueMock,
     }));
 
-    jest.doMock('bull', () => {
-      return jest.fn();
-    });
+    // Setup Bull mock
+    BullMock = jest.fn();
+    jest.doMock('bull', () => BullMock);
 
-    const createBullBoardMock = jest.fn().mockReturnValue({
-      setQueues: jest.fn(),
+    // Setup Bull Board mocks
+    setQueuesMock = jest.fn();
+    createBullBoardMock = jest.fn().mockReturnValue({
+      setQueues: setQueuesMock,
     });
     jest.doMock('@bull-board/api', () => ({
       createBullBoard: createBullBoardMock,
     }));
 
-    const ExpressAdapterMock = jest.fn().mockImplementation(() => ({
+    // Setup Express Adapter mock
+    ExpressAdapterMock = jest.fn().mockImplementation(() => ({
       getRouter: jest.fn().mockReturnValue('router'),
     }));
     jest.doMock('@bull-board/express', () => ({
       ExpressAdapter: ExpressAdapterMock,
     }));
 
+    // Setup Adapter mocks
+    BullMQAdapterMock = jest.fn();
     jest.doMock('@bull-board/api/bullMQAdapter', () => ({
-      BullMQAdapter: jest.fn(),
+      BullMQAdapter: BullMQAdapterMock,
     }));
 
+    BullAdapterMock = jest.fn();
     jest.doMock('@bull-board/api/bullAdapter', () => ({
-      BullAdapter: jest.fn(),
+      BullAdapter: BullAdapterMock,
     }));
 
+    // Setup Redis mock
+    clientKeysMock = jest.fn().mockResolvedValue(queueKeys);
     jest.doMock('../../src/redis', () => ({
       client: {
-        keys: jest.fn().mockResolvedValue(['bull:queue1:jobs', 'bull:queue2:jobs']),
+        keys: clientKeysMock,
         connection: 'redis-connection',
         on: jest.fn(),
       },
@@ -58,21 +82,36 @@ describe('Bull Queue Setup', () => {
       },
     }));
 
+    // Setup config mock
     jest.doMock('../../src/config', () => ({
-      config: {
-        BULL_PREFIX: 'bull',
-        BULL_VERSION: 'BULLMQ',
-        BACKOFF_STARTING_DELAY: 500,
-        BACKOFF_MAX_DELAY: Infinity,
-        BACKOFF_TIME_MULTIPLE: 2,
-        BACKOFF_NB_ATTEMPTS: 10,
-        BULL_BOARD_TITLE: 'Test Bull Board',
-      },
+      config,
     }));
 
+    // Setup backoff mock
     jest.doMock('exponential-backoff', () => ({
       backOff: jest.fn().mockImplementation((fn) => fn()),
     }));
+  };
+
+  beforeEach(() => {
+    // Clear all mocks before each test
+    jest.clearAllMocks();
+
+    // Reset modules to ensure clean imports
+    jest.resetModules();
+  });
+
+  afterEach(() => {
+    // Restore console.error if it was mocked
+    if (consoleSpy) {
+      consoleSpy.mockRestore();
+      consoleSpy = undefined;
+    }
+  });
+
+  it('should create a Bull board with the correct configuration', async () => {
+    // Setup mocks
+    setupCommonMocks();
 
     // Import the module to test
     require('../../src/bull');
@@ -96,69 +135,8 @@ describe('Bull Queue Setup', () => {
   });
 
   it('should discover Bull queues and add them to the board (BullMQ)', async () => {
-    // Mock all dependencies
-    const QueueMock = jest.fn();
-    jest.doMock('bullmq', () => ({
-      Queue: QueueMock,
-    }));
-
-    jest.doMock('bull', () => {
-      return jest.fn();
-    });
-
-    const setQueuesMock = jest.fn();
-    const createBullBoardMock = jest.fn().mockReturnValue({
-      setQueues: setQueuesMock,
-    });
-    jest.doMock('@bull-board/api', () => ({
-      createBullBoard: createBullBoardMock,
-    }));
-
-    jest.doMock('@bull-board/express', () => ({
-      ExpressAdapter: jest.fn().mockImplementation(() => ({
-        getRouter: jest.fn().mockReturnValue('router'),
-      })),
-    }));
-
-    const BullMQAdapterMock = jest.fn();
-    jest.doMock('@bull-board/api/bullMQAdapter', () => ({
-      BullMQAdapter: BullMQAdapterMock,
-    }));
-
-    jest.doMock('@bull-board/api/bullAdapter', () => ({
-      BullAdapter: jest.fn(),
-    }));
-
-    const clientKeysMock = jest.fn().mockResolvedValue(['bull:queue1:jobs', 'bull:queue2:jobs']);
-    jest.doMock('../../src/redis', () => ({
-      client: {
-        keys: clientKeysMock,
-        connection: 'redis-connection',
-        on: jest.fn(),
-      },
-      redisConfig: {
-        redis: {
-          host: 'localhost',
-          port: 6379,
-        },
-      },
-    }));
-
-    jest.doMock('../../src/config', () => ({
-      config: {
-        BULL_PREFIX: 'bull',
-        BULL_VERSION: 'BULLMQ',
-        BACKOFF_STARTING_DELAY: 500,
-        BACKOFF_MAX_DELAY: Infinity,
-        BACKOFF_TIME_MULTIPLE: 2,
-        BACKOFF_NB_ATTEMPTS: 10,
-        BULL_BOARD_TITLE: 'Test Bull Board',
-      },
-    }));
-
-    jest.doMock('exponential-backoff', () => ({
-      backOff: jest.fn().mockImplementation((fn) => fn()),
-    }));
+    // Setup mocks with BullMQ configuration
+    setupCommonMocks();
 
     // Import the module to test
     const bull = require('../../src/bull');
@@ -178,70 +156,11 @@ describe('Bull Queue Setup', () => {
   });
 
   it('should discover Bull queues and add them to the board (Bull)', async () => {
-    // Mock all dependencies
-    jest.doMock('bullmq', () => ({
-      Queue: jest.fn(),
-    }));
-
-    const BullMock = jest.fn();
-    jest.doMock('bull', () => {
-      return BullMock;
+    // Setup mocks with Bull configuration
+    setupCommonMocks({
+      ...defaultConfig,
+      BULL_VERSION: 'BULL',
     });
-
-    const setQueuesMock = jest.fn();
-    const createBullBoardMock = jest.fn().mockReturnValue({
-      setQueues: setQueuesMock,
-    });
-    jest.doMock('@bull-board/api', () => ({
-      createBullBoard: createBullBoardMock,
-    }));
-
-    jest.doMock('@bull-board/express', () => ({
-      ExpressAdapter: jest.fn().mockImplementation(() => ({
-        getRouter: jest.fn().mockReturnValue('router'),
-      })),
-    }));
-
-    jest.doMock('@bull-board/api/bullMQAdapter', () => ({
-      BullMQAdapter: jest.fn(),
-    }));
-
-    const BullAdapterMock = jest.fn();
-    jest.doMock('@bull-board/api/bullAdapter', () => ({
-      BullAdapter: BullAdapterMock,
-    }));
-
-    const clientKeysMock = jest.fn().mockResolvedValue(['bull:queue1:jobs', 'bull:queue2:jobs']);
-    jest.doMock('../../src/redis', () => ({
-      client: {
-        keys: clientKeysMock,
-        connection: 'redis-connection',
-        on: jest.fn(),
-      },
-      redisConfig: {
-        redis: {
-          host: 'localhost',
-          port: 6379,
-        },
-      },
-    }));
-
-    // Change the Bull version
-    jest.doMock('../../src/config', () => ({
-      config: {
-        BULL_PREFIX: 'bull',
-        BULL_VERSION: 'BULL',
-        BACKOFF_STARTING_DELAY: 500,
-        BACKOFF_MAX_DELAY: Infinity,
-        BACKOFF_TIME_MULTIPLE: 2,
-        BACKOFF_NB_ATTEMPTS: 10,
-        BULL_BOARD_TITLE: 'Test Bull Board',
-      },
-    }));
-
-    jest.doMock('exponential-backoff', () => ({
-      backOff: jest.fn().mockImplementation((fn) => fn()),
-    }));
 
     // Import the module to test
     const bull = require('../../src/bull');
@@ -261,71 +180,11 @@ describe('Bull Queue Setup', () => {
   });
 
   it('should handle error when no queues are found', async () => {
-    // Mock all dependencies
-    jest.doMock('bullmq', () => ({
-      Queue: jest.fn(),
-    }));
-
-    jest.doMock('bull', () => {
-      return jest.fn();
-    });
-
-    const setQueuesMock = jest.fn();
-    const createBullBoardMock = jest.fn().mockReturnValue({
-      setQueues: setQueuesMock,
-    });
-    jest.doMock('@bull-board/api', () => ({
-      createBullBoard: createBullBoardMock,
-    }));
-
-    jest.doMock('@bull-board/express', () => ({
-      ExpressAdapter: jest.fn().mockImplementation(() => ({
-        getRouter: jest.fn().mockReturnValue('router'),
-      })),
-    }));
-
-    jest.doMock('@bull-board/api/bullMQAdapter', () => ({
-      BullMQAdapter: jest.fn(),
-    }));
-
-    jest.doMock('@bull-board/api/bullAdapter', () => ({
-      BullAdapter: jest.fn(),
-    }));
-
-    // Mock the Redis client to return no queue keys
-    const clientKeysMock = jest.fn().mockResolvedValue([]);
-    jest.doMock('../../src/redis', () => ({
-      client: {
-        keys: clientKeysMock,
-        connection: 'redis-connection',
-        on: jest.fn(),
-      },
-      redisConfig: {
-        redis: {
-          host: 'localhost',
-          port: 6379,
-        },
-      },
-    }));
-
-    jest.doMock('../../src/config', () => ({
-      config: {
-        BULL_PREFIX: 'bull',
-        BULL_VERSION: 'BULLMQ',
-        BACKOFF_STARTING_DELAY: 500,
-        BACKOFF_MAX_DELAY: Infinity,
-        BACKOFF_TIME_MULTIPLE: 2,
-        BACKOFF_NB_ATTEMPTS: 10,
-        BULL_BOARD_TITLE: 'Test Bull Board',
-      },
-    }));
-
-    jest.doMock('exponential-backoff', () => ({
-      backOff: jest.fn().mockImplementation((fn) => fn()),
-    }));
+    // Setup mocks with empty queue keys
+    setupCommonMocks(defaultConfig, []);
 
     // Mock console.error to verify it's called
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+    consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
     // Import the module to test
     const bull = require('../../src/bull');
@@ -335,8 +194,5 @@ describe('Bull Queue Setup', () => {
 
     // Verify that console.error was called with the error
     expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
-
-    // Restore console.error
-    consoleSpy.mockRestore();
   });
 });
