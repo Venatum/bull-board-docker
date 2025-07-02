@@ -89,4 +89,10 @@ async function bullMain() {
 	}
 }
 
-bullMain();
+// Only run bullMain in non-test environment
+if (process.env.NODE_ENV !== 'test') {
+  bullMain();
+}
+
+// Export for testing
+export { bullMain, getBullQueues };
