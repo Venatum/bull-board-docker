@@ -31,13 +31,13 @@
     "commit": "cz"
   },
   "dependencies": {
-    "@bull-board/api": "^6.9.6",
-    "@bull-board/express": "^6.9.6",
+    "@bull-board/api": "^6.11.0",
+    "@bull-board/express": "^6.11.0",
     "body-parser": "^1.20.3",
     "bull": "^4.16.5",
-    "bullmq": "^5.52.2",
+    "bullmq": "^5.56.1",
     "connect-ensure-login": "^0.1.1",
-    "dotenv": "^16.5.0",
+    "dotenv": "^17.0.1",
     "exponential-backoff": "^3.1.2",
     "express": "^4.21.2",
     "express-session": "^1.18.1",
@@ -53,13 +53,13 @@
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^11.0.2",
+    "@semantic-release/github": "^11.0.3",
     "@semantic-release/release-notes-generator": "^14.0.3",
     "commitizen": "^4.3.1",
-    "conventional-changelog-conventionalcommits": "^8.0.0",
+    "conventional-changelog-conventionalcommits": "^9.0.0",
     "husky": "^9.1.7",
     "nodemon": "^3.1.10",
-    "semantic-release": "^24.2.3"
+    "semantic-release": "^24.2.6"
   },
   "engines": {
     "yarn": "please use npm",
