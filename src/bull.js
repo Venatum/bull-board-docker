@@ -2,7 +2,7 @@ import {createBullBoard} from "@bull-board/api";
 import {ExpressAdapter} from "@bull-board/express";
 import {BullMQAdapter} from "@bull-board/api/bullMQAdapter";
 import {BullAdapter} from "@bull-board/api/bullAdapter";
-import { Queue } from 'bullmq';
+import {Queue} from 'bullmq';
 import Bull from 'bull';
 import {backOff} from "exponential-backoff";
 
@@ -57,9 +57,11 @@ async function getBullQueues() {
 		(item) => config.BULL_VERSION === 'BULLMQ' ?
 			new BullMQAdapter(new Queue(item, {
 				connection: redisConfig.redis,
+				...(config.BULL_PREFIX && {prefix: config.BULL_PREFIX})
 			}, client.connection)) :
 			new BullAdapter(new Bull(item, {
 				redis: redisConfig.redis,
+				...(config.BULL_PREFIX && {prefix: config.BULL_PREFIX})
 			}, client.connection))
 	);
 	if (queueList.length === 0) {
@@ -91,8 +93,8 @@ async function bullMain() {
 
 // Only run bullMain in non-test environment
 if (process.env.NODE_ENV !== 'test') {
-  bullMain();
+	bullMain();
 }
 
 // Export for testing
-export { bullMain, getBullQueues };
+export {bullMain, getBullQueues};
