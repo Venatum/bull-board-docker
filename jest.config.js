@@ -11,5 +11,5 @@ module.exports = {
     '^.+\\.js$': 'babel-jest',
   },
   moduleFileExtensions: ['js', 'json'],
-  testTimeout: 10000,
+  testTimeout: 5000,
 };

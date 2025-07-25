@@ -80,5 +80,15 @@ export const redisConfig = {
 };
 
 // https://github.com/redis/node-redis/blob/master/docs/v3-to-v4.md
-export const client = createClient(redisConfig.redis);
-client.on('error', err => console.log('Redis Client Error', err));
+export const client = process.env.NODE_ENV === 'test'
+	? {
+		keys: () => Promise.resolve([]),
+		connection: 'mock-connection',
+		on: () => {},
+	}
+	: createClient(redisConfig.redis);
+
+// Only add error handler in non-test environment
+if (process.env.NODE_ENV !== 'test') {
+	client.on('error', err => console.log('Redis Client Error', err));
+}
