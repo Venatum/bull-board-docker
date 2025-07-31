@@ -1,9 +1,10 @@
-// Set NODE_ENV to 'test' to prevent automatic execution of bullMain
-import bull from "../../src/bull";
+import { jest } from '@jest/globals';
 
+// Set NODE_ENV to 'test' to prevent automatic execution of bullMain
 process.env.NODE_ENV = 'test';
 
-import {jest} from '@jest/globals';
+// override scope wise to avoid log flood
+console.log = () => null;
 
 describe('Bull Queue Setup', () => {
 	// Common mocks

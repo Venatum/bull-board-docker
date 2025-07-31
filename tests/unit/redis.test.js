@@ -1,5 +1,8 @@
 import { jest } from '@jest/globals';
 
+// override scope wise to avoid log flood
+console.log = () => null;
+
 describe('Redis Client', () => {
   // Common mocks
   let mockClient;
