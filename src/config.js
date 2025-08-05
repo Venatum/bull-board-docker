@@ -10,7 +10,7 @@ export const PROXY_PATH = normalizePath(process.env.PROXY_PATH);
 
 export const config = {
 	// Redis configuration
-	REDIS_PORT: process.env.REDIS_PORT || 6379,
+	REDIS_PORT: Number(process.env.REDIS_PORT) || 6379,
 	REDIS_HOST: process.env.REDIS_HOST || 'localhost',
 	REDIS_DB: process.env.REDIS_DB || '0',
 	REDIS_USER: process.env.REDIS_USER, // Redis 6+ requires a username and password to be set
@@ -20,6 +20,30 @@ export const config = {
 	SENTINEL_NAME: process.env.SENTINEL_NAME,
 	SENTINEL_HOSTS: process.env.SENTINEL_HOSTS,
 	MAX_RETRIES_PER_REQUEST: process.env.MAX_RETRIES_PER_REQUEST,
+
+	// Additional Sentinel configuration
+	SENTINEL_ROLE: process.env.SENTINEL_ROLE || 'master', // Role to connect to (master or slave)
+	SENTINEL_USERNAME: process.env.SENTINEL_USERNAME, // Username for authenticating with Sentinel
+	SENTINEL_PASSWORD: process.env.SENTINEL_PASSWORD, // Password for authenticating with Sentinel
+	SENTINEL_RETRY_STRATEGY: process.env.SENTINEL_RETRY_STRATEGY, // Strategy for retrying connections to Sentinel
+	SENTINEL_RECONNECT_STRATEGY: process.env.SENTINEL_RECONNECT_STRATEGY, // Strategy for reconnecting to Sentinel
+	SENTINEL_COMMAND_TIMEOUT: Number(process.env.SENTINEL_COMMAND_TIMEOUT) || undefined, // Timeout for Sentinel commands in ms
+	SENTINEL_TLS_ENABLED: process.env.SENTINEL_TLS_ENABLED === 'true', // Enable TLS for Sentinel mode
+	SENTINEL_UPDATE: process.env.SENTINEL_UPDATE === 'true', // Whether to update the list of Sentinels
+	SENTINEL_MAX_CONNECTIONS: Number(process.env.SENTINEL_MAX_CONNECTIONS) || 10, // Maximum number of connections to Sentinel
+	SENTINEL_FAILOVER_DETECTOR: process.env.SENTINEL_FAILOVER_DETECTOR === 'true', // Whether to enable failover detection
+
+	// Additional Redis configuration
+	REDIS_COMMAND_TIMEOUT: Number(process.env.REDIS_COMMAND_TIMEOUT) || undefined, // Command timeout in ms
+	REDIS_SOCKET_TIMEOUT: Number(process.env.REDIS_SOCKET_TIMEOUT) || undefined, // Socket timeout in ms
+	REDIS_KEEP_ALIVE: Number(process.env.REDIS_KEEP_ALIVE) || 0, // Keep-alive in ms
+	REDIS_NO_DELAY: process.env.REDIS_NO_DELAY !== 'false', // Disable Nagle's algorithm
+	REDIS_CONNECTION_NAME: process.env.REDIS_CONNECTION_NAME, // Connection name for client list
+	REDIS_AUTO_RESUBSCRIBE: process.env.REDIS_AUTO_RESUBSCRIBE !== 'false', // Auto resubscribe to channels
+	REDIS_AUTO_RESEND_UNFULFILLED: process.env.REDIS_AUTO_RESEND_UNFULFILLED !== 'false', // Resend unfulfilled commands on reconnect
+	REDIS_CONNECT_TIMEOUT: Number(process.env.REDIS_CONNECT_TIMEOUT) || 10000, // Connection timeout in ms
+	REDIS_ENABLE_OFFLINE_QUEUE: process.env.REDIS_ENABLE_OFFLINE_QUEUE !== 'false', // Enable offline queue
+	REDIS_ENABLE_READY_CHECK: process.env.REDIS_ENABLE_READY_CHECK !== 'false', // Enable ready check
 
 	// Queue configuration
 	BULL_PREFIX: process.env.BULL_PREFIX || 'bull',

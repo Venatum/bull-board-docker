@@ -9,6 +9,8 @@ yarn-error.log*
 node_modules/
 jspm_packages/
 
+coverage
+
 .idea/
 .env
 .npmrc

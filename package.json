@@ -28,25 +28,30 @@
     "start:docker-deps": "npm run start:docker redis",
     "stop:docker": "docker compose down -v",
     "commitlint": "commitlint --from origin/master",
-    "commit": "cz"
+    "commit": "cz",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "@bull-board/api": "^6.11.0",
-    "@bull-board/express": "^6.11.0",
+    "@bull-board/api": "^6.12.0",
+    "@bull-board/express": "^6.12.0",
     "body-parser": "^1.20.3",
     "bull": "^4.16.5",
-    "bullmq": "^5.56.1",
+    "bullmq": "^5.56.9",
     "connect-ensure-login": "^0.1.1",
-    "dotenv": "^17.0.1",
+    "dotenv": "^17.2.1",
     "exponential-backoff": "^3.1.2",
     "express": "^4.21.2",
-    "express-session": "^1.18.1",
-    "ioredis": "^5.6.1",
-    "morgan": "^1.10.0",
+    "express-session": "^1.18.2",
+    "ioredis": "^5.7.0",
+    "morgan": "^1.10.1",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.28.0",
+    "@babel/preset-env": "^7.28.0",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@commitlint/prompt": "^19.8.1",
@@ -55,11 +60,13 @@
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^11.0.3",
     "@semantic-release/release-notes-generator": "^14.0.3",
+    "babel-jest": "^30.0.5",
     "commitizen": "^4.3.1",
-    "conventional-changelog-conventionalcommits": "^9.0.0",
+    "conventional-changelog-conventionalcommits": "^9.1.0",
     "husky": "^9.1.7",
+    "jest": "^30.0.5",
     "nodemon": "^3.1.10",
-    "semantic-release": "^24.2.6"
+    "semantic-release": "^24.2.7"
   },
   "engines": {
     "yarn": "please use npm",
@@ -70,7 +77,7 @@
   },
   "author": {
     "name": "Vincent LE QUEC (Venatum)",
-    "email": "https://github.com/Venatum"
+    "url": "https://github.com/Venatum"
   },
   "husky": {
     "hooks": {
