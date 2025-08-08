@@ -16,6 +16,7 @@ export const config = {
 	REDIS_USER: process.env.REDIS_USER, // Redis 6+ requires a username and password to be set
 	REDIS_PASSWORD: process.env.REDIS_PASSWORD,
 	REDIS_USE_TLS: process.env.REDIS_USE_TLS,
+	REDIS_TLS_CA: process.env.REDIS_TLS_CA,
 	REDIS_FAMILY: Number(process.env.REDIS_FAMILY) || 0,
 	SENTINEL_NAME: process.env.SENTINEL_NAME,
 	SENTINEL_HOSTS: process.env.SENTINEL_HOSTS,
@@ -29,6 +30,7 @@ export const config = {
 	SENTINEL_RECONNECT_STRATEGY: process.env.SENTINEL_RECONNECT_STRATEGY, // Strategy for reconnecting to Sentinel
 	SENTINEL_COMMAND_TIMEOUT: Number(process.env.SENTINEL_COMMAND_TIMEOUT) || undefined, // Timeout for Sentinel commands in ms
 	SENTINEL_TLS_ENABLED: process.env.SENTINEL_TLS_ENABLED === 'true', // Enable TLS for Sentinel mode
+	SENTINEL_TLS_CA: process.env.SENTINEL_TLS_CA, // CA certificate for Sentinel TLS connections
 	SENTINEL_UPDATE: process.env.SENTINEL_UPDATE === 'true', // Whether to update the list of Sentinels
 	SENTINEL_MAX_CONNECTIONS: Number(process.env.SENTINEL_MAX_CONNECTIONS) || 10, // Maximum number of connections to Sentinel
 	SENTINEL_FAILOVER_DETECTOR: process.env.SENTINEL_FAILOVER_DETECTOR === 'true', // Whether to enable failover detection
