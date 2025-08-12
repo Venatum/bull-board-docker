@@ -6,7 +6,9 @@ const {createClient} = require('ioredis');
 const dotenv = require('dotenv');
 
 // Load environment variables
-dotenv.config();
+dotenv.config({
+	quiet: true
+});
 
 // Constants
 const DEFAULTS = {
