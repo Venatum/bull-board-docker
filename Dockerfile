@@ -1,18 +1,11 @@
 # Multi-stage build for optimization
 FROM node:20-alpine AS builder
 
-RUN apk update && \
-    apk upgrade &&  \
-    apk add --no-cache dumb-init &&  \
-    rm -rf /var/cache/apk/*
-
 WORKDIR /app
 
 COPY package*.json ./
 
-
-RUN npm ci --only=production --no-audit --no-fund && \
-    npm cache clean --force
+RUN npm ci --only=production --no-audit --no-fund
 
 # Production stage
 FROM node:20-alpine AS production
@@ -23,11 +16,10 @@ ARG PORT=3000
 ENV PORT=$PORT
 EXPOSE $PORT
 
-# Install security updates and dumb-init for proper signal handling
 RUN apk update && \
     apk upgrade && \
     apk add --no-cache dumb-init && \
-    rm -rf /var/cache/apk/*
+    rm -rf /var/cache/apk/* /tmp/* /var/tmp/*
 
 USER node
 
