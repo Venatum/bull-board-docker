@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { describe, it, expect, vi } from 'vitest';
 
 // override scope wise to avoid log flood
 console.log = () => null;
@@ -27,8 +27,8 @@ describe('Redis Client', () => {
   // Helper function to setup common mocks
   const setupCommonMocks = (config = defaultConfig) => {
     // Mock the ioredis module
-    jest.doMock('ioredis', () => {
-      const originalModule = jest.requireActual('ioredis');
+    vi.doMock('ioredis', () => {
+      const originalModule = vi.requireActual('ioredis');
       return {
         ...originalModule,
         createClient: createClientMock,
@@ -36,23 +36,23 @@ describe('Redis Client', () => {
     });
 
     // Mock the config module
-    jest.doMock('../../src/config', () => ({
+    vi.doMock('../../src/config', () => ({
       config,
     }));
   };
 
   beforeEach(() => {
     // Clear all mocks before each test
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Reset modules to ensure clean imports
-    jest.resetModules();
+    vi.resetModules();
 
     // Set up the mock client
-    mockClient = { on: jest.fn() };
+    mockClient = { on: vi.fn() };
 
     // Set up the createClient mock
-    createClientMock = jest.fn().mockReturnValue(mockClient);
+    createClientMock = vi.fn().mockReturnValue(mockClient);
 
     // Setup common mocks with default config
     setupCommonMocks();

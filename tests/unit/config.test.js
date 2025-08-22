@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { describe, it, expect, vi } from 'vitest';
 
 describe('Configuration', () => {
   // Save the original process.env
@@ -13,10 +13,10 @@ describe('Configuration', () => {
 
   beforeEach(() => {
     // Clear all mocks before each test
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Reset modules to ensure clean imports
-    jest.resetModules();
+    vi.resetModules();
 
     // Create a fresh copy of process.env for each test
     process.env = { ...originalEnv };

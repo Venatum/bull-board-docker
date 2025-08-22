@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { describe, it, expect, vi } from 'vitest';
 
 // override scope wise to avoid log flood
 console.log = () => null;
@@ -23,91 +23,91 @@ describe('Express Application', () => {
   const setupCommonMocks = (config = defaultConfig, redisPingResponse = 'PONG') => {
     // Create mock app for testing
     mockApp = {
-      set: jest.fn(),
-      use: jest.fn(),
-      listen: jest.fn().mockImplementation((port, hostname, callback) => {
+      set: vi.fn(),
+      use: vi.fn(),
+      listen: vi.fn().mockImplementation((port, hostname, callback) => {
         if (callback) callback();
-        return { on: jest.fn() };
+        return { on: vi.fn() };
       }),
-      get: jest.fn(),
+      get: vi.fn(),
     };
 
     // Create mock router
     mockRouter = {
-      get: jest.fn(),
-      post: jest.fn(),
+      get: vi.fn(),
+      post: vi.fn(),
     };
 
     // Mock express
-    jest.doMock('express', () => {
-      const express = jest.fn(() => mockApp);
-      express.Router = jest.fn(() => mockRouter);
+    vi.doMock('express', () => {
+      const express = vi.fn(() => mockApp);
+      express.Router = vi.fn(() => mockRouter);
       return express;
     });
 
     // Mock morgan
-    jest.doMock('morgan', () => {
-      return jest.fn().mockReturnValue('morgan-middleware');
+    vi.doMock('morgan', () => {
+      return vi.fn().mockReturnValue('morgan-middleware');
     });
 
     // Mock express-session
-    jest.doMock('express-session', () => {
-      return jest.fn().mockReturnValue('session-middleware');
+    vi.doMock('express-session', () => {
+      return vi.fn().mockReturnValue('session-middleware');
     });
 
     // Mock passport
-    jest.doMock('passport', () => ({
-      initialize: jest.fn().mockReturnValue('passport-init-middleware'),
-      session: jest.fn().mockReturnValue('passport-session-middleware'),
+    vi.doMock('passport', () => ({
+      initialize: vi.fn().mockReturnValue('passport-init-middleware'),
+      session: vi.fn().mockReturnValue('passport-session-middleware'),
     }));
 
     // Mock body-parser
-    jest.doMock('body-parser', () => ({
-      urlencoded: jest.fn().mockReturnValue('body-parser-middleware'),
+    vi.doMock('body-parser', () => ({
+      urlencoded: vi.fn().mockReturnValue('body-parser-middleware'),
     }));
 
     // Mock connect-ensure-login
-    jest.doMock('connect-ensure-login', () => ({
-      ensureLoggedIn: jest.fn().mockReturnValue('ensure-logged-in-middleware'),
+    vi.doMock('connect-ensure-login', () => ({
+      ensureLoggedIn: vi.fn().mockReturnValue('ensure-logged-in-middleware'),
     }));
 
     // Mock config
-    jest.doMock('../../src/config', () => ({
+    vi.doMock('../../src/config', () => ({
       config,
     }));
 
     // Mock login
-    jest.doMock('../../src/login', () => ({
+    vi.doMock('../../src/login', () => ({
       authRouter: 'auth-router',
     }));
 
     // Mock bull
-    jest.doMock('../../src/bull', () => ({
+    vi.doMock('../../src/bull', () => ({
       router: 'bull-router',
     }));
 
     // Mock redis
     const redisMock = {
       client: {
-        ping: jest.fn().mockResolvedValue(redisPingResponse),
-        on: jest.fn(),
+        ping: vi.fn().mockResolvedValue(redisPingResponse),
+        on: vi.fn(),
       },
     };
 
-    jest.doMock('../../src/redis', () => redisMock);
+    vi.doMock('../../src/redis', () => redisMock);
 
     return redisMock;
   };
 
   beforeEach(() => {
     // Clear all mocks before each test
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Reset modules to ensure clean imports
-    jest.resetModules();
+    vi.resetModules();
 
     // Mock console.log to prevent output during tests
-    consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    consoleSpy = vi.spyOn(console, 'log').mockImplementation();
   });
 
   afterEach(() => {
@@ -124,7 +124,7 @@ describe('Express Application', () => {
       setupCommonMocks();
 
       // Import the module to test
-      require('../../src/index');
+      import('../../src/index');
 
       // Verify that app.set was called with the correct arguments
       expect(mockApp.set).toHaveBeenCalledWith('views', expect.stringContaining('/views'));
@@ -147,7 +147,7 @@ describe('Express Application', () => {
       setupCommonMocks();
 
       // Import the module to test
-      require('../../src/index');
+      import('../../src/index');
 
       // Verify that app.use was called with the correct routes
       expect(mockApp.use).toHaveBeenCalledWith('/', 'bull-router');
@@ -165,7 +165,7 @@ describe('Express Application', () => {
       });
 
       // Import the module to test
-      require('../../src/index');
+      import('../../src/index');
 
       // Verify that app.use was called with the correct routes
       expect(mockApp.use).toHaveBeenCalledWith('/login', 'auth-router');
@@ -177,7 +177,7 @@ describe('Express Application', () => {
       setupCommonMocks();
 
       // Import the module to test
-      require('../../src/index');
+      import('../../src/index');
 
       // Find the middleware function that sets req.proxyUrl
       const proxyMiddleware = mockApp.use.mock.calls.find(call => typeof call[0] === 'function')[0];
@@ -186,7 +186,7 @@ describe('Express Application', () => {
       // Create mock request and response objects
       const req = {};
       const res = {};
-      const next = jest.fn();
+      const next = vi.fn();
 
       // Call the middleware
       proxyMiddleware(req, res, next);
@@ -205,7 +205,7 @@ describe('Express Application', () => {
       setupCommonMocks();
 
       // Import the module to test
-      require('../../src/index');
+      import('../../src/index');
 
       // Get the health check middleware
       const healthCheckMiddleware = mockApp.use.mock.calls.find(call => call[0] === '/healthcheck')[1];
@@ -214,8 +214,8 @@ describe('Express Application', () => {
       // Create mock request and response objects
       const req = {};
       const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
+        status: vi.fn().mockReturnThis(),
+        json: vi.fn(),
       };
 
       // Call the middleware
@@ -240,7 +240,7 @@ describe('Express Application', () => {
       redisMock.client.ping.mockRejectedValue(new Error('Redis connection error'));
 
       // Import the module to test
-      require('../../src/index');
+      import('../../src/index');
 
       // Find the health check route handler
       const healthCheckRoute = mockApp.use.mock.calls.find(call => call[0] === '/healthcheck');
@@ -252,8 +252,8 @@ describe('Express Application', () => {
       // Create mock request and response objects
       const req = {};
       const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn(),
+        status: vi.fn().mockReturnThis(),
+        json: vi.fn(),
       };
 
       // Call the handler

@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { describe, it, expect, vi } from 'vitest';
 
 describe('Authentication', () => {
   // Default config
@@ -18,31 +18,31 @@ describe('Authentication', () => {
   const setupCommonMocks = (config = defaultConfig) => {
     // Mock passport
     mockPassport = {
-      use: jest.fn(),
-      authenticate: jest.fn().mockReturnValue('passport-authenticate-middleware'),
-      serializeUser: jest.fn(),
-      deserializeUser: jest.fn(),
+      use: vi.fn(),
+      authenticate: vi.fn().mockReturnValue('passport-authenticate-middleware'),
+      serializeUser: vi.fn(),
+      deserializeUser: vi.fn(),
     };
-    jest.doMock('passport', () => mockPassport);
+    vi.doMock('passport', () => mockPassport);
 
     // Mock passport-local
-    mockLocalStrategy = jest.fn();
-    jest.doMock('passport-local', () => ({
+    mockLocalStrategy = vi.fn();
+    vi.doMock('passport-local', () => ({
       Strategy: mockLocalStrategy,
     }));
 
     // Mock express
     mockRouter = {
-      route: jest.fn().mockReturnThis(),
-      get: jest.fn().mockReturnThis(),
-      post: jest.fn().mockReturnThis(),
+      route: vi.fn().mockReturnThis(),
+      get: vi.fn().mockReturnThis(),
+      post: vi.fn().mockReturnThis(),
     };
-    jest.doMock('express', () => ({
-      Router: jest.fn().mockReturnValue(mockRouter),
+    vi.doMock('express', () => ({
+      Router: vi.fn().mockReturnValue(mockRouter),
     }));
 
     // Mock config
-    jest.doMock('../../src/config', () => ({
+    vi.doMock('../../src/config', () => ({
       config,
     }));
 
@@ -51,10 +51,10 @@ describe('Authentication', () => {
 
   beforeEach(() => {
     // Clear all mocks before each test
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Reset modules to ensure clean imports
-    jest.resetModules();
+    vi.resetModules();
   });
 
   describe('Passport Strategy', () => {
@@ -63,7 +63,7 @@ describe('Authentication', () => {
       setupCommonMocks();
 
       // Import the module to test
-      require('../../src/login');
+      import('../../src/login');
 
       // Verify that passport.use was called with a LocalStrategy
       expect(mockPassport.use).toHaveBeenCalledWith(expect.any(mockLocalStrategy));
@@ -72,7 +72,7 @@ describe('Authentication', () => {
       const strategyCallback = mockLocalStrategy.mock.calls[0][0];
 
       // Test the strategy with correct credentials
-      const doneCb = jest.fn();
+      const doneCb = vi.fn();
       strategyCallback('admin', 'password', doneCb);
       expect(doneCb).toHaveBeenCalledWith(null, { user: 'bull-board' });
 
@@ -94,7 +94,7 @@ describe('Authentication', () => {
       setupCommonMocks();
 
       // Import the module to test
-      require('../../src/login');
+      import('../../src/login');
 
       // Verify that passport.serializeUser and passport.deserializeUser were called
       expect(mockPassport.serializeUser).toHaveBeenCalled();
@@ -104,7 +104,7 @@ describe('Authentication', () => {
       const serializeCallback = mockPassport.serializeUser.mock.calls[0][0];
 
       // Test the serialization callback
-      const doneCb = jest.fn();
+      const doneCb = vi.fn();
       const user = { user: 'bull-board' };
       serializeCallback(user, doneCb);
       expect(doneCb).toHaveBeenCalledWith(null, user);
@@ -125,7 +125,7 @@ describe('Authentication', () => {
       setupCommonMocks();
 
       // Import the module to test
-      require('../../src/login');
+      import('../../src/login');
 
       // Verify that router.route was called with the correct path
       expect(mockRouter.route).toHaveBeenCalledWith('/');
@@ -139,7 +139,7 @@ describe('Authentication', () => {
       // Create mock request and response objects
       const req = {};
       const res = {
-        render: jest.fn(),
+        render: vi.fn(),
       };
 
       // Call the handler
@@ -168,7 +168,7 @@ describe('Authentication', () => {
       });
 
       // Import the module to test
-      require('../../src/login');
+      import('../../src/login');
 
       // Verify that passport.authenticate was called with the correct arguments
       expect(mockPassport.authenticate).toHaveBeenCalledWith('local', {

@@ -1,0 +1,30 @@
+// vitest.config.js
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+	test: {
+		environment: 'node',
+		include: ['**/tests/**/*.test.js'],
+		coverage: {
+			provider: 'v8',
+			reportsDirectory: 'coverage',
+			include: [
+				'src/**/*.js'
+			],
+			exclude: [
+				'src/views/**',
+				'node_modules/**',
+				'tests/**'
+			],
+			reporter: ['text', 'json', 'html', 'lcov'],
+		},
+		reporters: ['verbose'],
+		testTimeout: 5_000,
+
+		// Options supplémentaires utiles
+		globals: true, // Pour utiliser describe, it, expect sans imports
+		restoreMocks: true,
+		mockReset: true,
+		clearMocks: true,
+	},
+});

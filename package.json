@@ -29,9 +29,10 @@
     "stop:docker": "docker compose down -v",
     "commitlint": "commitlint --from origin/master",
     "commit": "cz",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "@bull-board/api": "^6.12.4",
@@ -50,8 +51,6 @@
     "passport-local": "^1.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.28.3",
-    "@babel/preset-env": "^7.28.3",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@commitlint/prompt": "^19.8.1",
@@ -60,13 +59,14 @@
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^11.0.4",
     "@semantic-release/release-notes-generator": "^14.0.3",
-    "babel-jest": "^30.0.5",
+    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
     "commitizen": "^4.3.1",
     "conventional-changelog-conventionalcommits": "^9.1.0",
     "husky": "^9.1.7",
-    "jest": "^30.0.5",
     "nodemon": "^3.1.10",
-    "semantic-release": "^24.2.7"
+    "semantic-release": "^24.2.7",
+    "vitest": "^3.2.4"
   },
   "engines": {
     "yarn": "please use npm",
