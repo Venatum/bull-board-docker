@@ -1,4 +1,4 @@
-import {createClient} from 'ioredis';
+import Redis from 'ioredis';
 
 import {config} from "./config.js";
 
@@ -87,7 +87,7 @@ export const client = process.env.NODE_ENV === 'test'
 		connection: 'mock-connection',
 		on: () => {},
 	}
-	: createClient(redisConfig.redis);
+	: Redis.createClient(redisConfig.redis);
 
 // Only add error handler in non-test environment
 if (process.env.NODE_ENV !== 'test') {
