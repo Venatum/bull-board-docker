@@ -16,7 +16,8 @@ export default defineConfig({
 				'node_modules/**',
 				'tests/**'
 			],
-			reporter: ['text', 'json', 'html', 'lcov'],
+			reporter: ['text', 'json-summary', 'json', 'html', 'lcov'],
+			reportOnFailure: true,
 		},
 		reporters: ['verbose'],
 		testTimeout: 5_000,
