@@ -4,7 +4,7 @@ import { describe, it, expect, vi } from 'vitest';
 process.env.NODE_ENV = 'test';
 
 // override scope wise to avoid log flood
-// console.log = () => null;
+console.log = () => null;
 
 describe('Bull Queue Setup', () => {
 	// Common mocks
@@ -39,7 +39,7 @@ describe('Bull Queue Setup', () => {
 
 		// Setup Bull mock
 		BullMock = vi.fn();
-		vi.doMock('bull', () => BullMock);
+		vi.doMock('bull', () => ({ default: BullMock }));
 
 		// Setup Bull Board mocks
 		setQueuesMock = vi.fn();
@@ -117,7 +117,7 @@ describe('Bull Queue Setup', () => {
 		setupCommonMocks();
 
 		// Import the module to test
-		import('../../src/bull');
+		await import('../../src/bull');
 
 		// We don't need to call bullMain for this test as we're just testing the initial setup
 		// which happens when the module is imported
@@ -142,7 +142,7 @@ describe('Bull Queue Setup', () => {
 		setupCommonMocks();
 
 		// Import the module to test
-		import bull from '../../src/bull.js';
+		const bull = await import('../../src/bull.js');
 
 		// Call the bullMain function
 		await bull.bullMain();
@@ -166,7 +166,7 @@ describe('Bull Queue Setup', () => {
 		});
 
 		// Import the module to test
-		import bull from '../../src/bull';
+		const bull = await import('../../src/bull');
 
 		// Call the bullMain function
 		await bull.bullMain();
@@ -190,7 +190,7 @@ describe('Bull Queue Setup', () => {
 		consoleSpy = vi.spyOn(console, 'error').mockImplementation();
 
 		// Import the module to test
-		import bull from '../../src/bull';
+		const bull = await import('../../src/bull');
 
 		// Call the bullMain function
 		await bull.bullMain();
@@ -203,7 +203,7 @@ describe('Bull Queue Setup', () => {
 		setupCommonMocks(configWithPrefix);
 
 		// Import the module to test
-		import bull from '../../src/bull';
+		const bull = await import('../../src/bull');
 
 		// Call the bullMain function
 		await bull.bullMain();

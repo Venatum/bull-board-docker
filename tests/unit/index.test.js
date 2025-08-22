@@ -42,28 +42,32 @@ describe('Express Application', () => {
     vi.doMock('express', () => {
       const express = vi.fn(() => mockApp);
       express.Router = vi.fn(() => mockRouter);
-      return express;
+      return { default: express };
     });
 
     // Mock morgan
     vi.doMock('morgan', () => {
-      return vi.fn().mockReturnValue('morgan-middleware');
+      return { default: vi.fn().mockReturnValue('morgan-middleware') };
     });
 
     // Mock express-session
     vi.doMock('express-session', () => {
-      return vi.fn().mockReturnValue('session-middleware');
+      return { default: vi.fn().mockReturnValue('session-middleware') };
     });
 
     // Mock passport
     vi.doMock('passport', () => ({
-      initialize: vi.fn().mockReturnValue('passport-init-middleware'),
-      session: vi.fn().mockReturnValue('passport-session-middleware'),
+      default: {
+        initialize: vi.fn().mockReturnValue('passport-init-middleware'),
+        session: vi.fn().mockReturnValue('passport-session-middleware'),
+      },
     }));
 
     // Mock body-parser
     vi.doMock('body-parser', () => ({
-      urlencoded: vi.fn().mockReturnValue('body-parser-middleware'),
+      default: {
+        urlencoded: vi.fn().mockReturnValue('body-parser-middleware'),
+      },
     }));
 
     // Mock connect-ensure-login
@@ -72,17 +76,17 @@ describe('Express Application', () => {
     }));
 
     // Mock config
-    vi.doMock('../../src/config', () => ({
+    vi.doMock('../../src/config.js', () => ({
       config,
     }));
 
     // Mock login
-    vi.doMock('../../src/login', () => ({
+    vi.doMock('../../src/login.js', () => ({
       authRouter: 'auth-router',
     }));
 
     // Mock bull
-    vi.doMock('../../src/bull', () => ({
+    vi.doMock('../../src/bull.js', () => ({
       router: 'bull-router',
     }));
 
@@ -94,7 +98,7 @@ describe('Express Application', () => {
       },
     };
 
-    vi.doMock('../../src/redis', () => redisMock);
+    vi.doMock('../../src/redis.js', () => redisMock);
 
     return redisMock;
   };
@@ -119,35 +123,35 @@ describe('Express Application', () => {
   });
 
   describe('Application Setup', () => {
-    it('should set up the Express application correctly', () => {
-      // Setup mocks
-      setupCommonMocks();
+    it('should set up the Express application correctly', async () => {
+		// Setup mocks
+		setupCommonMocks();
 
-      // Import the module to test
-      import('../../src/index');
+		// Import the module to test
+		await import('../../src/index.js');
 
-      // Verify that app.set was called with the correct arguments
-      expect(mockApp.set).toHaveBeenCalledWith('views', expect.stringContaining('/views'));
-      expect(mockApp.set).toHaveBeenCalledWith('view engine', 'ejs');
+		// Verify that app.set was called with the correct arguments
+		expect(mockApp.set).toHaveBeenCalledWith('views', expect.stringContaining('/views'));
+		expect(mockApp.set).toHaveBeenCalledWith('view engine', 'ejs');
 
-      // Verify that app.use was called with the correct middleware
-      expect(mockApp.use).toHaveBeenCalledWith('session-middleware');
-      expect(mockApp.use).toHaveBeenCalledWith('passport-init-middleware');
-      expect(mockApp.use).toHaveBeenCalledWith('passport-session-middleware');
-      expect(mockApp.use).toHaveBeenCalledWith('body-parser-middleware');
+		// Verify that app.use was called with the correct middleware
+		expect(mockApp.use).toHaveBeenCalledWith('session-middleware');
+		expect(mockApp.use).toHaveBeenCalledWith('passport-init-middleware');
+		expect(mockApp.use).toHaveBeenCalledWith('passport-session-middleware');
+		expect(mockApp.use).toHaveBeenCalledWith('body-parser-middleware');
 
-      // Verify that app.listen was called with the correct arguments
-      expect(mockApp.listen).toHaveBeenCalledWith(3000, 'localhost', expect.any(Function));
-    });
+		// Verify that app.listen was called with the correct arguments
+		expect(mockApp.listen).toHaveBeenCalledWith(3000, 'localhost', expect.any(Function));
+	});
   });
 
   describe('Routing', () => {
-    it('should set up routes correctly when authentication is disabled', () => {
+    it('should set up routes correctly when authentication is disabled', async () => {
       // Setup mocks with authentication disabled
       setupCommonMocks();
 
       // Import the module to test
-      import('../../src/index');
+      await import('../../src/index.js');
 
       // Verify that app.use was called with the correct routes
       expect(mockApp.use).toHaveBeenCalledWith('/', 'bull-router');
@@ -157,7 +161,7 @@ describe('Express Application', () => {
       expect(authRouterCall).toBeUndefined();
     });
 
-    it('should set up routes correctly when authentication is enabled', () => {
+    it('should set up routes correctly when authentication is enabled', async () => {
       // Setup mocks with authentication enabled
       setupCommonMocks({
         ...defaultConfig,
@@ -165,19 +169,19 @@ describe('Express Application', () => {
       });
 
       // Import the module to test
-      import('../../src/index');
+      await import('../../src/index.js');
 
       // Verify that app.use was called with the correct routes
       expect(mockApp.use).toHaveBeenCalledWith('/login', 'auth-router');
       expect(mockApp.use).toHaveBeenCalledWith('/', 'ensure-logged-in-middleware', 'bull-router');
     });
 
-    it('should set up proxy path middleware when PROXY_PATH is configured', () => {
+    it('should set up proxy path middleware when PROXY_PATH is configured', async () => {
       // Setup mocks
       setupCommonMocks();
 
       // Import the module to test
-      import('../../src/index');
+      await import('../../src/index.js');
 
       // Find the middleware function that sets req.proxyUrl
       const proxyMiddleware = mockApp.use.mock.calls.find(call => typeof call[0] === 'function')[0];
@@ -205,7 +209,7 @@ describe('Express Application', () => {
       setupCommonMocks();
 
       // Import the module to test
-      import('../../src/index');
+      await import('../../src/index.js');
 
       // Get the health check middleware
       const healthCheckMiddleware = mockApp.use.mock.calls.find(call => call[0] === '/healthcheck')[1];
@@ -240,7 +244,7 @@ describe('Express Application', () => {
       redisMock.client.ping.mockRejectedValue(new Error('Redis connection error'));
 
       // Import the module to test
-      import('../../src/index');
+      await import('../../src/index.js');
 
       // Find the health check route handler
       const healthCheckRoute = mockApp.use.mock.calls.find(call => call[0] === '/healthcheck');

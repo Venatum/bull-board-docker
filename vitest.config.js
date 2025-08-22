@@ -21,8 +21,8 @@ export default defineConfig({
 		reporters: ['verbose'],
 		testTimeout: 5_000,
 
-		// Options supplémentaires utiles
-		globals: true, // Pour utiliser describe, it, expect sans imports
+		// Useful additional options
+		globals: true, // to use describe, it, expect without imports
 		restoreMocks: true,
 		mockReset: true,
 		clearMocks: true,
