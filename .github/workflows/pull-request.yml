@@ -9,6 +9,9 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     timeout-minutes: 10
 
     steps:
@@ -26,21 +29,15 @@ jobs:
           node-version: ${{ steps.node_version.outputs.VERSION }}
           cache: 'npm'
 
-      - name: Cache Jest
-        uses: actions/cache@v4
-        with:
-          path: .jest-cache
-          key: ${{ runner.os }}-jest-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-jest-
-
       - name: Install dependencies
         run: npm i
 
       - name: Run test coverage
         run: npm run test:coverage
-        env:
-          JEST_CACHE_DIRECTORY: .jest-cache
+
+      - name: Report Coverage
+        if: always()
+        uses:  davelosert/vitest-coverage-report-action@v2
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -48,13 +45,3 @@ jobs:
           name: coverage-report
           path: coverage/
           retention-days: 7
-
-#      - name: Report coverage to PR
-#        uses: ArtiomTr/jest-coverage-report-action@v2
-#        with:
-#          github-token: ${{ secrets.GITHUB_TOKEN }}
-#          threshold: 80
-#          package-manager: npm
-#          test-script: npm run test:coverage
-#          skip-step: all
-#          coverage-file: ./coverage/coverage-final.json
