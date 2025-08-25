@@ -1,5 +1,6 @@
-import {createClient} from 'ioredis';
-import {config} from "./config";
+import Redis from 'ioredis';
+
+import {config} from "./config.js";
 
 const parseDSNToSentinels = (dsn) => {
 	const hostChain = dsn.split(/,|;/);
@@ -86,7 +87,7 @@ export const client = process.env.NODE_ENV === 'test'
 		connection: 'mock-connection',
 		on: () => {},
 	}
-	: createClient(redisConfig.redis);
+	: Redis.createClient(redisConfig.redis);
 
 // Only add error handler in non-test environment
 if (process.env.NODE_ENV !== 'test') {

@@ -3,20 +3,25 @@ import express from 'express';
 import session from 'express-session';
 import bodyParser from 'body-parser';
 import { ensureLoggedIn } from 'connect-ensure-login';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-import {config} from "./config";
-import {authRouter} from './login';
-import {router} from "./bull";
-import {client} from "./redis";
+import {config} from "./config.js";
+import {authRouter} from './login.js';
+import {router} from "./bull.js";
+import {client} from "./redis.js";
 
 const app = express();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
 if (app.get('env') !== 'production') {
-	const morgan = require('morgan');
-	app.use(morgan('combined'));
+	const morgan = await import('morgan');
+	app.use(morgan.default('combined'));
 }
 
 app.use((req, res, next) => {

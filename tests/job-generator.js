@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-const {Queue} = require('bullmq');
-const Bull = require('bull');
-const {createClient} = require('ioredis');
-const dotenv = require('dotenv');
+import {Queue} from 'bullmq';
+import Bull from 'bull';
+import Redis from 'ioredis';
+import * as dotenv from 'dotenv'
 
 // Load environment variables
 dotenv.config({
@@ -107,7 +107,7 @@ class JobGenerator {
 	_initializeConnections() {
 		try {
 			// Create Redis client
-			this.redisClient = createClient(RedisConfigFactory.createConfig());
+			this.redisClient = Redis.createClient(RedisConfigFactory.createConfig());
 			this.redisClient.on('error', (err) => console.error('Redis Client Error:', err));
 
 			// Initialize queue
@@ -421,5 +421,3 @@ async function main() {
 if (process?.argv?.[1].endsWith('job-generator.js')) {
 	main();
 }
-
-module.exports = {JobGenerator};
