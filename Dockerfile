@@ -1,6 +1,14 @@
-FROM node:20-alpine
+# Multi-stage build for optimization
+FROM node:20-alpine AS builder
 
-USER node
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm ci --only=production --no-audit --no-fund
+
+# Production stage
+FROM node:20-alpine AS production
 
 ENV NODE_ENV=production
 
@@ -8,14 +16,21 @@ ARG PORT=3000
 ENV PORT=$PORT
 EXPOSE $PORT
 
+RUN apk update && \
+    apk upgrade && \
+    apk add --no-cache dumb-init && \
+    rm -rf /var/cache/apk/* /tmp/* /var/tmp/*
+
+USER node
+
 WORKDIR /home/node/
 
-COPY --chown=node:node ./package.json .
-COPY --chown=node:node ./package-lock.json .
+# Copy node_modules from builder stage
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
 
-RUN npm ci --only=production
-
+COPY --chown=node:node package.json ./
 COPY --chown=node:node ./src ./src
 
-ENTRYPOINT ["npm"]
-CMD [ "start" ]
+# Use dumb-init for proper signal handling and direct node execution for better performance
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["npm", "start"]
