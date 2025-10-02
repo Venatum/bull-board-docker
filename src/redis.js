@@ -11,6 +11,20 @@ const parseDSNToSentinels = (dsn) => {
 	}));
 }
 
+const getTLSOption = () => {
+	if (config.REDIS_USE_TLS !== 'true') {
+		return false
+	}
+
+	if (!config.REDIS_TLS_HOST) {
+		return true
+	}
+
+	return {
+		servername: config.REDIS_TLS_HOST
+	}
+}
+
 export const redisConfig = {
 	// https://redis.github.io/ioredis/index.html#RedisOptions
 	redis: {
@@ -52,7 +66,7 @@ export const redisConfig = {
 		}),
 
 		// TLS options
-		tls: config.REDIS_USE_TLS === 'true',
+		tls: getTLSOption(),
 
 		// Timeout options
 		...(config.REDIS_COMMAND_TIMEOUT && {
