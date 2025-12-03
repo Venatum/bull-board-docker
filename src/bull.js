@@ -9,6 +9,17 @@ import {backOff} from "exponential-backoff";
 import {client, redisConfig} from "./redis.js";
 import {config} from "./config.js";
 
+const extractPath = (homePage) => {
+	try {
+		// If it's a full URL, URL() will parse it
+		const u = new URL(homePage);
+		return u.pathname.replace(/\/+$/, "") || "/";
+	} catch (_) {
+		// Not a full URL → treat as plain path
+		return homePage.replace(/\/+$/, "") || "/";
+	}
+};
+
 const serverAdapter = new ExpressAdapter();
 const {setQueues} = createBullBoard({
 	queues: [],
@@ -40,6 +51,12 @@ const {setQueues} = createBullBoard({
 		}
 	}
 });
+
+if (config.HOME_PAGE !== "/") {
+	const path = extractPath(config.HOME_PAGE);
+	serverAdapter.setBasePath(path);
+}
+
 export const router = serverAdapter.getRouter();
 
 async function getBullQueues() {
@@ -98,3 +115,4 @@ if (process.env.NODE_ENV !== 'test') {
 
 // Export for testing
 export {bullMain, getBullQueues};
+
