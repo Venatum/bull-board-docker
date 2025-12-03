@@ -9,7 +9,7 @@ import {backOff} from "exponential-backoff";
 import {client, redisConfig} from "./redis.js";
 import {config} from "./config.js";
 
-const extractPath = (homePage) => {
+const extractPath = (homePage = '/') => {
 	try {
 		// If it's a full URL, URL() will parse it
 		const u = new URL(homePage);

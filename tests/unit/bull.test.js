@@ -61,6 +61,9 @@ describe('Bull Queue Setup', () => {
 				getRouter() {
 					return 'router';
 				}
+				setBasePath(path) {
+					return path;
+				}
 			},
 		}));
 
