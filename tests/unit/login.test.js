@@ -1,4 +1,4 @@
-import {describe, expect, it, vi} from 'vitest';
+import {describe, expect, it, beforeEach, mock} from 'bun:test';
 
 describe('Authentication', () => {
 	// Default config
@@ -17,47 +17,44 @@ describe('Authentication', () => {
 	// Helper function to setup common mocks
 	const setupCommonMocks = (config = defaultConfig) => {
 		// Mock passport
-		mockPassport = {
-			use: vi.fn(),
-			authenticate: vi.fn().mockReturnValue('passport-authenticate-middleware'),
-			serializeUser: vi.fn(),
-			deserializeUser: vi.fn(),
-		};
-		vi.doMock('passport', () => ({default: mockPassport}));
+  mockPassport = {
+            use: mock.fn(),
+            authenticate: mock.fn().mockReturnValue('passport-authenticate-middleware'),
+            serializeUser: mock.fn(),
+            deserializeUser: mock.fn(),
+        };
+        mock.module('passport', () => ({default: mockPassport}));
 
 		// Mock passport-local
-		mockLocalStrategy = vi.fn();
-		vi.doMock('passport-local', () => ({
-			Strategy: mockLocalStrategy,
-		}));
+  mockLocalStrategy = mock.fn();
+  mock.module('passport-local', () => ({
+      Strategy: mockLocalStrategy,
+  }));
 
     // Mock express
     mockRouter = {
-      route: vi.fn().mockReturnThis(),
-      get: vi.fn().mockReturnThis(),
-      post: vi.fn().mockReturnThis(),
+      route: mock.fn().mockReturnThis(),
+      get: mock.fn().mockReturnThis(),
+      post: mock.fn().mockReturnThis(),
     };
-    vi.doMock('express', () => ({
+    mock.module('express', () => ({
       default: {
-        Router: vi.fn().mockReturnValue(mockRouter),
+        Router: mock.fn().mockReturnValue(mockRouter),
       },
     }));
 
 		// Mock config
-		vi.doMock('../../src/config.js', () => ({
-			config,
-		}));
+  mock.module('../../src/config.js', () => ({
+            config,
+        }));
 
 		return {mockPassport, mockLocalStrategy, mockRouter};
 	};
 
-	beforeEach(() => {
-		// Clear all mocks before each test
-		vi.clearAllMocks();
-
-		// Reset modules to ensure clean imports
-		vi.resetModules();
-	});
+ beforeEach(() => {
+        // Restore any previous mocks before each test
+        mock.restore();
+    });
 
 	describe('Passport Strategy', () => {
 		it('should set up Passport.js with LocalStrategy', async () => {
@@ -65,7 +62,7 @@ describe('Authentication', () => {
 			setupCommonMocks();
 
 			// Import the module to test
-			await import('../../src/login');
+ 		await import('../../src/login.js');
 
 			// Verify that passport.use was called with a LocalStrategy
 			expect(mockPassport.use).toHaveBeenCalledWith(expect.any(mockLocalStrategy));
@@ -74,7 +71,7 @@ describe('Authentication', () => {
 			const strategyCallback = mockLocalStrategy.mock.calls[0][0];
 
 			// Test the strategy with correct credentials
-			const doneCb = vi.fn();
+   const doneCb = mock.fn();
 			strategyCallback('admin', 'password', doneCb);
 			expect(doneCb).toHaveBeenCalledWith(null, {user: 'bull-board'});
 
@@ -96,7 +93,7 @@ describe('Authentication', () => {
 			setupCommonMocks();
 
 			// Import the module to test
-			await import('../../src/login');
+ 		await import('../../src/login.js');
 
 			// Verify that passport.serializeUser and passport.deserializeUser were called
 			expect(mockPassport.serializeUser).toHaveBeenCalled();
@@ -106,7 +103,7 @@ describe('Authentication', () => {
 			const serializeCallback = mockPassport.serializeUser.mock.calls[0][0];
 
 			// Test the serialization callback
-			const doneCb = vi.fn();
+   const doneCb = mock.fn();
 			const user = {user: 'bull-board'};
 			serializeCallback(user, doneCb);
 			expect(doneCb).toHaveBeenCalledWith(null, user);
@@ -127,7 +124,7 @@ describe('Authentication', () => {
 			setupCommonMocks();
 
 			// Import the module to test
-			await import('../../src/login');
+ 		await import('../../src/login.js');
 
 			// Verify that router.route was called with the correct path
 			expect(mockRouter.route).toHaveBeenCalledWith('/');
@@ -140,9 +137,9 @@ describe('Authentication', () => {
 
 			// Create mock request and response objects
 			const req = {};
-			const res = {
-				render: vi.fn(),
-			};
+   const res = {
+                render: mock.fn(),
+            };
 
 			// Call the handler
 			getHandler(req, res);
@@ -170,7 +167,7 @@ describe('Authentication', () => {
 			});
 
 			// Import the module to test
-			await import('../../src/login');
+ 		await import('../../src/login.js');
 
 			// Verify that passport.authenticate was called with the correct arguments
 			expect(mockPassport.authenticate).toHaveBeenCalledWith('local', {

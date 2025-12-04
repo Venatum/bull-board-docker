@@ -1,4 +1,4 @@
-import {describe, expect, it, vi} from 'vitest';
+import {describe, expect, it, beforeEach, afterAll, mock} from 'bun:test';
 
 describe('Configuration', () => {
 	// Save the original process.env
@@ -11,16 +11,11 @@ describe('Configuration', () => {
 		return {config, PROXY_PATH};
 	};
 
-	beforeEach(() => {
-		// Clear all mocks before each test
-		vi.clearAllMocks();
-
-		// Reset modules to ensure clean imports
-		vi.resetModules();
-
-		// Create a fresh copy of process.env for each test
-		process.env = {...originalEnv};
-	});
+ beforeEach(() => {
+        // Restore mocks and create a fresh copy of process.env for each test
+        mock.restore();
+        process.env = {...originalEnv};
+    });
 
 	afterAll(() => {
 		// Restore the original process.env

@@ -104,7 +104,7 @@ Only when both `USER_LOGIN` and `USER_PASSWORD` specified, access will be restri
 
 ### Testing
 
-The project includes a comprehensive test suite using Jest. The tests cover all major components of the application:
+The project uses the Bun test runner (`bun test`). The tests cover all major components of the application:
 
 - Redis configuration and client
 - Bull queue setup
@@ -117,13 +117,13 @@ To run the tests:
 
 ```bash
 # Run all tests
-npm test
+bun test
 
 # Run tests in watch mode (useful during development)
-npm run test:watch
+bun test --watch
 
 # Run tests with coverage report
-npm run test:coverage
+bun test --coverage
 ```
 
 ### Healthcheck

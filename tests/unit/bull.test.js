@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock, spyOn } from 'bun:test';
 
 // Set NODE_ENV to 'test' to prevent automatic execution of bullMain
 process.env.NODE_ENV = 'test';
@@ -32,91 +32,88 @@ describe('Bull Queue Setup', () => {
 	// Helper function to setup common mocks
 	const setupCommonMocks = (config = defaultConfig, queueKeys = ['bull:queue1:jobs', 'bull:queue2:jobs']) => {
 		// Setup BullMQ mock
-		QueueMock = vi.fn();
-		vi.doMock('bullmq', () => ({
-			Queue: QueueMock,
-		}));
+  QueueMock = mock.fn();
+  mock.module('bullmq', () => ({
+    Queue: QueueMock,
+  }));
 
 		// Setup Bull mock
-		BullMock = vi.fn();
-		vi.doMock('bull', () => ({ default: BullMock }));
+  BullMock = mock.fn();
+  mock.module('bull', () => ({ default: BullMock }));
 
 		// Setup Bull Board mocks
-		setQueuesMock = vi.fn();
-		createBullBoardMock = vi.fn().mockReturnValue({
-			setQueues: setQueuesMock,
-		});
-		vi.doMock('@bull-board/api', () => ({
-			createBullBoard: createBullBoardMock,
-		}));
+  setQueuesMock = mock.fn();
+  createBullBoardMock = mock.fn().mockReturnValue({
+    setQueues: setQueuesMock,
+  });
+  mock.module('@bull-board/api', () => ({
+    createBullBoard: createBullBoardMock,
+  }));
 
 		// Setup Express Adapter mock
-		ExpressAdapterMock = vi.fn();
-		vi.doMock('@bull-board/express', () => ({
-			// Provide a constructable class and keep a spy on constructor calls
-			ExpressAdapter: class {
-				constructor(...args) {
-					ExpressAdapterMock(...args);
-				}
-				getRouter() {
-					return 'router';
-				}
-			},
-		}));
+  ExpressAdapterMock = mock.fn();
+  mock.module('@bull-board/express', () => ({
+    // Provide a constructable class and keep a spy on constructor calls
+    ExpressAdapter: class {
+      constructor(...args) {
+        ExpressAdapterMock(...args);
+      }
+      getRouter() {
+        return 'router';
+      }
+    },
+  }));
 
 		// Setup Adapter mocks
-		BullMQAdapterMock = vi.fn();
-		vi.doMock('@bull-board/api/bullMQAdapter', () => ({
-			BullMQAdapter: class {
-				constructor(...args) {
-					BullMQAdapterMock(...args);
-				}
-			},
-		}));
+  BullMQAdapterMock = mock.fn();
+  mock.module('@bull-board/api/bullMQAdapter', () => ({
+    BullMQAdapter: class {
+      constructor(...args) {
+        BullMQAdapterMock(...args);
+      }
+    },
+  }));
 
-		BullAdapterMock = vi.fn();
-		vi.doMock('@bull-board/api/bullAdapter', () => ({
-			BullAdapter: class {
-				constructor(...args) {
-					BullAdapterMock(...args);
-				}
-			},
-		}));
+  BullAdapterMock = mock.fn();
+  mock.module('@bull-board/api/bullAdapter', () => ({
+    BullAdapter: class {
+      constructor(...args) {
+        BullAdapterMock(...args);
+      }
+    },
+  }));
 
 		// Setup Redis mock
-		clientKeysMock = vi.fn().mockResolvedValue(queueKeys);
-		vi.doMock('../../src/redis', () => ({
-			client: {
-				keys: clientKeysMock,
-				connection: 'redis-connection',
-				on: vi.fn(),
-			},
-			redisConfig: {
-				redis: {
-					host: 'localhost',
-					port: 6379,
-				},
-			},
-		}));
+  clientKeysMock = mock.fn().mockResolvedValue(queueKeys);
+  mock.module('../../src/redis.js', () => ({
+    client: {
+      keys: clientKeysMock,
+      connection: 'redis-connection',
+      on: mock.fn(),
+    },
+    redisConfig: {
+      redis: {
+        host: 'localhost',
+        port: 6379,
+      },
+    },
+  }));
 
 		// Setup config mock
-		vi.doMock('../../src/config', () => ({
-			config,
-		}));
+  mock.module('../../src/config.js', () => ({
+      config,
+    }));
 
 		// Setup backoff mock
-		vi.doMock('exponential-backoff', () => ({
-			backOff: vi.fn().mockImplementation((fn) => fn()),
-		}));
-	};
+  mock.module('exponential-backoff', () => ({
+      backOff: mock.fn().mockImplementation((fn) => fn()),
+    }));
+  };
 
-	beforeEach(() => {
-		// Clear all mocks before each test
-		vi.clearAllMocks();
-
-		// Reset modules to ensure clean imports
-		vi.resetModules();
-	});
+ beforeEach(() => {
+    // Restore all mocks between tests
+    mock.restore();
+  });
 
 	afterEach(() => {
 		// Restore console.error if it was mocked
@@ -131,7 +128,7 @@ describe('Bull Queue Setup', () => {
 		setupCommonMocks();
 
 		// Import the module to test
-		await import('../../src/bull');
+		await import('../../src/bull.js');
 
 		// We don't need to call bullMain for this test as we're just testing the initial setup
 		// which happens when the module is imported
@@ -180,7 +177,7 @@ describe('Bull Queue Setup', () => {
 		});
 
 		// Import the module to test
-		const bull = await import('../../src/bull');
+		const bull = await import('../../src/bull.js');
 
 		// Call the bullMain function
 		await bull.bullMain();
@@ -201,10 +198,10 @@ describe('Bull Queue Setup', () => {
 		setupCommonMocks(defaultConfig, []);
 
 		// Mock console.error to verify it's called
-		consoleSpy = vi.spyOn(console, 'error').mockImplementation();
+  consoleSpy = spyOn(console, 'error').mockImplementation(() => {});
 
 		// Import the module to test
-		const bull = await import('../../src/bull');
+		const bull = await import('../../src/bull.js');
 
 		// Call the bullMain function
 		await bull.bullMain();
@@ -217,7 +214,7 @@ describe('Bull Queue Setup', () => {
 		setupCommonMocks(configWithPrefix);
 
 		// Import the module to test
-		const bull = await import('../../src/bull');
+		const bull = await import('../../src/bull.js');
 
 		// Call the bullMain function
 		await bull.bullMain();

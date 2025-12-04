@@ -1,4 +1,4 @@
-import {describe, expect, it, vi} from 'vitest';
+import {describe, expect, it, beforeEach, afterEach, mock} from 'bun:test';
 
 // override scope wise to avoid log flood
 console.log = () => null;
@@ -25,36 +25,33 @@ describe('Redis Client', () => {
 	};
 
 	// Helper function to setup common mocks
-	const setupCommonMocks = (config = defaultConfig) => {
-		// Mock the ioredis module
-		vi.doMock('ioredis', () => ({
-			default: {
-				createClient: createClientMock,
-			}
-		}));
+ const setupCommonMocks = (config = defaultConfig) => {
+        // Mock the ioredis module
+        mock.module('ioredis', () => ({
+            default: {
+                createClient: createClientMock,
+            }
+        }));
 
-		// Mock the config module
-		vi.doMock('../../src/config.js', () => ({
-			config,
-		}));
-	};
+        // Mock the config module
+        mock.module('../../src/config.js', () => ({
+            config,
+        }));
+    };
 
-	beforeEach(() => {
-		// Clear all mocks before each test
-		vi.clearAllMocks();
+ beforeEach(() => {
+        // Restore all previous mocks
+        mock.restore();
 
-		// Reset modules to ensure clean imports
-		vi.resetModules();
+        // Set up the mock client
+        mockClient = {on: mock.fn()};
 
-		// Set up the mock client
-		mockClient = {on: vi.fn()};
+        // Set up the createClient mock
+        createClientMock = mock.fn().mockReturnValue(mockClient);
 
-		// Set up the createClient mock
-		createClientMock = vi.fn().mockReturnValue(mockClient);
-
-		// Setup common mocks with default config
-		setupCommonMocks();
-	});
+        // Setup common mocks with default config
+        setupCommonMocks();
+    });
 
 	afterEach(() => {
 		// Restore console.log if it was mocked
@@ -67,7 +64,7 @@ describe('Redis Client', () => {
 	describe('Basic Configuration', () => {
 		it('should create a Redis client with the correct configuration', async () => {
 			// Import the module to test
-			const {redisConfig, client} = await import('../../src/redis');
+   const {redisConfig, client} = await import('../../src/redis.js');
 
 			// In test environment, we should get a mock client
 			expect(client).toEqual(expect.objectContaining({
@@ -96,7 +93,7 @@ describe('Redis Client', () => {
 			const {client} = await import('../../src/redis.js');
 
 			// In test environment, createClient should not be called
-			expect(createClientMock).not.toHaveBeenCalled();
+   expect(createClientMock).not.toHaveBeenCalled();
 
 			// Verify that we get a mock client with the expected interface
 			expect(client).toEqual(expect.objectContaining({
@@ -120,7 +117,7 @@ describe('Redis Client', () => {
 			});
 
 			// Import the module to test
-			const {redisConfig} = await import('../../src/redis');
+   const {redisConfig} = await import('../../src/redis.js');
 
 			// Verify the sentinel configuration
 			expect(redisConfig.redis).toEqual(expect.objectContaining({
@@ -142,7 +139,7 @@ describe('Redis Client', () => {
 			});
 
 			// Import the module to test
-			const {redisConfig} = await import('../../src/redis');
+   const {redisConfig} = await import('../../src/redis.js');
 
 			// Verify the sentinel configuration
 			expect(redisConfig.redis).toEqual(expect.objectContaining({

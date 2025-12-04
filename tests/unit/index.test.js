@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, mock, spyOn } from 'bun:test';
 
 // override scope wise to avoid log flood
 console.log = () => null;
@@ -23,95 +23,92 @@ describe('Express Application', () => {
   const setupCommonMocks = (config = defaultConfig, redisPingResponse = 'PONG') => {
     // Create mock app for testing
     mockApp = {
-      set: vi.fn(),
-      use: vi.fn(),
-      listen: vi.fn().mockImplementation((port, hostname, callback) => {
+      set: mock.fn(),
+      use: mock.fn(),
+      listen: mock.fn().mockImplementation((port, hostname, callback) => {
         if (callback) callback();
-        return { on: vi.fn() };
+        return { on: mock.fn() };
       }),
-      get: vi.fn(),
+      get: mock.fn(),
     };
 
     // Create mock router
     mockRouter = {
-      get: vi.fn(),
-      post: vi.fn(),
+      get: mock.fn(),
+      post: mock.fn(),
     };
 
     // Mock express
-    vi.doMock('express', () => {
-      const express = vi.fn(() => mockApp);
-      express.Router = vi.fn(() => mockRouter);
+    mock.module('express', () => {
+      const express = mock.fn(() => mockApp);
+      express.Router = mock.fn(() => mockRouter);
       return { default: express };
     });
 
     // Mock morgan
-    vi.doMock('morgan', () => {
-      return { default: vi.fn().mockReturnValue('morgan-middleware') };
+    mock.module('morgan', () => {
+      return { default: mock.fn().mockReturnValue('morgan-middleware') };
     });
 
     // Mock express-session
-    vi.doMock('express-session', () => {
-      return { default: vi.fn().mockReturnValue('session-middleware') };
+    mock.module('express-session', () => {
+      return { default: mock.fn().mockReturnValue('session-middleware') };
     });
 
     // Mock passport
-    vi.doMock('passport', () => ({
+    mock.module('passport', () => ({
       default: {
-        initialize: vi.fn().mockReturnValue('passport-init-middleware'),
-        session: vi.fn().mockReturnValue('passport-session-middleware'),
+        initialize: mock.fn().mockReturnValue('passport-init-middleware'),
+        session: mock.fn().mockReturnValue('passport-session-middleware'),
       },
     }));
 
     // Mock body-parser
-    vi.doMock('body-parser', () => ({
+    mock.module('body-parser', () => ({
       default: {
-        urlencoded: vi.fn().mockReturnValue('body-parser-middleware'),
+        urlencoded: mock.fn().mockReturnValue('body-parser-middleware'),
       },
     }));
 
     // Mock connect-ensure-login
-    vi.doMock('connect-ensure-login', () => ({
-      ensureLoggedIn: vi.fn().mockReturnValue('ensure-logged-in-middleware'),
+    mock.module('connect-ensure-login', () => ({
+      ensureLoggedIn: mock.fn().mockReturnValue('ensure-logged-in-middleware'),
     }));
 
     // Mock config
-    vi.doMock('../../src/config.js', () => ({
+    mock.module('../../src/config.js', () => ({
       config,
     }));
 
     // Mock login
-    vi.doMock('../../src/login.js', () => ({
+    mock.module('../../src/login.js', () => ({
       authRouter: 'auth-router',
     }));
 
     // Mock bull
-    vi.doMock('../../src/bull.js', () => ({
+    mock.module('../../src/bull.js', () => ({
       router: 'bull-router',
     }));
 
     // Mock redis
     const redisMock = {
       client: {
-        ping: vi.fn().mockResolvedValue(redisPingResponse),
-        on: vi.fn(),
+        ping: mock.fn().mockResolvedValue(redisPingResponse),
+        on: mock.fn(),
       },
     };
 
-    vi.doMock('../../src/redis.js', () => redisMock);
+    mock.module('../../src/redis.js', () => redisMock);
 
     return redisMock;
   };
 
   beforeEach(() => {
-    // Clear all mocks before each test
-    vi.clearAllMocks();
-
-    // Reset modules to ensure clean imports
-    vi.resetModules();
+    // Restore any previous mocks
+    mock.restore();
 
     // Mock console.log to prevent output during tests
-    consoleSpy = vi.spyOn(console, 'log').mockImplementation();
+    consoleSpy = spyOn(console, 'log').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -190,7 +187,7 @@ describe('Express Application', () => {
       // Create mock request and response objects
       const req = {};
       const res = {};
-      const next = vi.fn();
+      const next = mock.fn();
 
       // Call the middleware
       proxyMiddleware(req, res, next);
@@ -218,8 +215,8 @@ describe('Express Application', () => {
       // Create mock request and response objects
       const req = {};
       const res = {
-        status: vi.fn().mockReturnThis(),
-        json: vi.fn(),
+        status: mock.fn().mockReturnThis(),
+        json: mock.fn(),
       };
 
       // Call the middleware
@@ -256,8 +253,8 @@ describe('Express Application', () => {
       // Create mock request and response objects
       const req = {};
       const res = {
-        status: vi.fn().mockReturnThis(),
-        json: vi.fn(),
+        status: mock.fn().mockReturnThis(),
+        json: mock.fn(),
       };
 
       // Call the handler

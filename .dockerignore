@@ -1,4 +1,4 @@
 *
 !./src
 !./package.json
-!./package-lock.json
+!./bun.lockb

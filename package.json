@@ -22,17 +22,17 @@
     "url": "git+https://github.com/Venatum/bull-board-docker.git"
   },
   "scripts": {
-    "start": "node .",
-    "start:dev": "nodemon .",
+    "start": "bun .",
+    "start:dev": "bun --watch .",
     "start:docker": "docker compose up --force-recreate --renew-anon-volumes --wait --detach",
-    "start:docker-deps": "npm run start:docker redis",
+    "start:docker-deps": "bun run start:docker redis",
     "stop:docker": "docker compose down -v",
     "commitlint": "commitlint --from origin/master",
     "commit": "cz",
-    "test": "vitest run",
-    "test:watch": "vitest watch",
-    "test:coverage": "vitest run --coverage",
-    "test:ui": "vitest --ui"
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage",
+    "test:ui": "bun test"
   },
   "dependencies": {
     "@bull-board/api": "^6.14.2",
@@ -59,21 +59,17 @@
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^12.0.2",
     "@semantic-release/release-notes-generator": "^14.1.0",
-    "@vitest/coverage-v8": "^4.0.8",
-    "@vitest/ui": "^4.0.8",
     "commitizen": "^4.3.1",
     "conventional-changelog-conventionalcommits": "^9.1.0",
     "husky": "^9.1.7",
-    "nodemon": "^3.1.11",
-    "semantic-release": "^25.0.2",
-    "vitest": "^4.0.8"
+    "semantic-release": "^25.0.2"
   },
   "engines": {
-    "yarn": "please use npm",
-    "npm": ">=10",
-    "node": ">=24",
-    "pnpm": "please use npm",
-    "bun": "please use npm"
+    "bun": ">=1.0.0",
+    "yarn": "please use bun",
+    "npm": "please use bun",
+    "node": "please use bun",
+    "pnpm": "please use bun"
   },
   "author": {
     "name": "Vincent LE QUEC (Venatum)",

@@ -1,14 +1,14 @@
 # Multi-stage build for optimization
-FROM node:24-alpine AS builder
+FROM oven/bun:1-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package.json bun.lockb* ./
 
-RUN npm ci --only=production --no-audit --no-fund
+RUN bun install --frozen-lockfile --production
 
 # Production stage
-FROM node:24-alpine AS production
+FROM oven/bun:1-alpine AS production
 
 ENV NODE_ENV=production
 
@@ -21,16 +21,16 @@ RUN apk update && \
     apk add --no-cache dumb-init && \
     rm -rf /var/cache/apk/* /tmp/* /var/tmp/*
 
-USER node
+USER bun
 
-WORKDIR /home/node/
+WORKDIR /home/bun/
 
 # Copy node_modules from builder stage
-COPY --from=builder --chown=node:node /app/node_modules ./node_modules
+COPY --from=builder --chown=bun:bun /app/node_modules ./node_modules
 
-COPY --chown=node:node package.json ./
-COPY --chown=node:node ./src ./src
+COPY --chown=bun:bun package.json ./
+COPY --chown=bun:bun ./src ./src
 
-# Use dumb-init for proper signal handling and direct node execution for better performance
+# Use dumb-init for proper signal handling and direct bun execution for better performance
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["npm", "start"]
+CMD ["bun", "start"]
