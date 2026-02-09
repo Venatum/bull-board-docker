@@ -64,6 +64,13 @@ describe('Configuration', () => {
 			process.env.REDIS_USER = 'user';
 			process.env.REDIS_PASSWORD = 'password';
 			process.env.REDIS_USE_TLS = 'true';
+			process.env.REDIS_TLS_CA = 'ca-cert';
+			process.env.REDIS_TLS_CERT = 'client-cert';
+			process.env.REDIS_TLS_KEY = 'client-key';
+			process.env.REDIS_TLS_SERVERNAME = 'redis.local';
+			process.env.REDIS_TLS_REJECT_UNAUTHORIZED = 'false';
+			process.env.REDIS_TLS_MIN_VERSION = 'TLSv1.2';
+			process.env.REDIS_TLS_CIPHERS = 'ECDHE-RSA-AES256-GCM-SHA384';
 			process.env.REDIS_FAMILY = '4';
 
 			// Import the module to test
@@ -76,7 +83,22 @@ describe('Configuration', () => {
 			expect(config.REDIS_USER).toBe('user');
 			expect(config.REDIS_PASSWORD).toBe('password');
 			expect(config.REDIS_USE_TLS).toBe('true');
+			expect(config.REDIS_TLS_CA).toBe('ca-cert');
+			expect(config.REDIS_TLS_CERT).toBe('client-cert');
+			expect(config.REDIS_TLS_KEY).toBe('client-key');
+			expect(config.REDIS_TLS_SERVERNAME).toBe('redis.local');
+			expect(config.REDIS_TLS_REJECT_UNAUTHORIZED).toBe(false);
+			expect(config.REDIS_TLS_MIN_VERSION).toBe('TLSv1.2');
+			expect(config.REDIS_TLS_CIPHERS).toBe('ECDHE-RSA-AES256-GCM-SHA384');
 			expect(config.REDIS_FAMILY).toBe(4);
+		});
+
+		it('should default REDIS_TLS_REJECT_UNAUTHORIZED to true when not set', async () => {
+			delete process.env.REDIS_TLS_REJECT_UNAUTHORIZED;
+
+			const {config} = await getConfig();
+
+			expect(config.REDIS_TLS_REJECT_UNAUTHORIZED).toBe(true);
 		});
 
 		it('should handle additional Redis configuration options', async () => {
@@ -119,6 +141,13 @@ describe('Configuration', () => {
 			process.env.SENTINEL_PASSWORD = 'sentinel-password';
 			process.env.SENTINEL_COMMAND_TIMEOUT = '5000';
 			process.env.SENTINEL_TLS_ENABLED = 'true';
+			process.env.SENTINEL_TLS_CA = 'sentinel-ca';
+			process.env.SENTINEL_TLS_CERT = 'sentinel-cert';
+			process.env.SENTINEL_TLS_KEY = 'sentinel-key';
+			process.env.SENTINEL_TLS_SERVERNAME = 'sentinel.local';
+			process.env.SENTINEL_TLS_REJECT_UNAUTHORIZED = 'false';
+			process.env.SENTINEL_TLS_MIN_VERSION = 'TLSv1.2';
+			process.env.SENTINEL_TLS_CIPHERS = 'ECDHE-RSA-AES128-GCM-SHA256';
 			process.env.SENTINEL_UPDATE = 'true';
 			process.env.SENTINEL_MAX_CONNECTIONS = '20';
 			process.env.SENTINEL_FAILOVER_DETECTOR = 'true';
@@ -134,9 +163,24 @@ describe('Configuration', () => {
 			expect(config.SENTINEL_PASSWORD).toBe('sentinel-password');
 			expect(config.SENTINEL_COMMAND_TIMEOUT).toBe(5000);
 			expect(config.SENTINEL_TLS_ENABLED).toBe(true);
+			expect(config.SENTINEL_TLS_CA).toBe('sentinel-ca');
+			expect(config.SENTINEL_TLS_CERT).toBe('sentinel-cert');
+			expect(config.SENTINEL_TLS_KEY).toBe('sentinel-key');
+			expect(config.SENTINEL_TLS_SERVERNAME).toBe('sentinel.local');
+			expect(config.SENTINEL_TLS_REJECT_UNAUTHORIZED).toBe(false);
+			expect(config.SENTINEL_TLS_MIN_VERSION).toBe('TLSv1.2');
+			expect(config.SENTINEL_TLS_CIPHERS).toBe('ECDHE-RSA-AES128-GCM-SHA256');
 			expect(config.SENTINEL_UPDATE).toBe(true);
 			expect(config.SENTINEL_MAX_CONNECTIONS).toBe(20);
 			expect(config.SENTINEL_FAILOVER_DETECTOR).toBe(true);
+		});
+
+		it('should default SENTINEL_TLS_REJECT_UNAUTHORIZED to true when not set', async () => {
+			delete process.env.SENTINEL_TLS_REJECT_UNAUTHORIZED;
+
+			const {config} = await getConfig();
+
+			expect(config.SENTINEL_TLS_REJECT_UNAUTHORIZED).toBe(true);
 		});
 
 		it('should use default values for Sentinel configuration when not set', async () => {

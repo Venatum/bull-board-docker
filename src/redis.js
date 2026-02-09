@@ -33,7 +33,27 @@ export const redisConfig = {
 			enableTLSForSentinelMode: config.SENTINEL_TLS_ENABLED,
 			...(config.SENTINEL_TLS_ENABLED && {
 				tls: {
-					ca: config.SENTINEL_TLS_CA || undefined,
+					...(config.SENTINEL_TLS_CA && {
+						ca: config.SENTINEL_TLS_CA,
+					}),
+					...(config.SENTINEL_TLS_CERT && {
+						cert: config.SENTINEL_TLS_CERT,
+					}),
+					...(config.SENTINEL_TLS_KEY && {
+						key: config.SENTINEL_TLS_KEY,
+					}),
+					...(config.SENTINEL_TLS_SERVERNAME && {
+						servername: config.SENTINEL_TLS_SERVERNAME,
+					}),
+					...(config.SENTINEL_TLS_REJECT_UNAUTHORIZED !== undefined && {
+						rejectUnauthorized: config.SENTINEL_TLS_REJECT_UNAUTHORIZED,
+					}),
+					...(config.SENTINEL_TLS_MIN_VERSION && {
+						minVersion: config.SENTINEL_TLS_MIN_VERSION,
+					}),
+					...(config.SENTINEL_TLS_CIPHERS && {
+						ciphers: config.SENTINEL_TLS_CIPHERS,
+					}),
 				}
 			}),
 			updateSentinels: config.SENTINEL_UPDATE,
@@ -58,9 +78,28 @@ export const redisConfig = {
 
 		// TLS options
 		...(config.REDIS_USE_TLS === 'true' && {
+			// ConnectionOptions
 			tls: {
 				...(config.REDIS_TLS_CA && {
 					ca: config.REDIS_TLS_CA
+				}),
+				...(config.REDIS_TLS_CERT && {
+					cert: config.REDIS_TLS_CERT
+				}),
+				...(config.REDIS_TLS_KEY && {
+					key: config.REDIS_TLS_KEY
+				}),
+				...(config.REDIS_TLS_SERVERNAME && {
+					servername: config.REDIS_TLS_SERVERNAME
+				}),
+				...(config.REDIS_TLS_REJECT_UNAUTHORIZED !== undefined && {
+					rejectUnauthorized: config.REDIS_TLS_REJECT_UNAUTHORIZED
+				}),
+				...(config.REDIS_TLS_MIN_VERSION && {
+					minVersion: config.REDIS_TLS_MIN_VERSION
+				}),
+				...(config.REDIS_TLS_CIPHERS && {
+					ciphers: config.REDIS_TLS_CIPHERS
 				})
 			}
 		}),
