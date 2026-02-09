@@ -56,7 +56,7 @@ module.exports = {
 			]
 		}],
 		['@semantic-release/release-notes-generator', {preset: 'conventionalcommits'}],
-		'@semantic-release/git',
+		// '@semantic-release/git',
 		'@semantic-release/github',
 	],
 };
