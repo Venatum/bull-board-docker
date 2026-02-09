@@ -31,6 +31,11 @@ export const redisConfig = {
 				sentinelCommandTimeout: config.SENTINEL_COMMAND_TIMEOUT
 			}),
 			enableTLSForSentinelMode: config.SENTINEL_TLS_ENABLED,
+			...(config.SENTINEL_TLS_ENABLED && {
+				tls: {
+					ca: config.SENTINEL_TLS_CA || undefined,
+				}
+			}),
 			updateSentinels: config.SENTINEL_UPDATE,
 			sentinelMaxConnections: config.SENTINEL_MAX_CONNECTIONS,
 			failoverDetector: config.SENTINEL_FAILOVER_DETECTOR,
@@ -52,7 +57,13 @@ export const redisConfig = {
 		}),
 
 		// TLS options
-		tls: config.REDIS_USE_TLS === 'true',
+		...(config.REDIS_USE_TLS === 'true' && {
+			tls: {
+				...(config.REDIS_TLS_CA && {
+					ca: config.REDIS_TLS_CA
+				})
+			}
+		}),
 
 		// Timeout options
 		...(config.REDIS_COMMAND_TIMEOUT && {

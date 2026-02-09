@@ -20,6 +20,8 @@ describe('Redis Client', () => {
 		REDIS_FAMILY: 4,
 		REDIS_KEEP_ALIVE: 5000,
 		REDIS_NO_DELAY: true,
+		REDIS_AUTO_RESUBSCRIBE: true,
+		REDIS_AUTO_RESEND_UNFULFILLED: true,
 		REDIS_ENABLE_OFFLINE_QUEUE: true,
 		REDIS_ENABLE_READY_CHECK: true,
 	};
@@ -80,12 +82,14 @@ describe('Redis Client', () => {
 			expect(redisConfig.redis).toEqual(expect.objectContaining({
 				port: 6379,
 				host: 'localhost',
+				family: 4,
 				db: '0',
 				username: 'testuser',
 				password: 'testpassword',
-				tls: false,
 				keepAlive: 5000,
 				noDelay: true,
+				autoResubscribe: true,
+				autoResendUnfulfilledCommands: true,
 				enableOfflineQueue: true,
 				enableReadyCheck: true,
 			}));
