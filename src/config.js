@@ -32,8 +32,8 @@ export const config = {
 	REDIS_PASSWORD: process.env.REDIS_PASSWORD,
 	REDIS_USE_TLS: process.env.REDIS_USE_TLS,
 	REDIS_TLS_CA: resolvePemOrPath(process.env.REDIS_TLS_CA),
-	REDIS_TLS_CERT: process.env.REDIS_TLS_CERT,
-	REDIS_TLS_KEY: process.env.REDIS_TLS_KEY,
+	REDIS_TLS_CERT: resolvePemOrPath(process.env.REDIS_TLS_CERT),
+	REDIS_TLS_KEY: resolvePemOrPath(process.env.REDIS_TLS_KEY),
 	REDIS_TLS_SERVERNAME: process.env.REDIS_TLS_SERVERNAME,
 	REDIS_TLS_REJECT_UNAUTHORIZED: process.env.REDIS_TLS_REJECT_UNAUTHORIZED !== 'false',
 	REDIS_TLS_MIN_VERSION: process.env.REDIS_TLS_MIN_VERSION,
@@ -52,8 +52,8 @@ export const config = {
 	SENTINEL_COMMAND_TIMEOUT: Number(process.env.SENTINEL_COMMAND_TIMEOUT) || undefined, // Timeout for Sentinel commands in ms
 	SENTINEL_TLS_ENABLED: process.env.SENTINEL_TLS_ENABLED === 'true', // Enable TLS for Sentinel mode
 	SENTINEL_TLS_CA: resolvePemOrPath(process.env.SENTINEL_TLS_CA), // CA certificate for Sentinel TLS connections
-	SENTINEL_TLS_CERT: process.env.SENTINEL_TLS_CERT, // Client certificate for Sentinel TLS connections
-	SENTINEL_TLS_KEY: process.env.SENTINEL_TLS_KEY, // Client key for Sentinel TLS connections
+	SENTINEL_TLS_CERT: resolvePemOrPath(process.env.SENTINEL_TLS_CERT), // Client certificate for Sentinel TLS connections
+	SENTINEL_TLS_KEY: resolvePemOrPath(process.env.SENTINEL_TLS_KEY), // Client key for Sentinel TLS connections
 	SENTINEL_TLS_SERVERNAME: process.env.SENTINEL_TLS_SERVERNAME, // Servername for SNI in TLS
 	SENTINEL_TLS_REJECT_UNAUTHORIZED: process.env.SENTINEL_TLS_REJECT_UNAUTHORIZED !== 'false', // Reject unauthorized TLS
 	SENTINEL_TLS_MIN_VERSION: process.env.SENTINEL_TLS_MIN_VERSION, // Minimum TLS version (e.g., TLSv1.2)

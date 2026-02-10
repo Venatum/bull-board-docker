@@ -1,4 +1,40 @@
-import {describe, expect, it, vi} from 'vitest';
+import {describe, expect, it, vi, beforeEach, afterAll} from 'vitest';
+
+// Mock fs module before importing config
+vi.mock('node:fs', async () => {
+	const actual = await vi.importActual('node:fs');
+	return {
+		...actual,
+		existsSync: vi.fn((path) => {
+			// For test purposes, treat TLS cert/key/ca paths as existing files
+			if (typeof path === 'string' && (
+				path.includes('ca-cert') ||
+				path.includes('client-cert') ||
+				path.includes('client-key') ||
+				path.includes('sentinel-ca') ||
+				path.includes('sentinel-cert') ||
+				path.includes('sentinel-key')
+			)) {
+				return true;
+			}
+			return actual.existsSync(path);
+		}),
+		readFileSync: vi.fn((path, encoding) => {
+			// For test purposes, return the path as the content for TLS files
+			if (typeof path === 'string' && (
+				path.includes('ca-cert') ||
+				path.includes('client-cert') ||
+				path.includes('client-key') ||
+				path.includes('sentinel-ca') ||
+				path.includes('sentinel-cert') ||
+				path.includes('sentinel-key')
+			)) {
+				return path;
+			}
+			return actual.readFileSync(path, encoding);
+		}),
+	};
+});
 
 describe('Configuration', () => {
 	// Save the original process.env
