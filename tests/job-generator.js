@@ -3,6 +3,7 @@
 import {Queue} from 'bullmq';
 import Bull from 'bull';
 import Redis from 'ioredis';
+import {existsSync, readFileSync} from 'node:fs';
 import * as dotenv from 'dotenv'
 
 // Load environment variables
@@ -46,13 +47,44 @@ const JOB_CONFIG = {
  */
 class RedisConfigFactory {
 	static createConfig() {
-		return {
+		const config = {
 			port: process.env.REDIS_PORT,
 			host: process.env.REDIS_HOST,
 			db: process.env.REDIS_DB,
 			...(process.env.REDIS_PASSWORD && {password: process.env.REDIS_PASSWORD}),
 			...(process.env.REDIS_USER && {username: process.env.REDIS_USER}),
 		};
+		if (process.env.REDIS_USE_TLS === 'true') {
+			const tls = {};
+			const ca = resolvePemOrPath(process.env.REDIS_TLS_CA);
+			const cert = resolvePemOrPath(process.env.REDIS_TLS_CERT);
+			const key = resolvePemOrPath(process.env.REDIS_TLS_KEY);
+			if (ca) tls.ca = ca;
+			if (cert) tls.cert = cert;
+			if (key) tls.key = key;
+			if (process.env.REDIS_TLS_SERVERNAME) tls.servername = process.env.REDIS_TLS_SERVERNAME;
+			if (process.env.REDIS_TLS_REJECT_UNAUTHORIZED !== undefined) {
+				tls.rejectUnauthorized = process.env.REDIS_TLS_REJECT_UNAUTHORIZED !== 'false';
+			}
+			if (process.env.REDIS_TLS_MIN_VERSION) tls.minVersion = process.env.REDIS_TLS_MIN_VERSION;
+			if (process.env.REDIS_TLS_CIPHERS) tls.ciphers = process.env.REDIS_TLS_CIPHERS;
+			if (Object.keys(tls).length > 0) {
+				config.tls = tls;
+			}
+		}
+		return config;
+	}
+}
+
+function resolvePemOrPath(pemOrPath) {
+	if (!pemOrPath) return undefined;
+	if (pemOrPath.includes('-----BEGIN')) return pemOrPath;
+	if (!existsSync(pemOrPath)) return undefined;
+
+	try {
+		return readFileSync(pemOrPath, 'utf8');
+	} catch {
+		return undefined;
 	}
 }
 
@@ -97,6 +129,7 @@ class JobGenerator {
 		// Initialize Redis client and queue
 		this.redisClient = null;
 		this.queue = null;
+		this.redisConfig = null;
 		this._initializeConnections();
 	}
 
@@ -107,7 +140,8 @@ class JobGenerator {
 	_initializeConnections() {
 		try {
 			// Create Redis client
-			this.redisClient = Redis.createClient(RedisConfigFactory.createConfig());
+			this.redisConfig = RedisConfigFactory.createConfig();
+			this.redisClient = Redis.createClient(this.redisConfig);
 			this.redisClient.on('error', (err) => console.error('Redis Client Error:', err));
 
 			// Initialize queue
@@ -124,12 +158,14 @@ class JobGenerator {
 	_initializeQueue() {
 		if (this.version === QUEUE_VERSIONS.BULLMQ) {
 			this.queue = new Queue(this.queueName, {
-				prefix: this.prefix
-			}, this.redisClient.connection);
+				prefix: this.prefix,
+				connection: this.redisConfig,
+			});
 		} else {
 			this.queue = new Bull(this.queueName, {
-				prefix: this.prefix
-			}, this.redisClient.connection);
+				prefix: this.prefix,
+				redis: this.redisConfig,
+			});
 		}
 	}
 
