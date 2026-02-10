@@ -1,0 +1,57 @@
+name: bull-board-tls-example
+
+services:
+  bullboard:
+    image: venatum/bull-board:latest
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_USE_TLS: 'true'
+      REDIS_TLS_REJECT_UNAUTHORIZED: 'false'
+      REDIS_TLS_CA: |
+        -----BEGIN CERTIFICATE-----
+        MIIDVjCCAj4CCQC5YFkJTKlgDzANBgkqhkiG9w0BAQsFADBtMQswCQYDVQQGEwJG
+        UjEMMAoGA1UECAwDSURGMQ4wDAYDVQQHDAVQYXJpczEaMBgGA1UECgwRQnVsbCBC
+        b2FyZCBEb2NrZXIxDDAKBgNVBAsMA0RldjEWMBQGA1UEAwwNYnVsbC1ib2FyZC1j
+        YTAeFw0yNjAyMTAxMDI2MjVaFw0zNjAyMDgxMDI2MjVaMG0xCzAJBgNVBAYTAkZS
+        MQwwCgYDVQQIDANJREYxDjAMBgNVBAcMBVBhcmlzMRowGAYDVQQKDBFCdWxsIEJv
+        YXJkIERvY2tlcjEMMAoGA1UECwwDRGV2MRYwFAYDVQQDDA1idWxsLWJvYXJkLWNh
+        MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqUBD8gmemJ6dmKZiN4Xq
+        BRamSxnvzNR5v3ocHi2o54D6HUZSWGR2mQId0LKCWs2LnZuvHLCFxt8ZApd7Fh8d
+        lQI1qppMhZuQb/oF6Y75Sr0gvqscbkrNXW4kthbd/0ACoenNdLHWnFygFW3btJSG
+        iFB71adv01KRa3Dr5/x3UzF9uC5bU1rWVFD7iRihoOJKBBvuXrBdqCG/VBkeO9tT
+        phqcKyEheWVgb781BExwwBHhApsjgXG9+tCWO8pD046bq/ztS+DrpMZylK0+YiS0
+        WVAQJXmJIdKdnYcIhtHy5KbWZQ7YqTGUMxEtSrTMt+oTVe90UPmXtrJ3VXoXTGtP
+        pwIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQCIwSoZ40eb+dBOs8E81/3zlg+47TXw
+        H9hl0ZMW7ROTT5dD/PWExOFcchy4p5/7GtMN2Z48D914lR8jCWuPLusN0yXnSFOd
+        CkPHMXh2bi7+kLRJx/Lz47+l+GSvcnS2+i6i1Qu9a/BcVsjockltM01+oI7EzfY5
+        CFT0HCYThMMabhPFPpexFhAFbUBBbvSR8SB2PZaOvVYVriWAc+llairlJsFqBWEm
+        LJekVb7ZwPpCnDOwObCqsHBxWruX98ZpLvqoi50x/vzHW5kkPKw/KsHfPMVuMlAn
+        yU4JQubNwlMhMhGYQCP27/QLnI0GJI03uPsKH4Rg1tRUJqp8VwxS4pqL
+        -----END CERTIFICATE-----
+      REDIS_TLS_SERVERNAME: redis
+      NODE_EXTRA_CA_CERTS: /tls/ca.crt
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./certs:/tls:ro
+
+  redis:
+    container_name: redis
+    image: redis:alpine
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./certs:/tls:ro
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli --tls --cacert /tls/ca.crt -h 127.0.0.1 -p 6379 ping | grep -q PONG"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
