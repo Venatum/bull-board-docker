@@ -35,17 +35,17 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@bull-board/api": "^6.17.0",
-    "@bull-board/express": "^6.17.0",
+    "@bull-board/api": "^6.18.0",
+    "@bull-board/express": "^6.18.0",
     "body-parser": "^2.2.2",
     "bull": "^4.16.5",
-    "bullmq": "^5.67.3",
+    "bullmq": "^5.68.0",
     "connect-ensure-login": "^0.1.1",
     "dotenv": "^17.2.4",
     "exponential-backoff": "^3.1.3",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
-    "ioredis": "^5.9.2",
+    "ioredis": "^5.9.3",
     "morgan": "^1.10.1",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0"
