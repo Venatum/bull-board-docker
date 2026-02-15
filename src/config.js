@@ -18,6 +18,7 @@ export const config = {
 	REDIS_USER: process.env.REDIS_USER, // Redis 6+ requires a username and password to be set
 	REDIS_PASSWORD: process.env.REDIS_PASSWORD,
 	REDIS_USE_TLS: process.env.REDIS_USE_TLS,
+	REDIS_TLS_HOST: process.env.REDIS_TLS_HOST,
 	REDIS_FAMILY: Number(process.env.REDIS_FAMILY) || 0,
 	SENTINEL_NAME: process.env.SENTINEL_NAME,
 	SENTINEL_HOSTS: process.env.SENTINEL_HOSTS,
