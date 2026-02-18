@@ -11,15 +11,25 @@ function normalizePath(pathStr) {
 
 export const PROXY_PATH = normalizePath(process.env.PROXY_PATH);
 
+function parseBooleanEnv(value, defaultValue = false) {
+	if (value === undefined) return defaultValue;
+	const normalized = String(value).trim().toLowerCase();
+	if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+	if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+	return defaultValue;
+}
+
 function resolvePemOrPath(pemOrPath) {
 	if (!pemOrPath) return undefined;
 	if (pemOrPath.includes('-----BEGIN')) return pemOrPath;
-	if (!existsSync(pemOrPath)) return undefined;
+	if (!existsSync(pemOrPath)) {
+		throw new Error(`TLS file not found: ${pemOrPath}`);
+	}
 
 	try {
 		return readFileSync(pemOrPath, 'utf8');
-	} catch {
-		return undefined;
+	} catch (error) {
+		throw new Error(`Cannot read TLS file: ${pemOrPath}. ${error.message}`);
 	}
 }
 
@@ -35,7 +45,7 @@ export const config = {
 	REDIS_TLS_CERT: resolvePemOrPath(process.env.REDIS_TLS_CERT),
 	REDIS_TLS_KEY: resolvePemOrPath(process.env.REDIS_TLS_KEY),
 	REDIS_TLS_SERVERNAME: process.env.REDIS_TLS_SERVERNAME,
-	REDIS_TLS_REJECT_UNAUTHORIZED: process.env.REDIS_TLS_REJECT_UNAUTHORIZED !== 'false',
+	REDIS_TLS_REJECT_UNAUTHORIZED: parseBooleanEnv(process.env.REDIS_TLS_REJECT_UNAUTHORIZED, true),
 	REDIS_TLS_MIN_VERSION: process.env.REDIS_TLS_MIN_VERSION,
 	REDIS_TLS_CIPHERS: process.env.REDIS_TLS_CIPHERS,
 	REDIS_FAMILY: Number(process.env.REDIS_FAMILY) || 0,
@@ -50,12 +60,12 @@ export const config = {
 	SENTINEL_RETRY_STRATEGY: process.env.SENTINEL_RETRY_STRATEGY, // Strategy for retrying connections to Sentinel
 	SENTINEL_RECONNECT_STRATEGY: process.env.SENTINEL_RECONNECT_STRATEGY, // Strategy for reconnecting to Sentinel
 	SENTINEL_COMMAND_TIMEOUT: Number(process.env.SENTINEL_COMMAND_TIMEOUT) || undefined, // Timeout for Sentinel commands in ms
-	SENTINEL_TLS_ENABLED: process.env.SENTINEL_TLS_ENABLED === 'true', // Enable TLS for Sentinel mode
+	SENTINEL_TLS_ENABLED: parseBooleanEnv(process.env.SENTINEL_TLS_ENABLED, false), // Enable TLS for Sentinel mode
 	SENTINEL_TLS_CA: resolvePemOrPath(process.env.SENTINEL_TLS_CA), // CA certificate for Sentinel TLS connections
 	SENTINEL_TLS_CERT: resolvePemOrPath(process.env.SENTINEL_TLS_CERT), // Client certificate for Sentinel TLS connections
 	SENTINEL_TLS_KEY: resolvePemOrPath(process.env.SENTINEL_TLS_KEY), // Client key for Sentinel TLS connections
 	SENTINEL_TLS_SERVERNAME: process.env.SENTINEL_TLS_SERVERNAME, // Servername for SNI in TLS
-	SENTINEL_TLS_REJECT_UNAUTHORIZED: process.env.SENTINEL_TLS_REJECT_UNAUTHORIZED !== 'false', // Reject unauthorized TLS
+	SENTINEL_TLS_REJECT_UNAUTHORIZED: parseBooleanEnv(process.env.SENTINEL_TLS_REJECT_UNAUTHORIZED, true), // Reject unauthorized TLS
 	SENTINEL_TLS_MIN_VERSION: process.env.SENTINEL_TLS_MIN_VERSION, // Minimum TLS version (e.g., TLSv1.2)
 	SENTINEL_TLS_CIPHERS: process.env.SENTINEL_TLS_CIPHERS, // OpenSSL cipher list
 	SENTINEL_UPDATE: process.env.SENTINEL_UPDATE === 'true', // Whether to update the list of Sentinels

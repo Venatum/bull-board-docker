@@ -217,7 +217,7 @@ describe('Redis Client', () => {
 
 			expect(redisConfig.redis).toEqual(expect.objectContaining({
 				enableTLSForSentinelMode: true,
-				tls: {
+				sentinelTLS: {
 					ca: 'sentinel-ca',
 					cert: 'sentinel-cert',
 					key: 'sentinel-key',
@@ -226,6 +226,29 @@ describe('Redis Client', () => {
 					minVersion: 'TLSv1.2',
 					ciphers: 'ECDHE-RSA-AES128-GCM-SHA256',
 				}
+			}));
+		});
+
+		it('should keep distinct TLS config for Redis and Sentinel when both are enabled', async () => {
+			setupCommonMocks({
+				SENTINEL_HOSTS: 'host1:26379',
+				SENTINEL_NAME: 'mymaster',
+				REDIS_USE_TLS: 'true',
+				REDIS_TLS_CA: 'redis-ca',
+				SENTINEL_TLS_ENABLED: true,
+				SENTINEL_TLS_CA: 'sentinel-ca',
+			});
+
+			const {redisConfig} = await import('../../src/redis');
+
+			expect(redisConfig.redis).toEqual(expect.objectContaining({
+				enableTLSForSentinelMode: true,
+				tls: {
+					ca: 'redis-ca',
+				},
+				sentinelTLS: {
+					ca: 'sentinel-ca',
+				},
 			}));
 		});
 	});

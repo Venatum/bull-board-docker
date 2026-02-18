@@ -56,6 +56,12 @@ describe('Configuration', () => {
 
 		// Create a fresh copy of process.env for each test
 		process.env = {...originalEnv};
+		delete process.env.REDIS_TLS_CA;
+		delete process.env.REDIS_TLS_CERT;
+		delete process.env.REDIS_TLS_KEY;
+		delete process.env.SENTINEL_TLS_CA;
+		delete process.env.SENTINEL_TLS_CERT;
+		delete process.env.SENTINEL_TLS_KEY;
 	});
 
 	afterAll(() => {
@@ -135,6 +141,20 @@ describe('Configuration', () => {
 			const {config} = await getConfig();
 
 			expect(config.REDIS_TLS_REJECT_UNAUTHORIZED).toBe(true);
+		});
+
+		it('should parse REDIS_TLS_REJECT_UNAUTHORIZED with flexible boolean values', async () => {
+			process.env.REDIS_TLS_REJECT_UNAUTHORIZED = '0';
+
+			const {config} = await getConfig();
+
+			expect(config.REDIS_TLS_REJECT_UNAUTHORIZED).toBe(false);
+		});
+
+		it('should throw when a TLS file path does not exist', async () => {
+			process.env.REDIS_TLS_CA = '/path/that/does/not/exist.crt';
+
+			await expect(getConfig()).rejects.toThrow('TLS file not found');
 		});
 
 		it('should handle additional Redis configuration options', async () => {
@@ -217,6 +237,14 @@ describe('Configuration', () => {
 			const {config} = await getConfig();
 
 			expect(config.SENTINEL_TLS_REJECT_UNAUTHORIZED).toBe(true);
+		});
+
+		it('should parse SENTINEL_TLS_ENABLED with flexible boolean values', async () => {
+			process.env.SENTINEL_TLS_ENABLED = 'YES';
+
+			const {config} = await getConfig();
+
+			expect(config.SENTINEL_TLS_ENABLED).toBe(true);
 		});
 
 		it('should use default values for Sentinel configuration when not set', async () => {
