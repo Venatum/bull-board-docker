@@ -35,8 +35,8 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@bull-board/api": "^6.18.2",
-    "@bull-board/express": "^6.18.2",
+    "@bull-board/api": "^6.19.0",
+    "@bull-board/express": "^6.19.0",
     "body-parser": "^2.2.2",
     "bull": "^4.16.5",
     "bullmq": "^5.69.3",
