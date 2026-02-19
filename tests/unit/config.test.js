@@ -1,4 +1,40 @@
-import {describe, expect, it, vi} from 'vitest';
+import {describe, expect, it, vi, beforeEach, afterAll} from 'vitest';
+
+// Mock fs module before importing config
+vi.mock('node:fs', async () => {
+	const actual = await vi.importActual('node:fs');
+	return {
+		...actual,
+		existsSync: vi.fn((path) => {
+			// For test purposes, treat TLS cert/key/ca paths as existing files
+			if (typeof path === 'string' && (
+				path.includes('ca-cert') ||
+				path.includes('client-cert') ||
+				path.includes('client-key') ||
+				path.includes('sentinel-ca') ||
+				path.includes('sentinel-cert') ||
+				path.includes('sentinel-key')
+			)) {
+				return true;
+			}
+			return actual.existsSync(path);
+		}),
+		readFileSync: vi.fn((path, encoding) => {
+			// For test purposes, return the path as the content for TLS files
+			if (typeof path === 'string' && (
+				path.includes('ca-cert') ||
+				path.includes('client-cert') ||
+				path.includes('client-key') ||
+				path.includes('sentinel-ca') ||
+				path.includes('sentinel-cert') ||
+				path.includes('sentinel-key')
+			)) {
+				return path;
+			}
+			return actual.readFileSync(path, encoding);
+		}),
+	};
+});
 
 describe('Configuration', () => {
 	// Save the original process.env
@@ -20,6 +56,12 @@ describe('Configuration', () => {
 
 		// Create a fresh copy of process.env for each test
 		process.env = {...originalEnv};
+		delete process.env.REDIS_TLS_CA;
+		delete process.env.REDIS_TLS_CERT;
+		delete process.env.REDIS_TLS_KEY;
+		delete process.env.SENTINEL_TLS_CA;
+		delete process.env.SENTINEL_TLS_CERT;
+		delete process.env.SENTINEL_TLS_KEY;
 	});
 
 	afterAll(() => {
@@ -64,6 +106,13 @@ describe('Configuration', () => {
 			process.env.REDIS_USER = 'user';
 			process.env.REDIS_PASSWORD = 'password';
 			process.env.REDIS_USE_TLS = 'true';
+			process.env.REDIS_TLS_CA = 'ca-cert';
+			process.env.REDIS_TLS_CERT = 'client-cert';
+			process.env.REDIS_TLS_KEY = 'client-key';
+			process.env.REDIS_TLS_SERVERNAME = 'redis.local';
+			process.env.REDIS_TLS_REJECT_UNAUTHORIZED = 'false';
+			process.env.REDIS_TLS_MIN_VERSION = 'TLSv1.2';
+			process.env.REDIS_TLS_CIPHERS = 'ECDHE-RSA-AES256-GCM-SHA384';
 			process.env.REDIS_FAMILY = '4';
 
 			// Import the module to test
@@ -76,7 +125,36 @@ describe('Configuration', () => {
 			expect(config.REDIS_USER).toBe('user');
 			expect(config.REDIS_PASSWORD).toBe('password');
 			expect(config.REDIS_USE_TLS).toBe('true');
+			expect(config.REDIS_TLS_CA).toBe('ca-cert');
+			expect(config.REDIS_TLS_CERT).toBe('client-cert');
+			expect(config.REDIS_TLS_KEY).toBe('client-key');
+			expect(config.REDIS_TLS_SERVERNAME).toBe('redis.local');
+			expect(config.REDIS_TLS_REJECT_UNAUTHORIZED).toBe(false);
+			expect(config.REDIS_TLS_MIN_VERSION).toBe('TLSv1.2');
+			expect(config.REDIS_TLS_CIPHERS).toBe('ECDHE-RSA-AES256-GCM-SHA384');
 			expect(config.REDIS_FAMILY).toBe(4);
+		});
+
+		it('should default REDIS_TLS_REJECT_UNAUTHORIZED to true when not set', async () => {
+			delete process.env.REDIS_TLS_REJECT_UNAUTHORIZED;
+
+			const {config} = await getConfig();
+
+			expect(config.REDIS_TLS_REJECT_UNAUTHORIZED).toBe(true);
+		});
+
+		it('should parse REDIS_TLS_REJECT_UNAUTHORIZED with flexible boolean values', async () => {
+			process.env.REDIS_TLS_REJECT_UNAUTHORIZED = '0';
+
+			const {config} = await getConfig();
+
+			expect(config.REDIS_TLS_REJECT_UNAUTHORIZED).toBe(false);
+		});
+
+		it('should throw when a TLS file path does not exist', async () => {
+			process.env.REDIS_TLS_CA = '/path/that/does/not/exist.crt';
+
+			await expect(getConfig()).rejects.toThrow('TLS file not found');
 		});
 
 		it('should handle additional Redis configuration options', async () => {
@@ -119,6 +197,13 @@ describe('Configuration', () => {
 			process.env.SENTINEL_PASSWORD = 'sentinel-password';
 			process.env.SENTINEL_COMMAND_TIMEOUT = '5000';
 			process.env.SENTINEL_TLS_ENABLED = 'true';
+			process.env.SENTINEL_TLS_CA = 'sentinel-ca';
+			process.env.SENTINEL_TLS_CERT = 'sentinel-cert';
+			process.env.SENTINEL_TLS_KEY = 'sentinel-key';
+			process.env.SENTINEL_TLS_SERVERNAME = 'sentinel.local';
+			process.env.SENTINEL_TLS_REJECT_UNAUTHORIZED = 'false';
+			process.env.SENTINEL_TLS_MIN_VERSION = 'TLSv1.2';
+			process.env.SENTINEL_TLS_CIPHERS = 'ECDHE-RSA-AES128-GCM-SHA256';
 			process.env.SENTINEL_UPDATE = 'true';
 			process.env.SENTINEL_MAX_CONNECTIONS = '20';
 			process.env.SENTINEL_FAILOVER_DETECTOR = 'true';
@@ -134,9 +219,32 @@ describe('Configuration', () => {
 			expect(config.SENTINEL_PASSWORD).toBe('sentinel-password');
 			expect(config.SENTINEL_COMMAND_TIMEOUT).toBe(5000);
 			expect(config.SENTINEL_TLS_ENABLED).toBe(true);
+			expect(config.SENTINEL_TLS_CA).toBe('sentinel-ca');
+			expect(config.SENTINEL_TLS_CERT).toBe('sentinel-cert');
+			expect(config.SENTINEL_TLS_KEY).toBe('sentinel-key');
+			expect(config.SENTINEL_TLS_SERVERNAME).toBe('sentinel.local');
+			expect(config.SENTINEL_TLS_REJECT_UNAUTHORIZED).toBe(false);
+			expect(config.SENTINEL_TLS_MIN_VERSION).toBe('TLSv1.2');
+			expect(config.SENTINEL_TLS_CIPHERS).toBe('ECDHE-RSA-AES128-GCM-SHA256');
 			expect(config.SENTINEL_UPDATE).toBe(true);
 			expect(config.SENTINEL_MAX_CONNECTIONS).toBe(20);
 			expect(config.SENTINEL_FAILOVER_DETECTOR).toBe(true);
+		});
+
+		it('should default SENTINEL_TLS_REJECT_UNAUTHORIZED to true when not set', async () => {
+			delete process.env.SENTINEL_TLS_REJECT_UNAUTHORIZED;
+
+			const {config} = await getConfig();
+
+			expect(config.SENTINEL_TLS_REJECT_UNAUTHORIZED).toBe(true);
+		});
+
+		it('should parse SENTINEL_TLS_ENABLED with flexible boolean values', async () => {
+			process.env.SENTINEL_TLS_ENABLED = 'YES';
+
+			const {config} = await getConfig();
+
+			expect(config.SENTINEL_TLS_ENABLED).toBe(true);
 		});
 
 		it('should use default values for Sentinel configuration when not set', async () => {
