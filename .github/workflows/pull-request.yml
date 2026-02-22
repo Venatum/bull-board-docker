@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get Node version from package.json
         id: node_version
@@ -24,7 +24,7 @@ jobs:
         run: echo "VERSION=$(jq -r '.engines.node' package.json)" >> $GITHUB_OUTPUT
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ steps.node_version.outputs.VERSION }}
           cache: 'npm'
@@ -40,7 +40,7 @@ jobs:
         uses:  davelosert/vitest-coverage-report-action@v2
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-report
           path: coverage/
