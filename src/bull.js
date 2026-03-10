@@ -6,7 +6,7 @@ import {Queue} from 'bullmq';
 import Bull from 'bull';
 import {backOff} from "exponential-backoff";
 
-import {client, redisConfig} from "./redis.js";
+import {client, redisConfig, isCluster} from "./redis.js";
 import {config} from "./config.js";
 
 const serverAdapter = new ExpressAdapter();
@@ -42,8 +42,19 @@ const {setQueues} = createBullBoard({
 });
 export const router = serverAdapter.getRouter();
 
+async function getRedisKeys(pattern) {
+	if (isCluster) {
+		const masters = client.nodes('master');
+		const results = await Promise.all(
+			masters.map(node => node.keys(pattern))
+		);
+		return results.flat();
+	}
+	return client.keys(pattern);
+}
+
 async function getBullQueues() {
-	const keys = await client.keys(`${config.BULL_PREFIX}:*`);
+	const keys = await getRedisKeys(`${config.BULL_PREFIX}:*`);
 	const uniqKeys = new Set(keys.map(key => key.replace(/^.+?:(.+?):.+?$/, '$1')));
 
 	// This increases the number of connections.
@@ -56,11 +67,13 @@ async function getBullQueues() {
 	const queueList = Array.from(uniqKeys).sort().map(
 		(item) => config.BULL_VERSION === 'BULLMQ' ?
 			new BullMQAdapter(new Queue(item, {
-				connection: redisConfig.redis,
+				connection: isCluster ? client : redisConfig.redis,
 				...(config.BULL_PREFIX && {prefix: config.BULL_PREFIX})
 			}, client.connection)) :
 			new BullAdapter(new Bull(item, {
-				redis: redisConfig.redis,
+				...(isCluster
+					? { createClient: () => client.duplicate() }
+					: { redis: redisConfig.redis }),
 				...(config.BULL_PREFIX && {prefix: config.BULL_PREFIX})
 			}, client.connection))
 	);

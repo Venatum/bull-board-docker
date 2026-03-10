@@ -1,0 +1,88 @@
+name: bull-board-cluster-example
+
+networks:
+  redis-network:
+    driver: bridge
+
+services:
+  bullboard:
+    container_name: bullboard
+    image: venatum/bull-board:latest
+    environment:
+      REDIS_CLUSTER_HOSTS: "redis-node1:6379,redis-node2:6379,redis-node3:6379"
+      BULL_PREFIX: bull
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    networks:
+      - redis-network
+    depends_on:
+      redis-cluster-init:
+        condition: service_completed_successfully
+
+  ###############
+  ##   Redis   ##
+  ###############
+  redis-node1:
+    container_name: redis-node1
+    image: redis:alpine
+    command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --protected-mode no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - redis-network
+
+  redis-node2:
+    container_name: redis-node2
+    image: redis:alpine
+    command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --protected-mode no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - redis-network
+
+  redis-node3:
+    container_name: redis-node3
+    image: redis:alpine
+    command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --protected-mode no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - redis-network
+
+  ########################
+  ## Cluster initializer ##
+  ########################
+  redis-cluster-init:
+    container_name: redis-cluster-init
+    image: redis:alpine
+    command: >
+      sh -c "redis-cli --cluster create
+      redis-node1:6379 redis-node2:6379 redis-node3:6379
+      --cluster-replicas 0 --cluster-yes"
+    depends_on:
+      redis-node1:
+        condition: service_healthy
+      redis-node2:
+        condition: service_healthy
+      redis-node3:
+        condition: service_healthy
+    networks:
+      - redis-network
