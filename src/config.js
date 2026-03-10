@@ -60,6 +60,7 @@ export const config = {
 	CLUSTER_RETRY_DELAY_ON_FAILOVER: Number(process.env.CLUSTER_RETRY_DELAY_ON_FAILOVER) || undefined,
 	CLUSTER_RETRY_DELAY_ON_CLUSTER_DOWN: Number(process.env.CLUSTER_RETRY_DELAY_ON_CLUSTER_DOWN) || undefined,
 	CLUSTER_RETRY_DELAY_ON_TRY_AGAIN: Number(process.env.CLUSTER_RETRY_DELAY_ON_TRY_AGAIN) || undefined,
+	CLUSTER_SKIP_DNS_LOOKUP: parseBooleanEnv(process.env.CLUSTER_SKIP_DNS_LOOKUP, false),
 	CLUSTER_SLOTS_REFRESH_TIMEOUT: Number(process.env.CLUSTER_SLOTS_REFRESH_TIMEOUT) || undefined,
 	CLUSTER_SLOTS_REFRESH_INTERVAL: Number(process.env.CLUSTER_SLOTS_REFRESH_INTERVAL) || undefined,
 	CLUSTER_NAT_MAP: process.env.CLUSTER_NAT_MAP, // JSON: {"externalHost:port": {"host": "internalHost", "port": N}}

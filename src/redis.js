@@ -169,6 +169,8 @@ export const redisConfig = {
 				...(config.CLUSTER_RETRY_DELAY_ON_FAILOVER && {retryDelayOnFailover: config.CLUSTER_RETRY_DELAY_ON_FAILOVER}),
 				...(config.CLUSTER_RETRY_DELAY_ON_CLUSTER_DOWN && {retryDelayOnClusterDown: config.CLUSTER_RETRY_DELAY_ON_CLUSTER_DOWN}),
 				...(config.CLUSTER_RETRY_DELAY_ON_TRY_AGAIN && {retryDelayOnTryAgain: config.CLUSTER_RETRY_DELAY_ON_TRY_AGAIN}),
+				// AWS MemoryDB and ElastiCache in cluster mode require skipping DNS lookup to connect to nodes by IP address instead of hostname
+				...(config.CLUSTER_SKIP_DNS_LOOKUP && { dnsLookup: (address, callback) => callback(null, address) }),
 				...(config.CLUSTER_SLOTS_REFRESH_TIMEOUT && {slotsRefreshTimeout: config.CLUSTER_SLOTS_REFRESH_TIMEOUT}),
 				...(config.CLUSTER_SLOTS_REFRESH_INTERVAL && {slotsRefreshInterval: config.CLUSTER_SLOTS_REFRESH_INTERVAL}),
 				...(config.CLUSTER_NAT_MAP && {natMap: JSON.parse(config.CLUSTER_NAT_MAP)}),

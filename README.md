@@ -37,6 +37,15 @@ Please note that on the interface, the Redis server info button will not work. F
 
 Redis Cluster mode is supported via `REDIS_CLUSTER_HOSTS`. Set it to a comma-separated list of startup node addresses and omit `REDIS_HOST`/`REDIS_PORT`. All existing `REDIS_*` auth and TLS variables apply to each cluster node via `redisOptions`.
 
+#### AWS MemoryDB
+
+These are the required settings for a MemoryDB Redis Cluster to work
+
+* `CLUSTER_SKIP_DNS_LOOKUP` to `true`
+* `CLUSTER_SLOTS_REFRESH_TIMEOUT` to `10000`
+* `REDIS_CLUSTER_HOSTS` to `clustercfg.your-bull-mq.qmjrpz.memorydb.us-east-1.amazonaws.com:6379`
+* `REDIS_USE_TLS` to `true`
+
 ### Environment variables
 
 **Redis**
@@ -82,6 +91,7 @@ Redis Cluster mode is supported via `REDIS_CLUSTER_HOSTS`. Set it to a comma-sep
 * `CLUSTER_RETRY_DELAY_ON_FAILOVER` - milliseconds to wait before retrying after a failover (disabled by default)
 * `CLUSTER_RETRY_DELAY_ON_CLUSTER_DOWN` - milliseconds to wait before retrying when the cluster is down (disabled by default)
 * `CLUSTER_RETRY_DELAY_ON_TRY_AGAIN` - milliseconds to wait before retrying on a `TRYAGAIN` error (disabled by default)
+* `CLUSTER_SKIP_DNS_LOOKUP` - prevents ioredis from resolving cluster node hostnames, which is necessary since MemoryDB nodes return internal DNS names during slot discovery that may not resolve correctly (`false` by default)
 * `CLUSTER_SLOTS_REFRESH_TIMEOUT` - timeout in milliseconds for slot refresh requests (disabled by default)
 * `CLUSTER_SLOTS_REFRESH_INTERVAL` - interval in milliseconds for automatic slot refresh (disabled by default)
 * `CLUSTER_NAT_MAP` - JSON NAT mapping for environments where cluster nodes are behind NAT, e.g. `{"externalHost:6379":{"host":"internalHost","port":6379}}` (disabled by default)
