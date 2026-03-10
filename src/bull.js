@@ -6,7 +6,7 @@ import {Queue} from 'bullmq';
 import Bull from 'bull';
 import {backOff} from "exponential-backoff";
 
-import {client, redisConfig} from "./redis.js";
+import {client, connection} from "./redis.js";
 import {config} from "./config.js";
 
 const serverAdapter = new ExpressAdapter();
@@ -56,11 +56,11 @@ async function getBullQueues() {
 	const queueList = Array.from(uniqKeys).sort().map(
 		(item) => config.BULL_VERSION === 'BULLMQ' ?
 			new BullMQAdapter(new Queue(item, {
-				connection: redisConfig.redis,
+				connection: connection,
 				...(config.BULL_PREFIX && {prefix: config.BULL_PREFIX})
 			}, client.connection)) :
 			new BullAdapter(new Bull(item, {
-				redis: redisConfig.redis,
+				redis: connection,
 				...(config.BULL_PREFIX && {prefix: config.BULL_PREFIX})
 			}, client.connection))
 	);

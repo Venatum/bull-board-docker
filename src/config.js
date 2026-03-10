@@ -53,6 +53,17 @@ export const config = {
 	SENTINEL_HOSTS: process.env.SENTINEL_HOSTS,
 	MAX_RETRIES_PER_REQUEST: process.env.MAX_RETRIES_PER_REQUEST,
 
+	// Redis Cluster configuration
+	REDIS_CLUSTER_HOSTS: process.env.REDIS_CLUSTER_HOSTS, // comma/semicolon separated host:port startup nodes
+	CLUSTER_SCALE_READS: process.env.CLUSTER_SCALE_READS || 'master', // 'master', 'slave', or 'all'
+	CLUSTER_MAX_REDIRECTIONS: Number(process.env.CLUSTER_MAX_REDIRECTIONS) || undefined,
+	CLUSTER_RETRY_DELAY_ON_FAILOVER: Number(process.env.CLUSTER_RETRY_DELAY_ON_FAILOVER) || undefined,
+	CLUSTER_RETRY_DELAY_ON_CLUSTER_DOWN: Number(process.env.CLUSTER_RETRY_DELAY_ON_CLUSTER_DOWN) || undefined,
+	CLUSTER_RETRY_DELAY_ON_TRY_AGAIN: Number(process.env.CLUSTER_RETRY_DELAY_ON_TRY_AGAIN) || undefined,
+	CLUSTER_SLOTS_REFRESH_TIMEOUT: Number(process.env.CLUSTER_SLOTS_REFRESH_TIMEOUT) || undefined,
+	CLUSTER_SLOTS_REFRESH_INTERVAL: Number(process.env.CLUSTER_SLOTS_REFRESH_INTERVAL) || undefined,
+	CLUSTER_NAT_MAP: process.env.CLUSTER_NAT_MAP, // JSON: {"externalHost:port": {"host": "internalHost", "port": N}}
+
 	// Additional Sentinel configuration
 	SENTINEL_ROLE: process.env.SENTINEL_ROLE || 'master', // Role to connect to (master or slave)
 	SENTINEL_USERNAME: process.env.SENTINEL_USERNAME, // Username for authenticating with Sentinel
