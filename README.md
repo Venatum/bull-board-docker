@@ -33,6 +33,10 @@ see "Example with docker-compose" section, for example, with env parameters
 It is now possible to use the BullBoard image with Redis Sentinel mode.
 Please note that on the interface, the Redis server info button will not work. Feel free to contribute to the development directly at [felixmosh/bull-board](https://github.com/felixmosh/bull-board)
 
+### Cluster
+
+Redis Cluster mode is supported via `REDIS_CLUSTER_HOSTS`. Set it to a comma-separated list of startup node addresses and omit `REDIS_HOST`/`REDIS_PORT`. All existing `REDIS_*` auth and TLS variables apply to each cluster node via `redisOptions`.
+
 ### Environment variables
 
 **Redis**
@@ -50,6 +54,7 @@ Please note that on the interface, the Redis server info button will not work. F
 * `REDIS_USER` - user to connect to redis (no user by default, Redis 6+)
 * `REDIS_PASSWORD` - password to connect to redis (no password by default)
 * `REDIS_FAMILY` - IP Stack version (one of 4 | 6 | 0) (`0` by default)
+* `REDIS_CLUSTER_HOSTS` - comma/semicolon-separated list of cluster startup nodes (e.g. `1.redis:6379,2.redis:6379,3.redis:6379`), overrides `REDIS_HOST` + `REDIS_PORT` when set (you can use `,` or `;`)
 * `SENTINEL_NAME` - name of sentinel instance (required with sentinel)
 * `SENTINEL_HOSTS` - a string containing a list of replica servers (e.g. '1.redis:26379,2.redis:26379,3.redis:26379'), overrides `REDIS_HOST` + `REDIS_PORT` configuration (you can use `,` or `;`)
 * `MAX_RETRIES_PER_REQUEST` - makes sure commands won't wait forever when the connection is down (disabled `null` by default)
@@ -70,6 +75,16 @@ Please note that on the interface, the Redis server info button will not work. F
 * `SENTINEL_UPDATE` - whether to update the list of Sentinels (`false` by default)
 * `SENTINEL_MAX_CONNECTIONS` - maximum number of connections to Sentinel (`10` by default)
 * `SENTINEL_FAILOVER_DETECTOR` - whether to enable failover detection (`false` by default)
+
+**Cluster Advanced Options**
+* `CLUSTER_SCALE_READS` - where to route read commands: `master`, `slave`, or `all` (`master` by default)
+* `CLUSTER_MAX_REDIRECTIONS` - maximum number of slot redirections before throwing an error (ioredis default: `16`)
+* `CLUSTER_RETRY_DELAY_ON_FAILOVER` - milliseconds to wait before retrying after a failover (disabled by default)
+* `CLUSTER_RETRY_DELAY_ON_CLUSTER_DOWN` - milliseconds to wait before retrying when the cluster is down (disabled by default)
+* `CLUSTER_RETRY_DELAY_ON_TRY_AGAIN` - milliseconds to wait before retrying on a `TRYAGAIN` error (disabled by default)
+* `CLUSTER_SLOTS_REFRESH_TIMEOUT` - timeout in milliseconds for slot refresh requests (disabled by default)
+* `CLUSTER_SLOTS_REFRESH_INTERVAL` - interval in milliseconds for automatic slot refresh (disabled by default)
+* `CLUSTER_NAT_MAP` - JSON NAT mapping for environments where cluster nodes are behind NAT, e.g. `{"externalHost:6379":{"host":"internalHost","port":6379}}` (disabled by default)
 
 **Redis Advanced Options**
 * `REDIS_COMMAND_TIMEOUT` - timeout for commands in milliseconds (disabled by default)
