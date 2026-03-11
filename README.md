@@ -35,6 +35,15 @@ Redis Cluster mode is supported (e.g. AWS MemoryDB, ElastiCache Cluster). Set `R
 > [!NOTE]
 > `REDIS_CLUSTER_HOSTS` and `SENTINEL_HOSTS` are mutually exclusive.
 
+#### AWS MemoryDB
+
+These are the required settings for a MemoryDB Redis Cluster to work
+
+* `REDIS_CLUSTER_DNS_LOOKUP` to `skip`
+* `REDIS_CLUSTER_SLOTS_REFRESH_TIMEOUT` to `10000`
+* `REDIS_CLUSTER_HOSTS` to `clustercfg.your-bull-mq.qmjrpz.memorydb.us-east-1.amazonaws.com:6379`
+* `REDIS_USE_TLS` to `true`
+
 ### Sentinel
 
 It is now possible to use the BullBoard image with Redis Sentinel mode.
