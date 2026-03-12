@@ -27,8 +27,6 @@
     "start:docker": "docker compose up --force-recreate --renew-anon-volumes --wait --detach",
     "start:docker-deps": "npm run start:docker redis",
     "stop:docker": "docker compose down -v",
-    "commitlint": "commitlint --from origin/master",
-    "commit": "cz",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
@@ -51,18 +49,13 @@
     "passport-local": "^1.0.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^20.4.3",
-    "@commitlint/config-conventional": "^20.4.3",
-    "@commitlint/prompt": "^20.4.3",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/github": "^12.0.6",
     "@semantic-release/release-notes-generator": "^14.1.0",
     "@vitest/coverage-v8": "^4.0.18",
     "@vitest/ui": "^4.0.18",
-    "commitizen": "^4.3.1",
     "conventional-changelog-conventionalcommits": "^9.3.0",
-    "husky": "^9.1.7",
     "nodemon": "^3.1.14",
     "semantic-release": "^25.0.3",
     "vitest": "^4.0.18"
@@ -77,15 +70,5 @@
   "author": {
     "name": "Vincent LE QUEC (Venatum)",
     "url": "https://github.com/Venatum"
-  },
-  "husky": {
-    "hooks": {
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-    }
-  },
-  "config": {
-    "commitizen": {
-      "path": "cz-conventional-changelog"
-    }
   }
 }
