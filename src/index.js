@@ -88,7 +88,12 @@ const server = app.listen(config.PORT, config.BULL_BOARD_HOSTNAME, () => {
 	console.log(`bull-board is fetching queue list, please wait...`);
 });
 
+let isShuttingDown = false;
+
 const gracefulShutdown = (signal) => {
+	if (isShuttingDown) return;
+	isShuttingDown = true;
+
 	console.log(`\n${signal} received, starting graceful shutdown...`);
 
 	server.close(async () => {
@@ -107,7 +112,7 @@ const gracefulShutdown = (signal) => {
 	setTimeout(() => {
 		console.error('Forced shutdown after timeout');
 		process.exit(1);
-	}, 10000);
+	}, 10000).unref();
 }
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
