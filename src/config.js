@@ -83,7 +83,7 @@ export const config = {
 	REDIS_CLUSTER_RETRY_DELAY_ON_TRY_AGAIN: Number(process.env.REDIS_CLUSTER_RETRY_DELAY_ON_TRY_AGAIN) || 100, // Retry delay on TRYAGAIN in ms
 	REDIS_CLUSTER_RETRY_DELAY_ON_MOVED: Number(process.env.REDIS_CLUSTER_RETRY_DELAY_ON_MOVED) || 0, // Delay before following MOVED redirect in ms
 	REDIS_CLUSTER_ENABLE_AUTO_PIPELINING: parseBooleanEnv(process.env.REDIS_CLUSTER_ENABLE_AUTO_PIPELINING, false), // Enable automatic pipelining
-	REDIS_CLUSTER_DNS_LOOKUP: process.env.REDIS_CLUSTER_DNS_LOOKUP, // Set to 'skip' to bypass DNS resolution (useful for AWS ElastiCache/MemoryDB with TLS)
+	REDIS_CLUSTER_SKIP_DNS_LOOKUP: parseBooleanEnv(process.env.REDIS_CLUSTER_SKIP_DNS_LOOKUP, false), // Skip DNS resolution (useful for AWS ElastiCache/MemoryDB with TLS)
 	REDIS_CLUSTER_NAT_MAP: process.env.REDIS_CLUSTER_NAT_MAP, // JSON string mapping internal to external addresses
 	REDIS_CLUSTER_LAZY_CONNECT: parseBooleanEnv(process.env.REDIS_CLUSTER_LAZY_CONNECT, false), // Delay connection until first command
 

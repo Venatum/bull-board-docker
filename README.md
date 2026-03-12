@@ -39,7 +39,7 @@ Redis Cluster mode is supported (e.g. AWS MemoryDB, ElastiCache Cluster). Set `R
 
 These are the required settings for a MemoryDB Redis Cluster to work
 
-* `REDIS_CLUSTER_DNS_LOOKUP` to `skip`
+* `REDIS_CLUSTER_SKIP_DNS_LOOKUP` to `true`
 * `REDIS_CLUSTER_SLOTS_REFRESH_TIMEOUT` to `10000`
 * `REDIS_CLUSTER_HOSTS` to `clustercfg.your-bull-mq.qmjrpz.memorydb.us-east-1.amazonaws.com:6379`
 * `REDIS_USE_TLS` to `true`
@@ -97,7 +97,7 @@ Please note that on the interface, the Redis server info button will not work. F
 * `REDIS_CLUSTER_RETRY_DELAY_ON_CLUSTER_DOWN` - delay before retrying on CLUSTERDOWN error in milliseconds (`100` by default)
 * `REDIS_CLUSTER_RETRY_DELAY_ON_TRY_AGAIN` - delay before retrying on TRYAGAIN error in milliseconds (`100` by default)
 * `REDIS_CLUSTER_RETRY_DELAY_ON_MOVED` - delay before following a MOVED redirect in milliseconds (`0` by default). Adding a delay can help stabilize the cluster after a failover
-* `REDIS_CLUSTER_DNS_LOOKUP` - set to `skip` to bypass DNS resolution and use addresses as-is. Useful for AWS ElastiCache/MemoryDB with TLS (disabled by default)
+* `REDIS_CLUSTER_SKIP_DNS_LOOKUP` - skip DNS resolution and use addresses as-is. Useful for AWS ElastiCache/MemoryDB with TLS (`false` by default)
 * `REDIS_CLUSTER_NAT_MAP` - JSON string mapping internal cluster addresses to external ones for NAT/Docker scenarios (e.g. `'{"10.0.0.1:6379":{"host":"ext.com","port":6379}}'`) (disabled by default)
 * `REDIS_CLUSTER_ENABLE_AUTO_PIPELINING` - enable automatic pipelining for improved performance (`false` by default)
 * `REDIS_CLUSTER_LAZY_CONNECT` - delay connection until the first command is sent (`false` by default)

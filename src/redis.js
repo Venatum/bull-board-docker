@@ -223,7 +223,7 @@ export const clusterConfig = isCluster ? {
 		retryDelayOnMoved: config.REDIS_CLUSTER_RETRY_DELAY_ON_MOVED,
 
 		// DNS lookup override (useful for AWS ElastiCache/MemoryDB with TLS)
-		...(config.REDIS_CLUSTER_DNS_LOOKUP === 'skip' && {
+		...(config.REDIS_CLUSTER_SKIP_DNS_LOOKUP && {
 			dnsLookup: (address, callback) => callback(null, address),
 		}),
 

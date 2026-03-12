@@ -272,7 +272,7 @@ describe('Configuration', () => {
 			process.env.REDIS_CLUSTER_RETRY_DELAY_ON_TRY_AGAIN = '400';
 			process.env.REDIS_CLUSTER_RETRY_DELAY_ON_MOVED = '50';
 			process.env.REDIS_CLUSTER_ENABLE_AUTO_PIPELINING = 'true';
-			process.env.REDIS_CLUSTER_DNS_LOOKUP = 'skip';
+			process.env.REDIS_CLUSTER_SKIP_DNS_LOOKUP = 'true';
 			process.env.REDIS_CLUSTER_NAT_MAP = '{"10.0.0.1:6379":{"host":"ext.com","port":6379}}';
 			process.env.REDIS_CLUSTER_LAZY_CONNECT = 'true';
 
@@ -288,7 +288,7 @@ describe('Configuration', () => {
 			expect(config.REDIS_CLUSTER_RETRY_DELAY_ON_TRY_AGAIN).toBe(400);
 			expect(config.REDIS_CLUSTER_RETRY_DELAY_ON_MOVED).toBe(50);
 			expect(config.REDIS_CLUSTER_ENABLE_AUTO_PIPELINING).toBe(true);
-			expect(config.REDIS_CLUSTER_DNS_LOOKUP).toBe('skip');
+			expect(config.REDIS_CLUSTER_SKIP_DNS_LOOKUP).toBe(true);
 			expect(config.REDIS_CLUSTER_NAT_MAP).toBe('{"10.0.0.1:6379":{"host":"ext.com","port":6379}}');
 			expect(config.REDIS_CLUSTER_LAZY_CONNECT).toBe(true);
 		});
@@ -306,7 +306,7 @@ describe('Configuration', () => {
 			expect(config.REDIS_CLUSTER_RETRY_DELAY_ON_TRY_AGAIN).toBe(100);
 			expect(config.REDIS_CLUSTER_RETRY_DELAY_ON_MOVED).toBe(0);
 			expect(config.REDIS_CLUSTER_ENABLE_AUTO_PIPELINING).toBe(false);
-			expect(config.REDIS_CLUSTER_DNS_LOOKUP).toBeUndefined();
+			expect(config.REDIS_CLUSTER_SKIP_DNS_LOOKUP).toBe(false);
 			expect(config.REDIS_CLUSTER_NAT_MAP).toBeUndefined();
 			expect(config.REDIS_CLUSTER_LAZY_CONNECT).toBe(false);
 		});
