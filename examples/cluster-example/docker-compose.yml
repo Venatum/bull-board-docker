@@ -3,6 +3,9 @@ name: bull-board-cluster-example
 networks:
   redis-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.100.0/24
 
 services:
   bullboard:
@@ -10,12 +13,13 @@ services:
     image: venatum/bull-board:latest
     environment:
       REDIS_CLUSTER_HOSTS: "redis-node1:6379,redis-node2:6379,redis-node3:6379"
-      BULL_PREFIX: bull
+      BULL_PREFIX: "{bull}"
     restart: unless-stopped
     ports:
       - "3000:3000"
     networks:
-      - redis-network
+      redis-network:
+        ipv4_address: 172.28.100.10
     depends_on:
       redis-cluster-init:
         condition: service_completed_successfully
@@ -37,7 +41,8 @@ services:
     ports:
       - "6379:6379"
     networks:
-      - redis-network
+      redis-network:
+        ipv4_address: 172.28.100.11
 
   redis-node2:
     container_name: redis-node2
@@ -50,8 +55,11 @@ services:
       retries: 5
       start_period: 10s
     restart: unless-stopped
+    ports:
+      - "6380:6379"
     networks:
-      - redis-network
+      redis-network:
+        ipv4_address: 172.28.100.12
 
   redis-node3:
     container_name: redis-node3
@@ -64,8 +72,11 @@ services:
       retries: 5
       start_period: 10s
     restart: unless-stopped
+    ports:
+      - "6381:6379"
     networks:
-      - redis-network
+      redis-network:
+        ipv4_address: 172.28.100.13
 
   ########################
   ## Cluster initializer ##
