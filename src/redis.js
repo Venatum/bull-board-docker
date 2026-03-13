@@ -47,6 +47,21 @@ if (config.SENTINEL_HOSTS && config.REDIS_CLUSTER_HOSTS) {
 
 export const isCluster = Boolean(config.REDIS_CLUSTER_HOSTS);
 
+const buildTlsConfig = () => {
+	if (!config.REDIS_USE_TLS) return undefined;
+	return {
+		...(config.REDIS_TLS_CA && { ca: config.REDIS_TLS_CA }),
+		...(config.REDIS_TLS_CERT && { cert: config.REDIS_TLS_CERT }),
+		...(config.REDIS_TLS_KEY && { key: config.REDIS_TLS_KEY }),
+		...(config.REDIS_TLS_SERVERNAME && { servername: config.REDIS_TLS_SERVERNAME }),
+		...(config.REDIS_TLS_REJECT_UNAUTHORIZED !== undefined && { rejectUnauthorized: config.REDIS_TLS_REJECT_UNAUTHORIZED }),
+		...(config.REDIS_TLS_MIN_VERSION && { minVersion: config.REDIS_TLS_MIN_VERSION }),
+		...(config.REDIS_TLS_CIPHERS && { ciphers: config.REDIS_TLS_CIPHERS }),
+	};
+};
+
+const tlsConfig = buildTlsConfig();
+
 export const redisConfig = {
 	// https://redis.github.io/ioredis/index.html#RedisOptions
 	redis: {
@@ -113,32 +128,7 @@ export const redisConfig = {
 		}),
 
 		// TLS options
-		...(config.REDIS_USE_TLS === 'true' && {
-			// ConnectionOptions
-			tls: {
-				...(config.REDIS_TLS_CA && {
-					ca: config.REDIS_TLS_CA
-				}),
-				...(config.REDIS_TLS_CERT && {
-					cert: config.REDIS_TLS_CERT
-				}),
-				...(config.REDIS_TLS_KEY && {
-					key: config.REDIS_TLS_KEY
-				}),
-				...(config.REDIS_TLS_SERVERNAME && {
-					servername: config.REDIS_TLS_SERVERNAME
-				}),
-				...(config.REDIS_TLS_REJECT_UNAUTHORIZED !== undefined && {
-					rejectUnauthorized: config.REDIS_TLS_REJECT_UNAUTHORIZED
-				}),
-				...(config.REDIS_TLS_MIN_VERSION && {
-					minVersion: config.REDIS_TLS_MIN_VERSION
-				}),
-				...(config.REDIS_TLS_CIPHERS && {
-					ciphers: config.REDIS_TLS_CIPHERS
-				})
-			}
-		}),
+		...(tlsConfig && { tls: tlsConfig }),
 
 		// Timeout options
 		...(config.REDIS_COMMAND_TIMEOUT && {
@@ -182,23 +172,16 @@ export const clusterConfig = isCluster ? {
 		redisOptions: {
 			...(config.REDIS_USER && { username: config.REDIS_USER }),
 			...(config.REDIS_PASSWORD && { password: config.REDIS_PASSWORD }),
-			...(config.REDIS_USE_TLS === 'true' && {
-				tls: {
-					...(config.REDIS_TLS_CA && { ca: config.REDIS_TLS_CA }),
-					...(config.REDIS_TLS_CERT && { cert: config.REDIS_TLS_CERT }),
-					...(config.REDIS_TLS_KEY && { key: config.REDIS_TLS_KEY }),
-					...(config.REDIS_TLS_SERVERNAME && { servername: config.REDIS_TLS_SERVERNAME }),
-					...(config.REDIS_TLS_REJECT_UNAUTHORIZED !== undefined && { rejectUnauthorized: config.REDIS_TLS_REJECT_UNAUTHORIZED }),
-					...(config.REDIS_TLS_MIN_VERSION && { minVersion: config.REDIS_TLS_MIN_VERSION }),
-					...(config.REDIS_TLS_CIPHERS && { ciphers: config.REDIS_TLS_CIPHERS }),
-				}
-			}),
+			...(tlsConfig && { tls: tlsConfig }),
 			...(config.REDIS_COMMAND_TIMEOUT && { commandTimeout: config.REDIS_COMMAND_TIMEOUT }),
 			...(config.REDIS_SOCKET_TIMEOUT && { socketTimeout: config.REDIS_SOCKET_TIMEOUT }),
 			...(config.REDIS_CONNECT_TIMEOUT && { connectTimeout: config.REDIS_CONNECT_TIMEOUT }),
 			keepAlive: config.REDIS_KEEP_ALIVE,
 			noDelay: config.REDIS_NO_DELAY,
+			autoResubscribe: config.REDIS_AUTO_RESUBSCRIBE,
+			autoResendUnfulfilledCommands: config.REDIS_AUTO_RESEND_UNFULFILLED,
 			...(config.REDIS_CONNECTION_NAME && { connectionName: config.REDIS_CONNECTION_NAME }),
+			// BullMQ requires maxRetriesPerRequest to be null to avoid unhandled rejections
 			maxRetriesPerRequest: null,
 		},
 

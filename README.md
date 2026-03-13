@@ -34,6 +34,7 @@ Redis Cluster mode is supported (e.g. AWS MemoryDB, ElastiCache Cluster). Set `R
 
 > [!NOTE]
 > `REDIS_CLUSTER_HOSTS` and `SENTINEL_HOSTS` are mutually exclusive.
+> If you use `BULL_VERSION=BULL` with Redis Cluster, you must set `BULL_PREFIX` with a hash tag (e.g. `{bull}`), or switch to `BULL_VERSION=BULLMQ`.
 
 #### AWS MemoryDB
 

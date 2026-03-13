@@ -16,7 +16,3 @@ coverage
 .npmrc
 
 examples/tls-example/certs/*
-
-# AI
-.claude
-CLAUDE.md

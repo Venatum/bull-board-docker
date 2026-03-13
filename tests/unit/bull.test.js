@@ -379,6 +379,7 @@ describe('Bull Queue Setup', () => {
 			const { mockClient } = setupClusterMocks({
 				...defaultConfig,
 				BULL_VERSION: 'BULL',
+				BULL_PREFIX: '{bull}',
 			});
 
 			const bull = await import('../../src/bull.js');
@@ -398,6 +399,7 @@ describe('Bull Queue Setup', () => {
 			setupClusterMocks({
 				...defaultConfig,
 				BULL_VERSION: 'BULL',
+				BULL_PREFIX: '{bull}',
 			});
 
 			const bull = await import('../../src/bull.js');
@@ -407,6 +409,20 @@ describe('Bull Queue Setup', () => {
 				expect.anything(),
 				expect.objectContaining({ redis: expect.anything() }),
 				expect.anything()
+			);
+		});
+
+		it('should throw when Bull is used in cluster mode without hash-tag prefix', async () => {
+			setupClusterMocks({
+				...defaultConfig,
+				BULL_VERSION: 'BULL',
+				BULL_PREFIX: 'bull',
+			});
+
+			const bull = await import('../../src/bull.js');
+
+			await expect(bull.getBullQueues()).rejects.toThrow(
+				'Redis Cluster with BULL requires BULL_PREFIX to include a hash tag'
 			);
 		});
 	});

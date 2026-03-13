@@ -16,7 +16,7 @@ describe('Redis Client', () => {
 		REDIS_DB: '0',
 		REDIS_USER: 'testuser',
 		REDIS_PASSWORD: 'testpassword',
-		REDIS_USE_TLS: 'false',
+		REDIS_USE_TLS: false,
 		REDIS_FAMILY: 4,
 		REDIS_KEEP_ALIVE: 5000,
 		REDIS_NO_DELAY: true,
@@ -227,6 +227,19 @@ describe('Redis Client', () => {
 			}));
 		});
 
+		it('should include auto-resubscribe flags in cluster redisOptions', async () => {
+			setupCommonMocks({
+				REDIS_CLUSTER_HOSTS: 'node1:6379',
+				REDIS_AUTO_RESUBSCRIBE: false,
+				REDIS_AUTO_RESEND_UNFULFILLED: false,
+			});
+
+			const {clusterConfig} = await import('../../src/redis');
+
+			expect(clusterConfig.options.redisOptions.autoResubscribe).toBe(false);
+			expect(clusterConfig.options.redisOptions.autoResendUnfulfilledCommands).toBe(false);
+		});
+
 		it('should place enableOfflineQueue and enableReadyCheck at cluster options level, not in redisOptions', async () => {
 			setupCommonMocks({
 				REDIS_CLUSTER_HOSTS: 'node1:6379',
@@ -419,7 +432,7 @@ describe('Redis Client', () => {
 				REDIS_CLUSTER_RETRY_DELAY_ON_MOVED: 0,
 				REDIS_CLUSTER_ENABLE_AUTO_PIPELINING: false,
 				REDIS_CLUSTER_LAZY_CONNECT: false,
-				REDIS_USE_TLS: 'true',
+				REDIS_USE_TLS: true,
 				REDIS_TLS_CA: 'ca-cert',
 				REDIS_TLS_SERVERNAME: 'redis.cluster.local',
 				REDIS_KEEP_ALIVE: 0,
@@ -503,7 +516,7 @@ describe('Redis Client', () => {
 	describe('TLS Configuration', () => {
 		it('should include TLS options when REDIS_USE_TLS is true', async () => {
 			setupCommonMocks({
-				REDIS_USE_TLS: 'true',
+				REDIS_USE_TLS: true,
 				REDIS_TLS_CA: 'ca-cert',
 				REDIS_TLS_CERT: 'client-cert',
 				REDIS_TLS_KEY: 'client-key',
@@ -530,7 +543,7 @@ describe('Redis Client', () => {
 
 		it('should not include TLS options when REDIS_USE_TLS is false', async () => {
 			setupCommonMocks({
-				REDIS_USE_TLS: 'false',
+				REDIS_USE_TLS: false,
 			});
 
 			const {redisConfig} = await import('../../src/redis');
@@ -573,7 +586,7 @@ describe('Redis Client', () => {
 			setupCommonMocks({
 				SENTINEL_HOSTS: 'host1:26379',
 				SENTINEL_NAME: 'mymaster',
-				REDIS_USE_TLS: 'true',
+				REDIS_USE_TLS: true,
 				REDIS_TLS_CA: 'redis-ca',
 				SENTINEL_TLS_ENABLED: true,
 				SENTINEL_TLS_CA: 'sentinel-ca',

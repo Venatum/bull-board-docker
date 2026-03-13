@@ -124,7 +124,7 @@ describe('Configuration', () => {
 			expect(config.REDIS_DB).toBe('1');
 			expect(config.REDIS_USER).toBe('user');
 			expect(config.REDIS_PASSWORD).toBe('password');
-			expect(config.REDIS_USE_TLS).toBe('true');
+			expect(config.REDIS_USE_TLS).toBe(true);
 			expect(config.REDIS_TLS_CA).toBe('ca-cert');
 			expect(config.REDIS_TLS_CERT).toBe('client-cert');
 			expect(config.REDIS_TLS_KEY).toBe('client-key');

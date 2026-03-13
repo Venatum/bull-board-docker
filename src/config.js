@@ -40,7 +40,7 @@ export const config = {
 	REDIS_DB: process.env.REDIS_DB || '0',
 	REDIS_USER: process.env.REDIS_USER, // Redis 6+ requires a username and password to be set
 	REDIS_PASSWORD: process.env.REDIS_PASSWORD,
-	REDIS_USE_TLS: process.env.REDIS_USE_TLS,
+	REDIS_USE_TLS: parseBooleanEnv(process.env.REDIS_USE_TLS, false),
 	REDIS_TLS_CA: resolvePemOrPath(process.env.REDIS_TLS_CA),
 	REDIS_TLS_CERT: resolvePemOrPath(process.env.REDIS_TLS_CERT),
 	REDIS_TLS_KEY: resolvePemOrPath(process.env.REDIS_TLS_KEY),

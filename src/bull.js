@@ -9,6 +9,8 @@ import {backOff} from "exponential-backoff";
 import {client, redisConfig, isCluster} from "./redis.js";
 import {config} from "./config.js";
 
+const BULL_CLUSTER_PREFIX_REQUIRED = 'BULL_CLUSTER_PREFIX_REQUIRED';
+
 const serverAdapter = new ExpressAdapter();
 const {setQueues} = createBullBoard({
 	queues: [],
@@ -42,6 +44,20 @@ const {setQueues} = createBullBoard({
 });
 export const router = serverAdapter.getRouter();
 
+function assertBullClusterPrefix() {
+	if (!isCluster || config.BULL_VERSION !== 'BULL') return;
+	const prefix = config.BULL_PREFIX || '';
+	const hasHashTag = /{[^}]+}/.test(prefix);
+	if (!hasHashTag) {
+		const err = new Error(
+			'Redis Cluster with BULL requires BULL_PREFIX to include a hash tag, e.g. "{bull}". ' +
+			'Alternatively set BULL_VERSION=BULLMQ.'
+		);
+		err.code = BULL_CLUSTER_PREFIX_REQUIRED;
+		throw err;
+	}
+}
+
 async function getRedisKeys(pattern) {
 	if (isCluster) {
 		const masters = client.nodes('master');
@@ -54,6 +70,7 @@ async function getRedisKeys(pattern) {
 }
 
 async function getBullQueues() {
+	assertBullClusterPrefix();
 	const keys = await getRedisKeys(`${config.BULL_PREFIX}:*`);
 	const uniqKeys = new Set(keys.map(key => key.replace(/^.+?:(.+?):.+?$/, '$1')));
 
@@ -93,6 +110,9 @@ async function bullMain() {
 			timeMultiple: config.BACKOFF_TIME_MULTIPLE,
 			numOfAttempts: config.BACKOFF_NB_ATTEMPTS,
 			retry: (e, attemptNumber) => {
+				if (e?.code === BULL_CLUSTER_PREFIX_REQUIRED) {
+					return false;
+				}
 				console.log(`No queue! Retry n°${attemptNumber}`);
 				return true;
 			},
