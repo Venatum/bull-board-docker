@@ -13,4 +13,5 @@ List of examples:
 - `demo-bull-example`: minimal bull-board + Redis using Bull
 - `custom-ui-example`: UI customization via env vars (title/logo/favicon/locale)
 - `sentinel-example`: Redis Sentinel topology (1 master, 2 replicas, 3 sentinels)
+- `cluster-example`: Redis Cluster topology (3 master nodes, no replicas)
 - `tls-example`: Redis over TLS with self-signed certs (dev/local)

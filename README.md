@@ -28,6 +28,23 @@ will run bull-board interface on `localhost:3000` and connect to your redis inst
 
 see "Example with docker-compose" section, for example, with env parameters
 
+### Redis Cluster
+
+Redis Cluster mode is supported (e.g. AWS MemoryDB, ElastiCache Cluster). Set `REDIS_CLUSTER_HOSTS` with your cluster nodes to enable it.
+
+> [!NOTE]
+> `REDIS_CLUSTER_HOSTS` and `SENTINEL_HOSTS` are mutually exclusive.
+> If you use `BULL_VERSION=BULL` with Redis Cluster, you must set `BULL_PREFIX` with a hash tag (e.g. `{bull}`), or switch to `BULL_VERSION=BULLMQ`.
+
+#### AWS MemoryDB
+
+These are the required settings for a MemoryDB Redis Cluster to work
+
+* `REDIS_CLUSTER_SKIP_DNS_LOOKUP` to `true`
+* `REDIS_CLUSTER_SLOTS_REFRESH_TIMEOUT` to `10000`
+* `REDIS_CLUSTER_HOSTS` to `clustercfg.your-bull-mq.qmjrpz.memorydb.us-east-1.amazonaws.com:6379`
+* `REDIS_USE_TLS` to `true`
+
 ### Sentinel
 
 It is now possible to use the BullBoard image with Redis Sentinel mode.
@@ -50,6 +67,7 @@ Please note that on the interface, the Redis server info button will not work. F
 * `REDIS_USER` - user to connect to redis (no user by default, Redis 6+)
 * `REDIS_PASSWORD` - password to connect to redis (no password by default)
 * `REDIS_FAMILY` - IP Stack version (one of 4 | 6 | 0) (`0` by default)
+* `REDIS_CLUSTER_HOSTS` - a string containing a list of cluster nodes (e.g. `'node1:6379,node2:6379,node3:6379'`), enables Redis Cluster mode. Mutually exclusive with `SENTINEL_HOSTS`. (you can use `,` or `;`)
 * `SENTINEL_NAME` - name of sentinel instance (required with sentinel)
 * `SENTINEL_HOSTS` - a string containing a list of replica servers (e.g. '1.redis:26379,2.redis:26379,3.redis:26379'), overrides `REDIS_HOST` + `REDIS_PORT` configuration (you can use `,` or `;`)
 * `MAX_RETRIES_PER_REQUEST` - makes sure commands won't wait forever when the connection is down (disabled `null` by default)
@@ -70,6 +88,20 @@ Please note that on the interface, the Redis server info button will not work. F
 * `SENTINEL_UPDATE` - whether to update the list of Sentinels (`false` by default)
 * `SENTINEL_MAX_CONNECTIONS` - maximum number of connections to Sentinel (`10` by default)
 * `SENTINEL_FAILOVER_DETECTOR` - whether to enable failover detection (`false` by default)
+
+**Redis Cluster Advanced Options**
+* `REDIS_CLUSTER_SCALE_READS` - where to send read commands: `master`, `slave`, or `all` (`master` by default)
+* `REDIS_CLUSTER_MAX_REDIRECTIONS` - maximum number of `MOVED`/`ASK` redirections before giving up (`16` by default)
+* `REDIS_CLUSTER_SLOTS_REFRESH_INTERVAL` - automatic slots refresh interval in milliseconds (disabled by default, recommended for production)
+* `REDIS_CLUSTER_SLOTS_REFRESH_TIMEOUT` - timeout when refreshing slots from the cluster in milliseconds (`1000` by default)
+* `REDIS_CLUSTER_RETRY_DELAY_ON_FAILOVER` - delay before retrying after a node disconnect in milliseconds (`100` by default). Ensure `retryDelayOnFailover * maxRedirections > cluster-node-timeout`
+* `REDIS_CLUSTER_RETRY_DELAY_ON_CLUSTER_DOWN` - delay before retrying on CLUSTERDOWN error in milliseconds (`100` by default)
+* `REDIS_CLUSTER_RETRY_DELAY_ON_TRY_AGAIN` - delay before retrying on TRYAGAIN error in milliseconds (`100` by default)
+* `REDIS_CLUSTER_RETRY_DELAY_ON_MOVED` - delay before following a MOVED redirect in milliseconds (`0` by default). Adding a delay can help stabilize the cluster after a failover
+* `REDIS_CLUSTER_SKIP_DNS_LOOKUP` - skip DNS resolution and use addresses as-is. Useful for AWS ElastiCache/MemoryDB with TLS (`false` by default)
+* `REDIS_CLUSTER_NAT_MAP` - JSON string mapping internal cluster addresses to external ones for NAT/Docker scenarios (e.g. `'{"10.0.0.1:6379":{"host":"ext.com","port":6379}}'`) (disabled by default)
+* `REDIS_CLUSTER_ENABLE_AUTO_PIPELINING` - enable automatic pipelining for improved performance (`false` by default)
+* `REDIS_CLUSTER_LAZY_CONNECT` - delay connection until the first command is sent (`false` by default)
 
 **Redis Advanced Options**
 * `REDIS_COMMAND_TIMEOUT` - timeout for commands in milliseconds (disabled by default)

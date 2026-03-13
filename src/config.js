@@ -40,7 +40,7 @@ export const config = {
 	REDIS_DB: process.env.REDIS_DB || '0',
 	REDIS_USER: process.env.REDIS_USER, // Redis 6+ requires a username and password to be set
 	REDIS_PASSWORD: process.env.REDIS_PASSWORD,
-	REDIS_USE_TLS: process.env.REDIS_USE_TLS,
+	REDIS_USE_TLS: parseBooleanEnv(process.env.REDIS_USE_TLS, false),
 	REDIS_TLS_CA: resolvePemOrPath(process.env.REDIS_TLS_CA),
 	REDIS_TLS_CERT: resolvePemOrPath(process.env.REDIS_TLS_CERT),
 	REDIS_TLS_KEY: resolvePemOrPath(process.env.REDIS_TLS_KEY),
@@ -71,6 +71,21 @@ export const config = {
 	SENTINEL_UPDATE: process.env.SENTINEL_UPDATE === 'true', // Whether to update the list of Sentinels
 	SENTINEL_MAX_CONNECTIONS: Number(process.env.SENTINEL_MAX_CONNECTIONS) || 10, // Maximum number of connections to Sentinel
 	SENTINEL_FAILOVER_DETECTOR: process.env.SENTINEL_FAILOVER_DETECTOR === 'true', // Whether to enable failover detection
+
+	// Redis Cluster configuration
+	REDIS_CLUSTER_HOSTS: process.env.REDIS_CLUSTER_HOSTS, // Comma/semicolon-separated list of host:port pairs
+	REDIS_CLUSTER_SCALE_READS: process.env.REDIS_CLUSTER_SCALE_READS || 'master', // Where to send reads: master, slave, or all
+	REDIS_CLUSTER_MAX_REDIRECTIONS: Number(process.env.REDIS_CLUSTER_MAX_REDIRECTIONS) || 16, // Max MOVED/ASK redirections
+	REDIS_CLUSTER_SLOTS_REFRESH_INTERVAL: Number(process.env.REDIS_CLUSTER_SLOTS_REFRESH_INTERVAL) || undefined, // Auto slots refresh interval in ms (disabled by default)
+	REDIS_CLUSTER_SLOTS_REFRESH_TIMEOUT: Number(process.env.REDIS_CLUSTER_SLOTS_REFRESH_TIMEOUT) || 1000, // Timeout for slots refresh in ms
+	REDIS_CLUSTER_RETRY_DELAY_ON_FAILOVER: Number(process.env.REDIS_CLUSTER_RETRY_DELAY_ON_FAILOVER) || 100, // Retry delay on node disconnect in ms
+	REDIS_CLUSTER_RETRY_DELAY_ON_CLUSTER_DOWN: Number(process.env.REDIS_CLUSTER_RETRY_DELAY_ON_CLUSTER_DOWN) || 100, // Retry delay on CLUSTERDOWN in ms
+	REDIS_CLUSTER_RETRY_DELAY_ON_TRY_AGAIN: Number(process.env.REDIS_CLUSTER_RETRY_DELAY_ON_TRY_AGAIN) || 100, // Retry delay on TRYAGAIN in ms
+	REDIS_CLUSTER_RETRY_DELAY_ON_MOVED: Number(process.env.REDIS_CLUSTER_RETRY_DELAY_ON_MOVED) || 0, // Delay before following MOVED redirect in ms
+	REDIS_CLUSTER_ENABLE_AUTO_PIPELINING: parseBooleanEnv(process.env.REDIS_CLUSTER_ENABLE_AUTO_PIPELINING, false), // Enable automatic pipelining
+	REDIS_CLUSTER_SKIP_DNS_LOOKUP: parseBooleanEnv(process.env.REDIS_CLUSTER_SKIP_DNS_LOOKUP, false), // Skip DNS resolution (useful for AWS ElastiCache/MemoryDB with TLS)
+	REDIS_CLUSTER_NAT_MAP: process.env.REDIS_CLUSTER_NAT_MAP, // JSON string mapping internal to external addresses
+	REDIS_CLUSTER_LAZY_CONNECT: parseBooleanEnv(process.env.REDIS_CLUSTER_LAZY_CONNECT, false), // Delay connection until first command
 
 	// Additional Redis configuration
 	REDIS_COMMAND_TIMEOUT: Number(process.env.REDIS_COMMAND_TIMEOUT) || undefined, // Command timeout in ms

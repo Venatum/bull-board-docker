@@ -46,6 +46,45 @@ const JOB_CONFIG = {
  * Redis configuration factory
  */
 class RedisConfigFactory {
+	static isCluster() {
+		return Boolean(process.env.REDIS_CLUSTER_HOSTS);
+	}
+
+	static parseClusterNodes(hosts) {
+		return hosts
+			.split(/,|;/)
+			.map((entry) => entry.trim())
+			.filter(Boolean)
+			.map((entry) => {
+				const separatorIndex = entry.lastIndexOf(':');
+				if (separatorIndex === -1) {
+					throw new Error(`Invalid cluster entry "${entry}". Expected host:port`);
+				}
+				return {
+					host: entry.slice(0, separatorIndex).trim(),
+					port: Number.parseInt(entry.slice(separatorIndex + 1).trim(), 10),
+				};
+			});
+	}
+
+	static _buildTlsConfig() {
+		if (process.env.REDIS_USE_TLS !== 'true') return undefined;
+		const tls = {};
+		const ca = resolvePemOrPath(process.env.REDIS_TLS_CA);
+		const cert = resolvePemOrPath(process.env.REDIS_TLS_CERT);
+		const key = resolvePemOrPath(process.env.REDIS_TLS_KEY);
+		if (ca) tls.ca = ca;
+		if (cert) tls.cert = cert;
+		if (key) tls.key = key;
+		if (process.env.REDIS_TLS_SERVERNAME) tls.servername = process.env.REDIS_TLS_SERVERNAME;
+		if (process.env.REDIS_TLS_REJECT_UNAUTHORIZED !== undefined) {
+			tls.rejectUnauthorized = process.env.REDIS_TLS_REJECT_UNAUTHORIZED !== 'false';
+		}
+		if (process.env.REDIS_TLS_MIN_VERSION) tls.minVersion = process.env.REDIS_TLS_MIN_VERSION;
+		if (process.env.REDIS_TLS_CIPHERS) tls.ciphers = process.env.REDIS_TLS_CIPHERS;
+		return Object.keys(tls).length > 0 ? tls : undefined;
+	}
+
 	static createConfig() {
 		const config = {
 			port: process.env.REDIS_PORT,
@@ -54,25 +93,32 @@ class RedisConfigFactory {
 			...(process.env.REDIS_PASSWORD && {password: process.env.REDIS_PASSWORD}),
 			...(process.env.REDIS_USER && {username: process.env.REDIS_USER}),
 		};
-		if (process.env.REDIS_USE_TLS === 'true') {
-			const tls = {};
-			const ca = resolvePemOrPath(process.env.REDIS_TLS_CA);
-			const cert = resolvePemOrPath(process.env.REDIS_TLS_CERT);
-			const key = resolvePemOrPath(process.env.REDIS_TLS_KEY);
-			if (ca) tls.ca = ca;
-			if (cert) tls.cert = cert;
-			if (key) tls.key = key;
-			if (process.env.REDIS_TLS_SERVERNAME) tls.servername = process.env.REDIS_TLS_SERVERNAME;
-			if (process.env.REDIS_TLS_REJECT_UNAUTHORIZED !== undefined) {
-				tls.rejectUnauthorized = process.env.REDIS_TLS_REJECT_UNAUTHORIZED !== 'false';
-			}
-			if (process.env.REDIS_TLS_MIN_VERSION) tls.minVersion = process.env.REDIS_TLS_MIN_VERSION;
-			if (process.env.REDIS_TLS_CIPHERS) tls.ciphers = process.env.REDIS_TLS_CIPHERS;
-			if (Object.keys(tls).length > 0) {
-				config.tls = tls;
-			}
-		}
+		const tls = this._buildTlsConfig();
+		if (tls) config.tls = tls;
 		return config;
+	}
+
+	static createClusterConfig() {
+		const nodes = this.parseClusterNodes(process.env.REDIS_CLUSTER_HOSTS);
+		const redisOptions = {
+			...(process.env.REDIS_PASSWORD && {password: process.env.REDIS_PASSWORD}),
+			...(process.env.REDIS_USER && {username: process.env.REDIS_USER}),
+			maxRetriesPerRequest: null,
+		};
+		const tls = this._buildTlsConfig();
+		if (tls) redisOptions.tls = tls;
+
+		const options = {
+			redisOptions,
+			...(process.env.REDIS_CLUSTER_SKIP_DNS_LOOKUP === 'true' && {
+				dnsLookup: (address, callback) => callback(null, address),
+			}),
+			...(process.env.REDIS_CLUSTER_NAT_MAP && {
+				natMap: JSON.parse(process.env.REDIS_CLUSTER_NAT_MAP),
+			}),
+		};
+
+		return {nodes, options};
 	}
 }
 
@@ -130,6 +176,8 @@ class JobGenerator {
 		this.redisClient = null;
 		this.queue = null;
 		this.redisConfig = null;
+		this.clusterConfig = null;
+		this.isCluster = false;
 		this._initializeConnections();
 	}
 
@@ -139,9 +187,15 @@ class JobGenerator {
 	 */
 	_initializeConnections() {
 		try {
-			// Create Redis client
-			this.redisConfig = RedisConfigFactory.createConfig();
-			this.redisClient = Redis.createClient(this.redisConfig);
+			this.isCluster = RedisConfigFactory.isCluster();
+
+			if (this.isCluster) {
+				this.clusterConfig = RedisConfigFactory.createClusterConfig();
+				this.redisClient = new Redis.Cluster(this.clusterConfig.nodes, this.clusterConfig.options);
+			} else {
+				this.redisConfig = RedisConfigFactory.createConfig();
+				this.redisClient = Redis.createClient(this.redisConfig);
+			}
 			this.redisClient.on('error', (err) => console.error('Redis Client Error:', err));
 
 			// Initialize queue
@@ -159,13 +213,20 @@ class JobGenerator {
 		if (this.version === QUEUE_VERSIONS.BULLMQ) {
 			this.queue = new Queue(this.queueName, {
 				prefix: this.prefix,
-				connection: this.redisConfig,
+				connection: this.isCluster
+					? this.redisClient
+					: this.redisConfig,
 			});
 		} else {
-			this.queue = new Bull(this.queueName, {
-				prefix: this.prefix,
-				redis: this.redisConfig,
-			});
+			this.queue = this.isCluster
+				? new Bull(this.queueName, {
+					prefix: this.prefix,
+					createClient: () => this.redisClient.duplicate(),
+				})
+				: new Bull(this.queueName, {
+					prefix: this.prefix,
+					redis: this.redisConfig,
+				});
 		}
 	}
 
