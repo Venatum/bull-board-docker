@@ -53,9 +53,6 @@ describe('Redis Client', () => {
 
 		// Set up the createClient mock
 		createClientMock = vi.fn().mockReturnValue(mockClient);
-
-		// Setup common mocks with default config
-		setupCommonMocks();
 	});
 
 	afterEach(() => {
@@ -68,6 +65,8 @@ describe('Redis Client', () => {
 
 	describe('Basic Configuration', () => {
 		it('should create a Redis client with the correct configuration', async () => {
+			setupCommonMocks();
+
 			// Import the module to test
 			const {redisConfig, client} = await import('../../src/redis');
 
@@ -96,6 +95,8 @@ describe('Redis Client', () => {
 		});
 
 		it('should use mock client in test environment', async () => {
+			setupCommonMocks();
+
 			// Import the module to test
 			const {client} = await import('../../src/redis.js');
 
