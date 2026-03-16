@@ -6,8 +6,10 @@ import {Queue} from 'bullmq';
 import Bull from 'bull';
 import {backOff} from "exponential-backoff";
 
-import {client, redisConfig} from "./redis.js";
+import {client, redisConfig, isCluster} from "./redis.js";
 import {config} from "./config.js";
+
+const BULL_CLUSTER_PREFIX_REQUIRED = 'BULL_CLUSTER_PREFIX_REQUIRED';
 
 const serverAdapter = new ExpressAdapter();
 const {setQueues} = createBullBoard({
@@ -42,25 +44,64 @@ const {setQueues} = createBullBoard({
 });
 export const router = serverAdapter.getRouter();
 
-async function scanForKeys(pattern) {
+function assertBullClusterPrefix() {
+	if (!isCluster || config.BULL_VERSION !== 'BULL') return;
+	const prefix = config.BULL_PREFIX || '';
+	const hasHashTag = /{[^}]+}/.test(prefix);
+	if (!hasHashTag) {
+		const err = new Error(
+			'Redis Cluster with BULL requires BULL_PREFIX to include a hash tag, e.g. "{bull}". ' +
+			'Alternatively set BULL_VERSION=BULLMQ.'
+		);
+		err.code = BULL_CLUSTER_PREFIX_REQUIRED;
+		throw err;
+	}
+}
+
+async function scanForKeys(redisClient, pattern) {
 	const keys = [];
 	let cursor = '0';
 	do {
-		const [nextCursor, foundKeys] = await client.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+		const [nextCursor, foundKeys] = await redisClient.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
 		cursor = nextCursor;
 		keys.push(...foundKeys);
 	} while (cursor !== '0');
 	return keys;
 }
 
-async function getBullQueues() {
-	let keys;
+async function getRedisKeys(pattern) {
+	if (isCluster) {
+		const masters = client.nodes('master');
+		if (!masters || masters.length === 0) {
+			throw new Error('No master nodes available in the Redis Cluster');
+		}
+		const results = await Promise.allSettled(
+			masters.map(node => scanForKeys(node, pattern))
+		);
+		const fulfilled = results.filter(r => r.status === 'fulfilled');
+		const rejected = results.filter(r => r.status === 'rejected');
+		if (rejected.length > 0) {
+			console.error(
+				`Failed to scan keys on ${rejected.length}/${masters.length} master node(s):`,
+				rejected.map(r => r.reason?.message)
+			);
+		}
+		if (fulfilled.length === 0) {
+			throw new Error('All master nodes failed during key scan');
+		}
+		return fulfilled.flatMap(r => r.value);
+	}
 	try {
-		keys = await scanForKeys(`${config.BULL_PREFIX}:*`);
+		return await scanForKeys(client, pattern);
 	} catch (err) {
 		console.warn('SCAN failed, falling back to KEYS:', err.message);
-		keys = await client.keys(`${config.BULL_PREFIX}:*`);
+		return client.keys(pattern);
 	}
+}
+
+async function getBullQueues() {
+	assertBullClusterPrefix();
+	const keys = await getRedisKeys(`${config.BULL_PREFIX}:*`);
 	const uniqKeys = new Set(keys.map(key => key.replace(/^.+?:(.+?):.+?$/, '$1')));
 
 	// This increases the number of connections.
@@ -73,11 +114,17 @@ async function getBullQueues() {
 	const queueList = Array.from(uniqKeys).sort().map(
 		(item) => config.BULL_VERSION === 'BULLMQ' ?
 			new BullMQAdapter(new Queue(item, {
-				connection: redisConfig.redis,
+				connection: isCluster ? client : redisConfig.redis,
 				...(config.BULL_PREFIX && {prefix: config.BULL_PREFIX})
 			}, client.connection)) :
 			new BullAdapter(new Bull(item, {
-				redis: redisConfig.redis,
+				...(isCluster
+					? { createClient: () => {
+						const dup = client.duplicate();
+						dup.on('error', (err) => console.error(`Redis Cluster duplicate client error (queue "${item}"):`, err));
+						return dup;
+					}}
+					: { redis: redisConfig.redis }),
 				...(config.BULL_PREFIX && {prefix: config.BULL_PREFIX})
 			}, client.connection))
 	);
@@ -97,6 +144,9 @@ async function bullMain() {
 			timeMultiple: config.BACKOFF_TIME_MULTIPLE,
 			numOfAttempts: config.BACKOFF_NB_ATTEMPTS,
 			retry: (e, attemptNumber) => {
+				if (e?.code === BULL_CLUSTER_PREFIX_REQUIRED) {
+					return false;
+				}
 				console.log(`No queue! Retry n°${attemptNumber}`);
 				return true;
 			},

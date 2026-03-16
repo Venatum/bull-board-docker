@@ -124,7 +124,7 @@ describe('Configuration', () => {
 			expect(config.REDIS_DB).toBe('1');
 			expect(config.REDIS_USER).toBe('user');
 			expect(config.REDIS_PASSWORD).toBe('password');
-			expect(config.REDIS_USE_TLS).toBe('true');
+			expect(config.REDIS_USE_TLS).toBe(true);
 			expect(config.REDIS_TLS_CA).toBe('ca-cert');
 			expect(config.REDIS_TLS_CERT).toBe('client-cert');
 			expect(config.REDIS_TLS_KEY).toBe('client-key');
@@ -257,6 +257,58 @@ describe('Configuration', () => {
 			expect(config.SENTINEL_UPDATE).toBe(false);
 			expect(config.SENTINEL_MAX_CONNECTIONS).toBe(10);
 			expect(config.SENTINEL_FAILOVER_DETECTOR).toBe(false);
+		});
+	});
+
+	describe('Cluster Configuration', () => {
+		it('should load Cluster configuration from environment variables', async () => {
+			process.env.REDIS_CLUSTER_HOSTS = 'node1:6379,node2:6380,node3:6381';
+			process.env.REDIS_CLUSTER_SCALE_READS = 'slave';
+			process.env.REDIS_CLUSTER_MAX_REDIRECTIONS = '32';
+			process.env.REDIS_CLUSTER_SLOTS_REFRESH_INTERVAL = '5000';
+			process.env.REDIS_CLUSTER_SLOTS_REFRESH_TIMEOUT = '2000';
+			process.env.REDIS_CLUSTER_RETRY_DELAY_ON_FAILOVER = '200';
+			process.env.REDIS_CLUSTER_RETRY_DELAY_ON_CLUSTER_DOWN = '300';
+			process.env.REDIS_CLUSTER_RETRY_DELAY_ON_TRY_AGAIN = '400';
+			process.env.REDIS_CLUSTER_RETRY_DELAY_ON_MOVED = '50';
+			process.env.REDIS_CLUSTER_ENABLE_AUTO_PIPELINING = 'true';
+			process.env.REDIS_CLUSTER_SKIP_DNS_LOOKUP = 'true';
+			process.env.REDIS_CLUSTER_NAT_MAP = '{"10.0.0.1:6379":{"host":"ext.com","port":6379}}';
+			process.env.REDIS_CLUSTER_LAZY_CONNECT = 'true';
+
+			const {config} = await getConfig();
+
+			expect(config.REDIS_CLUSTER_HOSTS).toBe('node1:6379,node2:6380,node3:6381');
+			expect(config.REDIS_CLUSTER_SCALE_READS).toBe('slave');
+			expect(config.REDIS_CLUSTER_MAX_REDIRECTIONS).toBe(32);
+			expect(config.REDIS_CLUSTER_SLOTS_REFRESH_INTERVAL).toBe(5000);
+			expect(config.REDIS_CLUSTER_SLOTS_REFRESH_TIMEOUT).toBe(2000);
+			expect(config.REDIS_CLUSTER_RETRY_DELAY_ON_FAILOVER).toBe(200);
+			expect(config.REDIS_CLUSTER_RETRY_DELAY_ON_CLUSTER_DOWN).toBe(300);
+			expect(config.REDIS_CLUSTER_RETRY_DELAY_ON_TRY_AGAIN).toBe(400);
+			expect(config.REDIS_CLUSTER_RETRY_DELAY_ON_MOVED).toBe(50);
+			expect(config.REDIS_CLUSTER_ENABLE_AUTO_PIPELINING).toBe(true);
+			expect(config.REDIS_CLUSTER_SKIP_DNS_LOOKUP).toBe(true);
+			expect(config.REDIS_CLUSTER_NAT_MAP).toBe('{"10.0.0.1:6379":{"host":"ext.com","port":6379}}');
+			expect(config.REDIS_CLUSTER_LAZY_CONNECT).toBe(true);
+		});
+
+		it('should use default values for Cluster configuration when not set', async () => {
+			const {config} = await getConfig();
+
+			expect(config.REDIS_CLUSTER_HOSTS).toBeUndefined();
+			expect(config.REDIS_CLUSTER_SCALE_READS).toBe('master');
+			expect(config.REDIS_CLUSTER_MAX_REDIRECTIONS).toBe(16);
+			expect(config.REDIS_CLUSTER_SLOTS_REFRESH_INTERVAL).toBeUndefined();
+			expect(config.REDIS_CLUSTER_SLOTS_REFRESH_TIMEOUT).toBe(1000);
+			expect(config.REDIS_CLUSTER_RETRY_DELAY_ON_FAILOVER).toBe(100);
+			expect(config.REDIS_CLUSTER_RETRY_DELAY_ON_CLUSTER_DOWN).toBe(100);
+			expect(config.REDIS_CLUSTER_RETRY_DELAY_ON_TRY_AGAIN).toBe(100);
+			expect(config.REDIS_CLUSTER_RETRY_DELAY_ON_MOVED).toBe(0);
+			expect(config.REDIS_CLUSTER_ENABLE_AUTO_PIPELINING).toBe(false);
+			expect(config.REDIS_CLUSTER_SKIP_DNS_LOOKUP).toBe(false);
+			expect(config.REDIS_CLUSTER_NAT_MAP).toBeUndefined();
+			expect(config.REDIS_CLUSTER_LAZY_CONNECT).toBe(false);
 		});
 	});
 
