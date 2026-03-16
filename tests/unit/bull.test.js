@@ -389,10 +389,11 @@ describe('Bull Queue Setup', () => {
 				createClient: expect.any(Function),
 			}), 'redis-connection');
 
-			// Verify createClient calls duplicate
+			// Verify createClient calls duplicate and attaches error handler
 			const createClientFn = BullMock.mock.calls[0][1].createClient;
-			createClientFn();
+			const dup = createClientFn();
 			expect(mockClient.duplicate).toHaveBeenCalled();
+			expect(dup.on).toHaveBeenCalledWith('error', expect.any(Function));
 		});
 
 		it('should not use redis options object for Bull queues in cluster mode', async () => {
@@ -410,6 +411,115 @@ describe('Bull Queue Setup', () => {
 				expect.objectContaining({ redis: expect.anything() }),
 				expect.anything()
 			);
+		});
+
+		it('should throw when no master nodes are available', async () => {
+			setupClusterMocks();
+
+			// Override nodes to return empty array
+			vi.doMock('../../src/redis', () => ({
+				client: {
+					keys: vi.fn(),
+					connection: 'redis-connection',
+					on: vi.fn(),
+					nodes: vi.fn().mockReturnValue([]),
+					duplicate: vi.fn().mockReturnValue({ on: vi.fn() }),
+				},
+				redisConfig: { redis: { host: 'localhost', port: 6379 } },
+				isCluster: true,
+			}));
+
+			const bull = await import('../../src/bull.js');
+			await expect(bull.getBullQueues()).rejects.toThrow('No master nodes available');
+		});
+
+		it('should handle partial node failures gracefully', async () => {
+			const failingNode = { keys: vi.fn().mockRejectedValue(new Error('ECONNREFUSED')) };
+			const workingNode = { keys: vi.fn().mockResolvedValue(['bull:queue1:jobs']) };
+
+			vi.doMock('bullmq', () => ({ Queue: vi.fn() }));
+			vi.doMock('bull', () => ({ default: vi.fn() }));
+			setQueuesMock = vi.fn();
+			vi.doMock('@bull-board/api', () => ({
+				createBullBoard: vi.fn().mockReturnValue({ setQueues: setQueuesMock }),
+			}));
+			vi.doMock('@bull-board/express', () => ({
+				ExpressAdapter: class { getRouter() { return 'router'; } },
+			}));
+			vi.doMock('@bull-board/api/bullMQAdapter', () => ({
+				BullMQAdapter: class {},
+			}));
+			vi.doMock('@bull-board/api/bullAdapter', () => ({
+				BullAdapter: class {},
+			}));
+			vi.doMock('../../src/redis', () => ({
+				client: {
+					keys: vi.fn(),
+					connection: 'redis-connection',
+					on: vi.fn(),
+					nodes: vi.fn().mockReturnValue([failingNode, workingNode]),
+					duplicate: vi.fn().mockReturnValue({ on: vi.fn() }),
+				},
+				redisConfig: { redis: {} },
+				isCluster: true,
+			}));
+			vi.doMock('../../src/config', () => ({ config: defaultConfig }));
+			vi.doMock('exponential-backoff', () => ({
+				backOff: vi.fn().mockImplementation((fn) => fn()),
+			}));
+
+			consoleSpy = vi.spyOn(console, 'error').mockImplementation();
+
+			const bull = await import('../../src/bull.js');
+			await bull.bullMain();
+
+			// Should log the partial failure
+			expect(consoleSpy).toHaveBeenCalledWith(
+				expect.stringContaining('Failed to scan keys on 1/2 master node(s)'),
+				expect.any(Array)
+			);
+			// Should still discover the queue from the working node
+			expect(setQueuesMock).toHaveBeenCalledWith(expect.any(Array));
+		});
+
+		it('should throw when all master nodes fail', async () => {
+			const failingNode1 = { keys: vi.fn().mockRejectedValue(new Error('ECONNREFUSED')) };
+			const failingNode2 = { keys: vi.fn().mockRejectedValue(new Error('ETIMEDOUT')) };
+
+			vi.doMock('bullmq', () => ({ Queue: vi.fn() }));
+			vi.doMock('bull', () => ({ default: vi.fn() }));
+			vi.doMock('@bull-board/api', () => ({
+				createBullBoard: vi.fn().mockReturnValue({ setQueues: vi.fn() }),
+			}));
+			vi.doMock('@bull-board/express', () => ({
+				ExpressAdapter: class { getRouter() { return 'router'; } },
+			}));
+			vi.doMock('@bull-board/api/bullMQAdapter', () => ({
+				BullMQAdapter: class {},
+			}));
+			vi.doMock('@bull-board/api/bullAdapter', () => ({
+				BullAdapter: class {},
+			}));
+			vi.doMock('../../src/redis', () => ({
+				client: {
+					keys: vi.fn(),
+					connection: 'redis-connection',
+					on: vi.fn(),
+					nodes: vi.fn().mockReturnValue([failingNode1, failingNode2]),
+					duplicate: vi.fn().mockReturnValue({ on: vi.fn() }),
+				},
+				redisConfig: { redis: {} },
+				isCluster: true,
+			}));
+			vi.doMock('../../src/config', () => ({ config: defaultConfig }));
+			vi.doMock('exponential-backoff', () => ({
+				backOff: vi.fn().mockImplementation((fn) => fn()),
+			}));
+
+			consoleSpy = vi.spyOn(console, 'error').mockImplementation();
+
+			const bull = await import('../../src/bull.js');
+			await expect(bull.getBullQueues()).rejects.toThrow('All master nodes failed');
 		});
 
 		it('should throw when Bull is used in cluster mode without hash-tag prefix', async () => {

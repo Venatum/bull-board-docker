@@ -61,10 +61,24 @@ function assertBullClusterPrefix() {
 async function getRedisKeys(pattern) {
 	if (isCluster) {
 		const masters = client.nodes('master');
-		const results = await Promise.all(
+		if (!masters || masters.length === 0) {
+			throw new Error('No master nodes available in the Redis Cluster');
+		}
+		const results = await Promise.allSettled(
 			masters.map(node => node.keys(pattern))
 		);
-		return results.flat();
+		const fulfilled = results.filter(r => r.status === 'fulfilled');
+		const rejected = results.filter(r => r.status === 'rejected');
+		if (rejected.length > 0) {
+			console.error(
+				`Failed to scan keys on ${rejected.length}/${masters.length} master node(s):`,
+				rejected.map(r => r.reason?.message)
+			);
+		}
+		if (fulfilled.length === 0) {
+			throw new Error('All master nodes failed during key scan');
+		}
+		return fulfilled.flatMap(r => r.value);
 	}
 	return client.keys(pattern);
 }
@@ -89,7 +103,11 @@ async function getBullQueues() {
 			}, client.connection)) :
 			new BullAdapter(new Bull(item, {
 				...(isCluster
-					? { createClient: () => client.duplicate() }
+					? { createClient: () => {
+						const dup = client.duplicate();
+						dup.on('error', (err) => console.error(`Redis Cluster duplicate client error (queue "${item}"):`, err));
+						return dup;
+					}}
 					: { redis: redisConfig.redis }),
 				...(config.BULL_PREFIX && {prefix: config.BULL_PREFIX})
 			}, client.connection))

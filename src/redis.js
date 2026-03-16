@@ -160,8 +160,8 @@ const parseNatMap = (jsonStr) => {
 	if (!jsonStr) return undefined;
 	try {
 		return JSON.parse(jsonStr);
-	} catch {
-		throw new Error(`Invalid REDIS_CLUSTER_NAT_MAP JSON: ${jsonStr}`);
+	} catch (err) {
+		throw new Error(`Invalid REDIS_CLUSTER_NAT_MAP JSON: ${err.message}. Value: ${jsonStr.substring(0, 200)}`);
 	}
 };
 
