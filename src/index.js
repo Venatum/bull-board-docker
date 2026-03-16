@@ -112,7 +112,7 @@ const gracefulShutdown = (signal) => {
 	setTimeout(() => {
 		console.error('Forced shutdown after timeout');
 		process.exit(1);
-	}, 10000).unref();
+	}, config.GRACEFUL_SHUTDOWN_TIMEOUT).unref();
 }
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));

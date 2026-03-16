@@ -107,6 +107,9 @@ export const config = {
 	BACKOFF_TIME_MULTIPLE: process.env.BACKOFF_TIME_MULTIPLE || 2,
 	BACKOFF_NB_ATTEMPTS: process.env.BACKOFF_NB_ATTEMPTS || 10,
 
+	// Shutdown configuration
+	GRACEFUL_SHUTDOWN_TIMEOUT: Number(process.env.GRACEFUL_SHUTDOWN_TIMEOUT) || 10000,
+
 	// App configuration
 	BULL_BOARD_HOSTNAME: process.env.BULL_BOARD_HOSTNAME || "0.0.0.0",
 	PORT: process.env.PORT || 3000,

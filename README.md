@@ -122,6 +122,9 @@ Please note that on the interface, the Redis server info button will not work. F
 * `USER_LOGIN` - login to restrict access to bull-board interface (disabled by default)
 * `USER_PASSWORD` - password to restrict access to bull-board interface (disabled by default)
 
+**Graceful shutdown**
+* `GRACEFUL_SHUTDOWN_TIMEOUT` - Maximum time in milliseconds to wait for the server to close before forcing shutdown (`10000` by default)
+
 **Queue setup**
 * `BULL_PREFIX` - prefix to your bull queue name (`bull` by default)
 * `BULL_VERSION` - version of bull lib to use 'BULLMQ' or 'BULL' (`BULLMQ` by default)
