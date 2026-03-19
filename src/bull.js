@@ -91,12 +91,7 @@ async function getRedisKeys(pattern) {
 		}
 		return [...new Set(fulfilled.flatMap(r => r.value))];
 	}
-	try {
-		return await scanForKeys(client, pattern);
-	} catch (err) {
-		console.warn('SCAN failed, falling back to KEYS:', err.message);
-		return client.keys(pattern);
-	}
+	return scanForKeys(client, pattern);
 }
 
 function createBullMQAdapter(name) {

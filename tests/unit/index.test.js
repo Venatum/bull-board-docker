@@ -264,7 +264,7 @@ describe('Express Application', () => {
       await handler(req, res);
 
       // Verify that res.status and res.json were called with the correct arguments
-      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.status).toHaveBeenCalledWith(503);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
         status: 'error',
         info: expect.objectContaining({

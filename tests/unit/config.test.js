@@ -328,10 +328,10 @@ describe('Configuration', () => {
 			// Verify that environment variables were loaded correctly
 			expect(config.BULL_PREFIX).toBe('custom-bull');
 			expect(config.BULL_VERSION).toBe('BULL');
-			expect(config.BACKOFF_STARTING_DELAY).toBe('1000');
-			expect(config.BACKOFF_MAX_DELAY).toBe('10000');
-			expect(config.BACKOFF_TIME_MULTIPLE).toBe('3');
-			expect(config.BACKOFF_NB_ATTEMPTS).toBe('5');
+			expect(config.BACKOFF_STARTING_DELAY).toBe(1000);
+			expect(config.BACKOFF_MAX_DELAY).toBe(10000);
+			expect(config.BACKOFF_TIME_MULTIPLE).toBe(3);
+			expect(config.BACKOFF_NB_ATTEMPTS).toBe(5);
 		});
 	});
 

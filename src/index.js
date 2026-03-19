@@ -71,7 +71,7 @@ app.use('/healthcheck', async (req, res) => {
 		redisError = err;
 	}
 
-	res.status(200).json({
+	res.status(status === 'ok' ? 200 : 503).json({
 		status,
 		info: {
 			redis: {

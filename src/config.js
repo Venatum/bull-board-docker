@@ -102,10 +102,10 @@ export const config = {
 	// Queue configuration
 	BULL_PREFIX: process.env.BULL_PREFIX || 'bull',
 	BULL_VERSION: process.env.BULL_VERSION || 'BULLMQ',
-	BACKOFF_STARTING_DELAY: process.env.BACKOFF_STARTING_DELAY || 500,
-	BACKOFF_MAX_DELAY: process.env.BACKOFF_MAX_DELAY || Infinity,
-	BACKOFF_TIME_MULTIPLE: process.env.BACKOFF_TIME_MULTIPLE || 2,
-	BACKOFF_NB_ATTEMPTS: process.env.BACKOFF_NB_ATTEMPTS || 10,
+	BACKOFF_STARTING_DELAY: Number(process.env.BACKOFF_STARTING_DELAY) || 500,
+	BACKOFF_MAX_DELAY: Number(process.env.BACKOFF_MAX_DELAY) || Infinity,
+	BACKOFF_TIME_MULTIPLE: Number(process.env.BACKOFF_TIME_MULTIPLE) || 2,
+	BACKOFF_NB_ATTEMPTS: Number(process.env.BACKOFF_NB_ATTEMPTS) || 10,
 
 	// Shutdown configuration
 	GRACEFUL_SHUTDOWN_TIMEOUT: Number(process.env.GRACEFUL_SHUTDOWN_TIMEOUT) || 10000,

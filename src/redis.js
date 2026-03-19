@@ -228,11 +228,13 @@ function createRedisClient() {
 export const client = process.env.NODE_ENV === 'test'
 	? {
 		keys: () => Promise.resolve([]),
+		scan: () => Promise.resolve(['0', []]),
 		connection: 'mock-connection',
 		on: () => {},
 		nodes: () => [],
 		duplicate: () => ({
 			keys: () => Promise.resolve([]),
+			scan: () => Promise.resolve(['0', []]),
 			on: () => {},
 		}),
 	}

@@ -85,9 +85,11 @@ describe('Bull Queue Setup', () => {
 
 		// Setup Redis mock
 		clientKeysMock = vi.fn().mockResolvedValue(queueKeys);
+		const clientScanMock = vi.fn().mockResolvedValue(['0', queueKeys]);
 		vi.doMock('../../src/redis', () => ({
 			client: {
 				keys: clientKeysMock,
+				scan: clientScanMock,
 				connection: 'redis-connection',
 				on: vi.fn(),
 				nodes: vi.fn().mockReturnValue([]),
