@@ -4,11 +4,13 @@ This example runs Redis with TLS enabled and connects bull-board using TLS.
 The certificates in `./certs` are self-signed and intended for local/dev use only.
 
 What it does:
+
 - Starts Redis in TLS-only mode (no plain TCP)
 - Starts bull-board with TLS options enabled
 - Mounts the CA into the bull-board container so Node trusts it
 
 Generate the certificates (self-signed):
+
 ```
   mkdir -p certs
 
@@ -31,14 +33,17 @@ Generate the certificates (self-signed):
 ```
 
 Run:
+
 ```
   docker compose up
 ```
 
 Open:
+
 - http://localhost:3000
 
 Notes:
+
 - This example sets `REDIS_TLS_REJECT_UNAUTHORIZED=false` to keep things simple
   with self-signed certs.
 - `NODE_EXTRA_CA_CERTS=/tls/ca.crt` is set to make Node trust the CA.

@@ -17,7 +17,7 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/). 
 ### Allowed types
 
 | Type       | Description                                                          |
-|------------|----------------------------------------------------------------------|
+| ---------- | -------------------------------------------------------------------- |
 | `feat`     | A new feature (triggers a **minor** release)                         |
 | `fix`      | A bug fix (triggers a **patch** release)                             |
 | `chore`    | Maintenance tasks (no release)                                       |
