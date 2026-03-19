@@ -1,6 +1,6 @@
-import Redis from 'ioredis';
+import Redis from "ioredis";
 
-import {config} from "./config.js";
+import { config } from "./config.js";
 
 const parseEntry = (entry) => {
 	const ipv6Match = entry.match(/^\[(.+)]:(\d+)$/);
@@ -9,7 +9,7 @@ const parseEntry = (entry) => {
 		return { host: ipv6Match[1], port: validatePort(port, entry) };
 	}
 
-	const separatorIndex = entry.lastIndexOf(':');
+	const separatorIndex = entry.lastIndexOf(":");
 	if (separatorIndex === -1) {
 		throw new Error(`Invalid entry "${entry}". Expected host:port`);
 	}
@@ -30,8 +30,8 @@ const validatePort = (port, entry) => {
 };
 
 const parseHostList = (dsn) => {
-	if (!dsn || typeof dsn !== 'string') {
-		throw new Error('Host list must be a non-empty string');
+	if (!dsn || typeof dsn !== "string") {
+		throw new Error("Host list must be a non-empty string");
 	}
 
 	return dsn
@@ -42,7 +42,9 @@ const parseHostList = (dsn) => {
 };
 
 if (config.SENTINEL_HOSTS && config.REDIS_CLUSTER_HOSTS) {
-	throw new Error('SENTINEL_HOSTS and REDIS_CLUSTER_HOSTS are mutually exclusive. Please set only one.');
+	throw new Error(
+		"SENTINEL_HOSTS and REDIS_CLUSTER_HOSTS are mutually exclusive. Please set only one.",
+	);
 }
 
 export const isCluster = Boolean(config.REDIS_CLUSTER_HOSTS);
@@ -54,7 +56,9 @@ const buildTlsConfig = () => {
 		...(config.REDIS_TLS_CERT && { cert: config.REDIS_TLS_CERT }),
 		...(config.REDIS_TLS_KEY && { key: config.REDIS_TLS_KEY }),
 		...(config.REDIS_TLS_SERVERNAME && { servername: config.REDIS_TLS_SERVERNAME }),
-		...(config.REDIS_TLS_REJECT_UNAUTHORIZED !== undefined && { rejectUnauthorized: config.REDIS_TLS_REJECT_UNAUTHORIZED }),
+		...(config.REDIS_TLS_REJECT_UNAUTHORIZED !== undefined && {
+			rejectUnauthorized: config.REDIS_TLS_REJECT_UNAUTHORIZED,
+		}),
 		...(config.REDIS_TLS_MIN_VERSION && { minVersion: config.REDIS_TLS_MIN_VERSION }),
 		...(config.REDIS_TLS_CIPHERS && { ciphers: config.REDIS_TLS_CIPHERS }),
 	};
@@ -73,13 +77,13 @@ export const redisConfig = {
 			role: config.SENTINEL_ROLE,
 			maxRetriesPerRequest: config.MAX_RETRIES_PER_REQUEST || null,
 			...(config.SENTINEL_USERNAME && {
-				sentinelUsername: config.SENTINEL_USERNAME
+				sentinelUsername: config.SENTINEL_USERNAME,
 			}),
 			...(config.SENTINEL_PASSWORD && {
-				sentinelPassword: config.SENTINEL_PASSWORD
+				sentinelPassword: config.SENTINEL_PASSWORD,
 			}),
 			...(config.SENTINEL_COMMAND_TIMEOUT && {
-				sentinelCommandTimeout: config.SENTINEL_COMMAND_TIMEOUT
+				sentinelCommandTimeout: config.SENTINEL_COMMAND_TIMEOUT,
 			}),
 			enableTLSForSentinelMode: config.SENTINEL_TLS_ENABLED,
 			...(config.SENTINEL_TLS_ENABLED && {
@@ -105,26 +109,27 @@ export const redisConfig = {
 					...(config.SENTINEL_TLS_CIPHERS && {
 						ciphers: config.SENTINEL_TLS_CIPHERS,
 					}),
-				}
+				},
 			}),
 			updateSentinels: config.SENTINEL_UPDATE,
 			sentinelMaxConnections: config.SENTINEL_MAX_CONNECTIONS,
 			failoverDetector: config.SENTINEL_FAILOVER_DETECTOR,
 		}),
-		...(!config.SENTINEL_HOSTS && !isCluster && {
-			port: config.REDIS_PORT,
-			host: config.REDIS_HOST,
-			family: config.REDIS_FAMILY,
-		}),
+		...(!config.SENTINEL_HOSTS &&
+			!isCluster && {
+				port: config.REDIS_PORT,
+				host: config.REDIS_HOST,
+				family: config.REDIS_FAMILY,
+			}),
 		db: config.REDIS_DB,
 
 		// Authentication options
 		...(config.REDIS_USER && {
 			// Redis 6+ requires a username and password to be set
-			username: config.REDIS_USER
+			username: config.REDIS_USER,
 		}),
 		...(config.REDIS_PASSWORD && {
-			password: config.REDIS_PASSWORD
+			password: config.REDIS_PASSWORD,
 		}),
 
 		// TLS options
@@ -132,20 +137,20 @@ export const redisConfig = {
 
 		// Timeout options
 		...(config.REDIS_COMMAND_TIMEOUT && {
-			commandTimeout: config.REDIS_COMMAND_TIMEOUT
+			commandTimeout: config.REDIS_COMMAND_TIMEOUT,
 		}),
 		...(config.REDIS_SOCKET_TIMEOUT && {
-			socketTimeout: config.REDIS_SOCKET_TIMEOUT
+			socketTimeout: config.REDIS_SOCKET_TIMEOUT,
 		}),
 		...(config.REDIS_CONNECT_TIMEOUT && {
-			connectTimeout: config.REDIS_CONNECT_TIMEOUT
+			connectTimeout: config.REDIS_CONNECT_TIMEOUT,
 		}),
 
 		// Connection behavior options
 		keepAlive: config.REDIS_KEEP_ALIVE,
 		noDelay: config.REDIS_NO_DELAY,
 		...(config.REDIS_CONNECTION_NAME && {
-			connectionName: config.REDIS_CONNECTION_NAME
+			connectionName: config.REDIS_CONNECTION_NAME,
 		}),
 
 		// Reconnection behavior options
@@ -161,61 +166,73 @@ const parseNatMap = (jsonStr) => {
 	try {
 		return JSON.parse(jsonStr);
 	} catch (err) {
-		throw new Error(`Invalid REDIS_CLUSTER_NAT_MAP JSON: ${err.message}. Value: ${jsonStr.substring(0, 200)}`);
+		throw new Error(
+			`Invalid REDIS_CLUSTER_NAT_MAP JSON: ${err.message}. Value: ${jsonStr.substring(0, 200)}`,
+		);
 	}
 };
 
-export const clusterConfig = isCluster ? {
-	nodes: parseHostList(config.REDIS_CLUSTER_HOSTS),
-	options: {
-		// Per-node Redis options (excludes host/port/sentinels/enableOfflineQueue/readOnly per ioredis types)
-		redisOptions: {
-			...(config.REDIS_USER && { username: config.REDIS_USER }),
-			...(config.REDIS_PASSWORD && { password: config.REDIS_PASSWORD }),
-			...(tlsConfig && { tls: tlsConfig }),
-			...(config.REDIS_COMMAND_TIMEOUT && { commandTimeout: config.REDIS_COMMAND_TIMEOUT }),
-			...(config.REDIS_SOCKET_TIMEOUT && { socketTimeout: config.REDIS_SOCKET_TIMEOUT }),
-			...(config.REDIS_CONNECT_TIMEOUT && { connectTimeout: config.REDIS_CONNECT_TIMEOUT }),
-			keepAlive: config.REDIS_KEEP_ALIVE,
-			noDelay: config.REDIS_NO_DELAY,
-			autoResubscribe: config.REDIS_AUTO_RESUBSCRIBE,
-			autoResendUnfulfilledCommands: config.REDIS_AUTO_RESEND_UNFULFILLED,
-			...(config.REDIS_CONNECTION_NAME && { connectionName: config.REDIS_CONNECTION_NAME }),
-			// BullMQ requires maxRetriesPerRequest to be null to avoid unhandled rejections
-			maxRetriesPerRequest: null,
-		},
+export const clusterConfig = isCluster
+	? {
+			nodes: parseHostList(config.REDIS_CLUSTER_HOSTS),
+			options: {
+				// Per-node Redis options (excludes host/port/sentinels/enableOfflineQueue/readOnly per ioredis types)
+				redisOptions: {
+					...(config.REDIS_USER && { username: config.REDIS_USER }),
+					...(config.REDIS_PASSWORD && { password: config.REDIS_PASSWORD }),
+					...(tlsConfig && { tls: tlsConfig }),
+					...(config.REDIS_COMMAND_TIMEOUT && {
+						commandTimeout: config.REDIS_COMMAND_TIMEOUT,
+					}),
+					...(config.REDIS_SOCKET_TIMEOUT && {
+						socketTimeout: config.REDIS_SOCKET_TIMEOUT,
+					}),
+					...(config.REDIS_CONNECT_TIMEOUT && {
+						connectTimeout: config.REDIS_CONNECT_TIMEOUT,
+					}),
+					keepAlive: config.REDIS_KEEP_ALIVE,
+					noDelay: config.REDIS_NO_DELAY,
+					autoResubscribe: config.REDIS_AUTO_RESUBSCRIBE,
+					autoResendUnfulfilledCommands: config.REDIS_AUTO_RESEND_UNFULFILLED,
+					...(config.REDIS_CONNECTION_NAME && {
+						connectionName: config.REDIS_CONNECTION_NAME,
+					}),
+					// BullMQ requires maxRetriesPerRequest to be null to avoid unhandled rejections
+					maxRetriesPerRequest: null,
+				},
 
-		// Cluster-level options
-		scaleReads: config.REDIS_CLUSTER_SCALE_READS,
-		maxRedirections: config.REDIS_CLUSTER_MAX_REDIRECTIONS,
-		enableOfflineQueue: config.REDIS_ENABLE_OFFLINE_QUEUE,
-		enableReadyCheck: config.REDIS_ENABLE_READY_CHECK,
-		enableAutoPipelining: config.REDIS_CLUSTER_ENABLE_AUTO_PIPELINING,
-		lazyConnect: config.REDIS_CLUSTER_LAZY_CONNECT,
+				// Cluster-level options
+				scaleReads: config.REDIS_CLUSTER_SCALE_READS,
+				maxRedirections: config.REDIS_CLUSTER_MAX_REDIRECTIONS,
+				enableOfflineQueue: config.REDIS_ENABLE_OFFLINE_QUEUE,
+				enableReadyCheck: config.REDIS_ENABLE_READY_CHECK,
+				enableAutoPipelining: config.REDIS_CLUSTER_ENABLE_AUTO_PIPELINING,
+				lazyConnect: config.REDIS_CLUSTER_LAZY_CONNECT,
 
-		// Slot management
-		slotsRefreshTimeout: config.REDIS_CLUSTER_SLOTS_REFRESH_TIMEOUT,
-		...(config.REDIS_CLUSTER_SLOTS_REFRESH_INTERVAL && {
-			slotsRefreshInterval: config.REDIS_CLUSTER_SLOTS_REFRESH_INTERVAL,
-		}),
+				// Slot management
+				slotsRefreshTimeout: config.REDIS_CLUSTER_SLOTS_REFRESH_TIMEOUT,
+				...(config.REDIS_CLUSTER_SLOTS_REFRESH_INTERVAL && {
+					slotsRefreshInterval: config.REDIS_CLUSTER_SLOTS_REFRESH_INTERVAL,
+				}),
 
-		// Retry delays
-		retryDelayOnFailover: config.REDIS_CLUSTER_RETRY_DELAY_ON_FAILOVER,
-		retryDelayOnClusterDown: config.REDIS_CLUSTER_RETRY_DELAY_ON_CLUSTER_DOWN,
-		retryDelayOnTryAgain: config.REDIS_CLUSTER_RETRY_DELAY_ON_TRY_AGAIN,
-		retryDelayOnMoved: config.REDIS_CLUSTER_RETRY_DELAY_ON_MOVED,
+				// Retry delays
+				retryDelayOnFailover: config.REDIS_CLUSTER_RETRY_DELAY_ON_FAILOVER,
+				retryDelayOnClusterDown: config.REDIS_CLUSTER_RETRY_DELAY_ON_CLUSTER_DOWN,
+				retryDelayOnTryAgain: config.REDIS_CLUSTER_RETRY_DELAY_ON_TRY_AGAIN,
+				retryDelayOnMoved: config.REDIS_CLUSTER_RETRY_DELAY_ON_MOVED,
 
-		// DNS lookup override (useful for AWS ElastiCache/MemoryDB with TLS)
-		...(config.REDIS_CLUSTER_SKIP_DNS_LOOKUP && {
-			dnsLookup: (address, callback) => callback(null, address),
-		}),
+				// DNS lookup override (useful for AWS ElastiCache/MemoryDB with TLS)
+				...(config.REDIS_CLUSTER_SKIP_DNS_LOOKUP && {
+					dnsLookup: (address, callback) => callback(null, address),
+				}),
 
-		// NAT mapping (for environments where cluster nodes advertise internal addresses)
-		...(config.REDIS_CLUSTER_NAT_MAP && {
-			natMap: parseNatMap(config.REDIS_CLUSTER_NAT_MAP),
-		}),
-	}
-} : null;
+				// NAT mapping (for environments where cluster nodes advertise internal addresses)
+				...(config.REDIS_CLUSTER_NAT_MAP && {
+					natMap: parseNatMap(config.REDIS_CLUSTER_NAT_MAP),
+				}),
+			},
+		}
+	: null;
 
 function createRedisClient() {
 	if (isCluster) {
@@ -225,22 +242,23 @@ function createRedisClient() {
 }
 
 // https://github.com/redis/node-redis/blob/master/docs/v3-to-v4.md
-export const client = process.env.NODE_ENV === 'test'
-	? {
-		keys: () => Promise.resolve([]),
-		scan: () => Promise.resolve(['0', []]),
-		connection: 'mock-connection',
-		on: () => {},
-		nodes: () => [],
-		duplicate: () => ({
-			keys: () => Promise.resolve([]),
-			scan: () => Promise.resolve(['0', []]),
-			on: () => {},
-		}),
-	}
-	: createRedisClient();
+export const client =
+	process.env.NODE_ENV === "test"
+		? {
+				keys: () => Promise.resolve([]),
+				scan: () => Promise.resolve(["0", []]),
+				connection: "mock-connection",
+				on: () => {},
+				nodes: () => [],
+				duplicate: () => ({
+					keys: () => Promise.resolve([]),
+					scan: () => Promise.resolve(["0", []]),
+					on: () => {},
+				}),
+			}
+		: createRedisClient();
 
 // Only add error handler in non-test environment
-if (process.env.NODE_ENV !== 'test') {
-	client.on('error', err => console.log('Redis Client Error', err));
+if (process.env.NODE_ENV !== "test") {
+	client.on("error", (err) => console.log("Redis Client Error", err));
 }

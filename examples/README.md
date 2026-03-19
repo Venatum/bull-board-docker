@@ -3,12 +3,14 @@
 This folder contains ready-to-run `docker compose` examples for common setups.
 
 Run any example:
+
 ```
   cd <example-folder>
   docker compose up
 ```
 
 List of examples:
+
 - `demo-example`: minimal bull-board + Redis (BullMQ default)
 - `demo-bull-example`: minimal bull-board + Redis using Bull
 - `custom-ui-example`: UI customization via env vars (title/logo/favicon/locale)

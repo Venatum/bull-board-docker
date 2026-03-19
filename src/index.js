@@ -1,27 +1,27 @@
-import passport from 'passport';
-import express from 'express';
-import session from 'express-session';
-import bodyParser from 'body-parser';
-import { ensureLoggedIn } from 'connect-ensure-login';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import passport from "passport";
+import express from "express";
+import session from "express-session";
+import bodyParser from "body-parser";
+import { ensureLoggedIn } from "connect-ensure-login";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 
-import {config} from "./config.js";
-import {authRouter} from './login.js';
-import {router} from "./bull.js";
-import {client} from "./redis.js";
+import { config } from "./config.js";
+import { authRouter } from "./login.js";
+import { router } from "./bull.js";
+import { client } from "./redis.js";
 
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-app.set('views', __dirname + '/views');
-app.set('view engine', 'ejs');
+app.set("views", __dirname + "/views");
+app.set("view engine", "ejs");
 
-if (app.get('env') !== 'production') {
-	const morgan = await import('morgan');
-	app.use(morgan.default('combined'));
+if (app.get("env") !== "production") {
+	const morgan = await import("morgan");
+	app.use(morgan.default("combined"));
 }
 
 app.use((req, res, next) => {
@@ -32,21 +32,21 @@ app.use((req, res, next) => {
 });
 
 const sessionOpts = {
-	name: 'bull-board.sid',
+	name: "bull-board.sid",
 	secret: Math.random().toString(),
 	resave: false,
 	saveUninitialized: false,
 	cookie: {
-		path: '/',
+		path: "/",
 		httpOnly: false,
-		secure: false
-	}
+		secure: false,
+	},
 };
 
 app.use(session(sessionOpts));
 app.use(passport.initialize({}));
 app.use(passport.session({}));
-app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.urlencoded({ extended: false }));
 
 if (config.AUTH_ENABLED) {
 	app.use(config.LOGIN_PAGE, authRouter);
@@ -55,36 +55,40 @@ if (config.AUTH_ENABLED) {
 	app.use(config.HOME_PAGE, router);
 }
 
-app.use('/healthcheck', async (req, res) => {
-	let status = "ok", redisStatus, redisError;
+app.use("/healthcheck", async (req, res) => {
+	let status = "ok",
+		redisStatus,
+		redisError;
 
 	try {
-		 if (await client.ping() === "PONG") {
-			 redisStatus = 'up';
-		 } else {
-			 redisStatus = 'down';
-			 status = "error";
-		 }
+		if ((await client.ping()) === "PONG") {
+			redisStatus = "up";
+		} else {
+			redisStatus = "down";
+			status = "error";
+		}
 	} catch (err) {
-		console.error(err)
+		console.error(err);
 		status = "error";
 		redisError = err;
 	}
 
-	res.status(status === 'ok' ? 200 : 503).json({
+	res.status(status === "ok" ? 200 : 503).json({
 		status,
 		info: {
 			redis: {
 				status: redisStatus,
 				description: "Based on the Redis PING/PONG system",
-				...(redisError && { error: redisError.message})
+				...(redisError && { error: redisError.message }),
 			},
 		},
 	});
 });
 
 const server = app.listen(config.PORT, config.BULL_BOARD_HOSTNAME, () => {
-	console.log(`bull-board is started http://${config.BULL_BOARD_HOSTNAME}:${config.PORT}${config.HOME_PAGE}`);
+	console.log(
+		`bull-board is started http://${config.BULL_BOARD_HOSTNAME}:${config.PORT}${config.HOME_PAGE}`,
+	);
 	console.log(`bull-board is fetching queue list, please wait...`);
 });
 
@@ -97,23 +101,23 @@ const gracefulShutdown = (signal) => {
 	console.log(`\n${signal} received, starting graceful shutdown...`);
 
 	server.close(async () => {
-		console.log('HTTP server closed');
+		console.log("HTTP server closed");
 
 		try {
 			await client.quit();
-			console.log('Redis connection closed');
+			console.log("Redis connection closed");
 		} catch (err) {
-			console.error('Error closing Redis connection:', err);
+			console.error("Error closing Redis connection:", err);
 		}
 
 		process.exit(0);
 	});
 
 	setTimeout(() => {
-		console.error('Forced shutdown after timeout');
+		console.error("Forced shutdown after timeout");
 		process.exit(1);
 	}, config.GRACEFUL_SHUTDOWN_TIMEOUT).unref();
-}
+};
 
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));

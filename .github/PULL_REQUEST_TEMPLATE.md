@@ -1,5 +1,5 @@
-[//]: # (please fill in all the fields required to understand your PR and delete the rest.)
-[//]: # (And remember to tests with `npm run test`)
+[//]: # "please fill in all the fields required to understand your PR and delete the rest."
+[//]: # "And remember to tests with `npm run test`"
 
 # 🚀 Fix #issue - Subject Issue
 
@@ -7,7 +7,7 @@ _Your little description about your changes_
 
 ## 📦 What's in the box?
 
-[//]: # (Add a list of what you have done)
+[//]: # "Add a list of what you have done"
 
 - [ ] Your feature
 - [ ] Your improvement

@@ -1,18 +1,18 @@
-import passport from 'passport';
-import {Strategy as LocalStrategy} from 'passport-local';
-import express from 'express';
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import express from "express";
 
-import {config} from "./config.js";
+import { config } from "./config.js";
 
 export const authRouter = express.Router();
 
-passport.use(new LocalStrategy(
-	function (username, password, cb) {
+passport.use(
+	new LocalStrategy(function (username, password, cb) {
 		if (username === config.USER_LOGIN && password === config.USER_PASSWORD) {
-			return cb(null, {user: 'bull-board'});
+			return cb(null, { user: "bull-board" });
 		}
 		return cb(null, false);
-	})
+	}),
 );
 
 passport.serializeUser((user, cb) => {
@@ -23,11 +23,14 @@ passport.deserializeUser((user, cb) => {
 	cb(null, user);
 });
 
-authRouter.route('/')
+authRouter
+	.route("/")
 	.get((req, res) => {
-		res.render('login');
+		res.render("login");
 	})
-	.post(passport.authenticate('local', {
-		successRedirect: config.HOME_PAGE,
-		failureRedirect: config.LOGIN_PAGE,
-	}));
+	.post(
+		passport.authenticate("local", {
+			successRedirect: config.HOME_PAGE,
+			failureRedirect: config.LOGIN_PAGE,
+		}),
+	);

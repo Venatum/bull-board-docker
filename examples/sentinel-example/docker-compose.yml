@@ -105,7 +105,7 @@ services:
       start_period: 10s
     restart: unless-stopped
     ports:
-      - '26379:26379'
+      - "26379:26379"
     networks:
       - redis-network
     depends_on:
@@ -130,7 +130,7 @@ services:
       start_period: 10s
     restart: unless-stopped
     ports:
-      - '26380:26379'
+      - "26380:26379"
     networks:
       - redis-network
     depends_on:
@@ -155,7 +155,7 @@ services:
       start_period: 10s
     restart: unless-stopped
     ports:
-      - '26381:26379'
+      - "26381:26379"
     networks:
       - redis-network
     depends_on:
