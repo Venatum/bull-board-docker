@@ -182,6 +182,55 @@ describe("Bull Queue Setup", () => {
 		expect(setQueuesMock).toHaveBeenCalledWith(expect.any(Array));
 	});
 
+	it("should accumulate keys across multiple SCAN pages", async () => {
+		vi.doMock("bullmq", () => ({ Queue: vi.fn() }));
+		vi.doMock("bull", () => ({ default: vi.fn() }));
+		vi.doMock("@bull-board/api", () => ({
+			createBullBoard: vi.fn().mockReturnValue({ setQueues: vi.fn() }),
+		}));
+		vi.doMock("@bull-board/express", () => ({
+			ExpressAdapter: class {
+				getRouter() {
+					return "router";
+				}
+			},
+		}));
+		vi.doMock("@bull-board/api/bullMQAdapter", () => ({
+			BullMQAdapter: class {},
+		}));
+		vi.doMock("@bull-board/api/bullAdapter", () => ({
+			BullAdapter: class {},
+		}));
+
+		const multiPageScanMock = vi
+			.fn()
+			.mockResolvedValueOnce(["42", ["bull:queue1:id"]])
+			.mockResolvedValueOnce(["0", ["bull:queue2:id"]]);
+
+		vi.doMock("../../src/redis", () => ({
+			client: {
+				scan: multiPageScanMock,
+				connection: "redis-connection",
+				on: vi.fn(),
+				nodes: vi.fn().mockReturnValue([]),
+				duplicate: vi.fn().mockReturnValue({ on: vi.fn() }),
+			},
+			redisConfig: { redis: { host: "localhost", port: 6379 } },
+			isCluster: false,
+		}));
+		vi.doMock("../../src/config", () => ({ config: defaultConfig }));
+		vi.doMock("exponential-backoff", () => ({
+			backOff: vi.fn().mockImplementation((fn) => fn()),
+		}));
+
+		const bull = await import("../../src/bull.js");
+		await bull.bullMain();
+
+		expect(multiPageScanMock).toHaveBeenCalledTimes(2);
+		expect(multiPageScanMock).toHaveBeenNthCalledWith(1, "0", "MATCH", "bull:*", "COUNT", 100);
+		expect(multiPageScanMock).toHaveBeenNthCalledWith(2, "42", "MATCH", "bull:*", "COUNT", 100);
+	});
+
 	it("should discover Bull queues and add them to the board (Bull)", async () => {
 		// Setup mocks with Bull configuration
 		setupCommonMocks({

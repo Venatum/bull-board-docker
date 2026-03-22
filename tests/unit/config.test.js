@@ -90,6 +90,9 @@ describe("Configuration", () => {
 			expect(config.BACKOFF_TIME_MULTIPLE).toBe(2);
 			expect(config.BACKOFF_NB_ATTEMPTS).toBe(10);
 
+			// Shutdown configuration
+			expect(config.GRACEFUL_SHUTDOWN_TIMEOUT).toBe(10000);
+
 			// App configuration
 			expect(config.PORT).toBe(3000);
 			expect(config.BULL_BOARD_HOSTNAME).toBe("0.0.0.0");
@@ -336,6 +339,16 @@ describe("Configuration", () => {
 			expect(config.BACKOFF_MAX_DELAY).toBe(10000);
 			expect(config.BACKOFF_TIME_MULTIPLE).toBe(3);
 			expect(config.BACKOFF_NB_ATTEMPTS).toBe(5);
+		});
+	});
+
+	describe("Shutdown Configuration", () => {
+		it("should load GRACEFUL_SHUTDOWN_TIMEOUT from environment variable", async () => {
+			process.env.GRACEFUL_SHUTDOWN_TIMEOUT = "30000";
+
+			const { config } = await getConfig();
+
+			expect(config.GRACEFUL_SHUTDOWN_TIMEOUT).toBe(30000);
 		});
 	});
 

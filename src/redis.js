@@ -247,6 +247,8 @@ export const client =
 		? {
 				keys: () => Promise.resolve([]),
 				scan: () => Promise.resolve(["0", []]),
+				ping: () => Promise.resolve("PONG"),
+				quit: () => Promise.resolve("OK"),
 				connection: "mock-connection",
 				on: () => {},
 				nodes: () => [],
