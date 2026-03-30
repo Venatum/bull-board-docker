@@ -73,7 +73,7 @@ app.use("/healthcheck", async (req, res) => {
 		redisError = err;
 	}
 
-	res.status(200).json({
+	res.status(status === "ok" ? 200 : 503).json({
 		status,
 		info: {
 			redis: {
@@ -85,9 +85,39 @@ app.use("/healthcheck", async (req, res) => {
 	});
 });
 
-app.listen(config.PORT, config.BULL_BOARD_HOSTNAME, () => {
+const server = app.listen(config.PORT, config.BULL_BOARD_HOSTNAME, () => {
 	console.log(
 		`bull-board is started http://${config.BULL_BOARD_HOSTNAME}:${config.PORT}${config.HOME_PAGE}`,
 	);
 	console.log(`bull-board is fetching queue list, please wait...`);
 });
+
+let isShuttingDown = false;
+
+const gracefulShutdown = (signal) => {
+	if (isShuttingDown) return;
+	isShuttingDown = true;
+
+	console.log(`\n${signal} received, starting graceful shutdown...`);
+
+	server.close(async () => {
+		console.log("HTTP server closed");
+
+		try {
+			await client.quit();
+			console.log("Redis connection closed");
+		} catch (err) {
+			console.error("Error closing Redis connection:", err);
+		}
+
+		process.exit(0);
+	});
+
+	setTimeout(() => {
+		console.error("Forced shutdown after timeout");
+		process.exit(1);
+	}, config.GRACEFUL_SHUTDOWN_TIMEOUT).unref();
+};
+
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
