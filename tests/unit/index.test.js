@@ -336,6 +336,34 @@ describe("Express Application", () => {
 			processExitSpy.mockRestore();
 		});
 
+		it("should still exit when client.quit() rejects during shutdown", async () => {
+			const processOnSpy = vi.spyOn(process, "on");
+			const processExitSpy = vi.spyOn(process, "exit").mockImplementation(() => {});
+			const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation();
+			const redisMock = setupCommonMocks({
+				...defaultConfig,
+				GRACEFUL_SHUTDOWN_TIMEOUT: 10000,
+			});
+			redisMock.client.quit = vi.fn().mockRejectedValue(new Error("Redis quit failed"));
+
+			await import("../../src/index.js");
+
+			const sigtermHandler = processOnSpy.mock.calls.find((call) => call[0] === "SIGTERM")[1];
+
+			await sigtermHandler();
+
+			expect(redisMock.client.quit).toHaveBeenCalled();
+			expect(consoleErrorSpy).toHaveBeenCalledWith(
+				"Error closing Redis connection:",
+				expect.any(Error),
+			);
+			expect(processExitSpy).toHaveBeenCalledWith(0);
+
+			processOnSpy.mockRestore();
+			processExitSpy.mockRestore();
+			consoleErrorSpy.mockRestore();
+		});
+
 		it("should not shutdown twice on repeated signals", async () => {
 			const processOnSpy = vi.spyOn(process, "on");
 			const processExitSpy = vi.spyOn(process, "exit").mockImplementation(() => {});

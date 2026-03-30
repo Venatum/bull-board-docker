@@ -183,10 +183,12 @@ describe("Bull Queue Setup", () => {
 	});
 
 	it("should accumulate keys across multiple SCAN pages", async () => {
-		vi.doMock("bullmq", () => ({ Queue: vi.fn() }));
+		const multiPageQueueMock = vi.fn();
+		vi.doMock("bullmq", () => ({ Queue: multiPageQueueMock }));
 		vi.doMock("bull", () => ({ default: vi.fn() }));
+		const multiPageSetQueuesMock = vi.fn();
 		vi.doMock("@bull-board/api", () => ({
-			createBullBoard: vi.fn().mockReturnValue({ setQueues: vi.fn() }),
+			createBullBoard: vi.fn().mockReturnValue({ setQueues: multiPageSetQueuesMock }),
 		}));
 		vi.doMock("@bull-board/express", () => ({
 			ExpressAdapter: class {
@@ -226,9 +228,16 @@ describe("Bull Queue Setup", () => {
 		const bull = await import("../../src/bull.js");
 		await bull.bullMain();
 
+		// Verify SCAN pagination
 		expect(multiPageScanMock).toHaveBeenCalledTimes(2);
 		expect(multiPageScanMock).toHaveBeenNthCalledWith(1, "0", "MATCH", "bull:*", "COUNT", 100);
 		expect(multiPageScanMock).toHaveBeenNthCalledWith(2, "42", "MATCH", "bull:*", "COUNT", 100);
+
+		// Verify both queues from different pages were discovered and registered
+		expect(multiPageQueueMock).toHaveBeenCalledTimes(2);
+		expect(multiPageQueueMock).toHaveBeenCalledWith("queue1", expect.any(Object), "redis-connection");
+		expect(multiPageQueueMock).toHaveBeenCalledWith("queue2", expect.any(Object), "redis-connection");
+		expect(multiPageSetQueuesMock).toHaveBeenCalledWith(expect.arrayContaining([expect.any(Object), expect.any(Object)]));
 	});
 
 	it("should discover Bull queues and add them to the board (Bull)", async () => {
