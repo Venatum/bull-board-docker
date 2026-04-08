@@ -42,11 +42,11 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@bull-board/api": "^6.20.7",
-    "@bull-board/express": "^6.20.7",
+    "@bull-board/api": "^6.21.0",
+    "@bull-board/express": "^6.21.0",
     "body-parser": "^2.2.2",
     "bull": "^4.16.5",
-    "bullmq": "^5.73.0",
+    "bullmq": "^5.73.1",
     "connect-ensure-login": "^0.1.1",
     "dotenv": "^17.4.1",
     "exponential-backoff": "^3.1.3",
