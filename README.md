@@ -19,12 +19,12 @@ To configure redis see "Environment variables" section.
 
 ```yaml
 services:
-    bullboard:
-        container_name: bullboard
-        image: venatum/bull-board
-        restart: unless-stopped
-        ports:
-            - "3000:3000"
+  bullboard:
+    container_name: bullboard
+    image: venatum/bull-board
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
 ```
 
 will run bull-board interface on `localhost:3000` and connect to your redis instance on `localhost:6379` without password.
@@ -210,33 +210,33 @@ A Healthcheck based on NestJS is available to monitor the status of the containe
 
 ```yaml
 services:
-    redis:
-        container_name: redis
-        image: redis:alpine
-        restart: unless-stopped
-        ports:
-            - "6379:6379"
-        volumes:
-            - redis_db_data:/data
+  redis:
+    container_name: redis
+    image: redis:alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_db_data:/data
 
-    bullboard:
-        container_name: bullboard
-        image: venatum/bull-board:latest
-        restart: unless-stopped
-        environment:
-            REDIS_HOST: redis
-            REDIS_PORT: 6379
-            REDIS_PASSWORD: example-password
-            REDIS_USE_TLS: "false"
-            BULL_PREFIX: bull
-        ports:
-            - "3000:3000"
-        depends_on:
-            - redis
+  bullboard:
+    container_name: bullboard
+    image: venatum/bull-board:latest
+    restart: unless-stopped
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: example-password
+      REDIS_USE_TLS: "false"
+      BULL_PREFIX: bull
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
 
 volumes:
-    redis_db_data:
-        external: false
+  redis_db_data:
+    external: false
 ```
 
 [bull-board]: https://github.com/felixmosh/bull-board

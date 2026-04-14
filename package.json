@@ -67,9 +67,9 @@
   },
   "engines": {
     "bun": ">=1.0.0",
-    "yarn": "please use bun",
-    "npm": "please use bun",
     "node": "please use bun",
-    "pnpm": "please use bun"
+    "npm": "please use bun",
+    "pnpm": "please use bun",
+    "yarn": "please use bun"
   }
 }
