@@ -58,7 +58,7 @@ module.exports = {
 				],
 			},
 		],
-		["@semantic-release/release-notes-generator", { preset: "conventionalcommits" }],
+		["./scripts/tldr-plugin.cjs", { preset: "conventionalcommits" }],
 		// '@semantic-release/git',
 		"@semantic-release/github",
 	],
