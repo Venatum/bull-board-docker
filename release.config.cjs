@@ -21,42 +21,45 @@
 
 module.exports = {
 	plugins: [
-		['@semantic-release/commit-analyzer', {
-			preset: 'conventionalcommits',
-			presetConfig: {
-				types: [
-					{type: '*!', section: "BREAKING CHANGES"},
-					{type: 'feat', section: "Features"},
-					{type: 'chore', scope: 'deps', section: "Dependency updates"},
-					{type: 'chore', scope: 'dev-deps', section: "Dev dependency updates"},
-					{type: 'fix', section: "Bug Fixes"},
-					{type: 'docs', section: "Documentation"},
-					{type: 'perf', section: "Performance improvements"},
-					{type: 'revert', section: "Revert previous changes"},
-					{type: 'test', section: "Tests"},
-					{type: 'ci', section: "Build and continuous integration"},
-					{type: 'build', section: "Build and continuous integration"},
-					{type: 'chore', section: "General maintenance"},
-					{type: 'style', section: "Style improvements"},
-					{type: 'refactor', section: "Refactoring"},
-				]
-			},
-			releaseRules: [
-				{type: '*!', release: 'major'},
-				{type: 'chore', scope: 'deps', release: 'patch'},
-				{type: 'chore', scope: 'dev-deps', release: false},
-				{type: 'build', scope: 'docker', release: 'patch'},
-				{type: 'ci', release: false},
+		[
+			"@semantic-release/commit-analyzer",
+			{
+				preset: "conventionalcommits",
+				presetConfig: {
+					types: [
+						{ type: "*!", section: "BREAKING CHANGES" },
+						{ type: "feat", section: "Features" },
+						{ type: "chore", scope: "deps", section: "Dependency updates" },
+						{ type: "chore", scope: "dev-deps", section: "Dev dependency updates" },
+						{ type: "fix", section: "Bug Fixes" },
+						{ type: "docs", section: "Documentation" },
+						{ type: "perf", section: "Performance improvements" },
+						{ type: "revert", section: "Revert previous changes" },
+						{ type: "test", section: "Tests" },
+						{ type: "ci", section: "Build and continuous integration" },
+						{ type: "build", section: "Build and continuous integration" },
+						{ type: "chore", section: "General maintenance" },
+						{ type: "style", section: "Style improvements" },
+						{ type: "refactor", section: "Refactoring" },
+					],
+				},
+				releaseRules: [
+					{ type: "*!", release: "major" },
+					{ type: "chore", scope: "deps", release: "patch" },
+					{ type: "chore", scope: "dev-deps", release: false },
+					{ type: "build", scope: "docker", release: "patch" },
+					{ type: "ci", release: false },
 
-				// {type: 'chore', scope: 'api-deps', release: 'minor'},
-				// {type: 'chore', scope: 'core-deps', release: 'patch'},
-				// {type: 'chore', scope: 'deps', release: 'patch'},
-				// {type: 'docs', release: 'patch'},
-				{type: 'revert', release: 'patch'},
-			]
-		}],
-		['@semantic-release/release-notes-generator', {preset: 'conventionalcommits'}],
+					// {type: 'chore', scope: 'api-deps', release: 'minor'},
+					// {type: 'chore', scope: 'core-deps', release: 'patch'},
+					// {type: 'chore', scope: 'deps', release: 'patch'},
+					// {type: 'docs', release: 'patch'},
+					{ type: "revert", release: "patch" },
+				],
+			},
+		],
+		["./scripts/tldr-plugin.cjs", { preset: "conventionalcommits" }],
 		// '@semantic-release/git',
-		'@semantic-release/github',
+		"@semantic-release/github",
 	],
 };

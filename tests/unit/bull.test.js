@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, mock, spyOn } from 'bun:test';
 
 // Set NODE_ENV to 'test' to prevent automatic execution of bullMain
-process.env.NODE_ENV = 'test';
+process.env.NODE_ENV = "test";
 
 // override scope wise to avoid log flood
 console.log = () => null;
 
-describe('Bull Queue Setup', () => {
+describe("Bull Queue Setup", () => {
 	// Common mocks
 	let QueueMock;
 	let BullMock;
@@ -20,53 +20,56 @@ describe('Bull Queue Setup', () => {
 
 	// Default config
 	const defaultConfig = {
-		BULL_PREFIX: 'bull',
-		BULL_VERSION: 'BULLMQ',
+		BULL_PREFIX: "bull",
+		BULL_VERSION: "BULLMQ",
 		BACKOFF_STARTING_DELAY: 500,
 		BACKOFF_MAX_DELAY: Infinity,
 		BACKOFF_TIME_MULTIPLE: 2,
 		BACKOFF_NB_ATTEMPTS: 10,
-		BULL_BOARD_TITLE: 'Test Bull Board',
+		BULL_BOARD_TITLE: "Test Bull Board",
 	};
 
 	// Helper function to setup common mocks
-	const setupCommonMocks = (config = defaultConfig, queueKeys = ['bull:queue1:jobs', 'bull:queue2:jobs']) => {
+	const setupCommonMocks = (
+		config = defaultConfig,
+		queueKeys = ["bull:queue1:jobs", "bull:queue2:jobs"],
+	) => {
 		// Setup BullMQ mock
   QueueMock = mock.fn();
-  mock.module('bullmq', () => ({
+  mock.module("bullmq", () => ({
     Queue: QueueMock,
   }));
 
 		// Setup Bull mock
   BullMock = mock.fn();
-  mock.module('bull', () => ({ default: BullMock }));
+  mock.module("bull", () => ({ default: BullMock }));
 
 		// Setup Bull Board mocks
   setQueuesMock = mock.fn();
   createBullBoardMock = mock.fn().mockReturnValue({
     setQueues: setQueuesMock,
   });
-  mock.module('@bull-board/api', () => ({
+  mock.module("@bull-board/api", () => ({
     createBullBoard: createBullBoardMock,
   }));
 
 		// Setup Express Adapter mock
   ExpressAdapterMock = mock.fn();
-  mock.module('@bull-board/express', () => ({
+  mock.module("@bull-board/express", () => ({
     // Provide a constructable class and keep a spy on constructor calls
     ExpressAdapter: class {
       constructor(...args) {
         ExpressAdapterMock(...args);
       }
       getRouter() {
-        return 'router';
+        return "router";
       }
     },
   }));
 
 		// Setup Adapter mocks
   BullMQAdapterMock = mock.fn();
-  mock.module('@bull-board/api/bullMQAdapter', () => ({
+  mock.module("@bull-board/api/bullMQAdapter", () => ({
     BullMQAdapter: class {
       constructor(...args) {
         BullMQAdapterMock(...args);
@@ -75,7 +78,7 @@ describe('Bull Queue Setup', () => {
   }));
 
   BullAdapterMock = mock.fn();
-  mock.module('@bull-board/api/bullAdapter', () => ({
+  mock.module("@bull-board/api/bullAdapter", () => ({
     BullAdapter: class {
       constructor(...args) {
         BullAdapterMock(...args);
@@ -105,7 +108,7 @@ describe('Bull Queue Setup', () => {
     }));
 
 		// Setup backoff mock
-  mock.module('exponential-backoff', () => ({
+  mock.module("exponential-backoff", () => ({
       backOff: mock.fn().mockImplementation((fn) => fn()),
     }));
   };
@@ -123,7 +126,7 @@ describe('Bull Queue Setup', () => {
 		}
 	});
 
-	it('should create a Bull board with the correct configuration', async () => {
+	it("should create a Bull board with the correct configuration", async () => {
 		// Setup mocks
 		setupCommonMocks();
 
@@ -134,33 +137,35 @@ describe('Bull Queue Setup', () => {
 		// which happens when the module is imported
 
 		// Verify that createBullBoard was called with the correct configuration
-		expect(createBullBoardMock).toHaveBeenCalledWith(expect.objectContaining({
-			queues: [],
-			serverAdapter: expect.any(Object),
-			options: expect.objectContaining({
-				uiConfig: expect.objectContaining({
-					boardTitle: 'Test Bull Board',
+		expect(createBullBoardMock).toHaveBeenCalledWith(
+			expect.objectContaining({
+				queues: [],
+				serverAdapter: expect.any(Object),
+				options: expect.objectContaining({
+					uiConfig: expect.objectContaining({
+						boardTitle: "Test Bull Board",
+					}),
 				}),
 			}),
-		}));
+		);
 
 		// Verify that ExpressAdapter was instantiated
 		expect(ExpressAdapterMock).toHaveBeenCalled();
 	});
 
-	it('should discover Bull queues and add them to the board (BullMQ)', async () => {
+	it("should discover Bull queues and add them to the board (BullMQ)", async () => {
 		// Setup mocks with BullMQ configuration
 		setupCommonMocks();
 
 		// Import the module to test
-		const bull = await import('../../src/bull.js');
+		const bull = await import("../../src/bull.js");
 
 		// Call the bullMain function
 		await bull.bullMain();
 
 		// Verify that Queue constructor was called for each queue
-		expect(QueueMock).toHaveBeenCalledWith('queue1', expect.any(Object), 'redis-connection');
-		expect(QueueMock).toHaveBeenCalledWith('queue2', expect.any(Object), 'redis-connection');
+		expect(QueueMock).toHaveBeenCalledWith("queue1", expect.any(Object), "redis-connection");
+		expect(QueueMock).toHaveBeenCalledWith("queue2", expect.any(Object), "redis-connection");
 
 		// Verify that BullMQAdapter was created for each queue
 		expect(BullMQAdapterMock).toHaveBeenCalledTimes(2);
@@ -169,11 +174,11 @@ describe('Bull Queue Setup', () => {
 		expect(setQueuesMock).toHaveBeenCalledWith(expect.any(Array));
 	});
 
-	it('should discover Bull queues and add them to the board (Bull)', async () => {
+	it("should discover Bull queues and add them to the board (Bull)", async () => {
 		// Setup mocks with Bull configuration
 		setupCommonMocks({
 			...defaultConfig,
-			BULL_VERSION: 'BULL',
+			BULL_VERSION: "BULL",
 		});
 
 		// Import the module to test
@@ -183,8 +188,8 @@ describe('Bull Queue Setup', () => {
 		await bull.bullMain();
 
 		// Verify that Bull constructor was called for each queue
-		expect(BullMock).toHaveBeenCalledWith('queue1', expect.any(Object), 'redis-connection');
-		expect(BullMock).toHaveBeenCalledWith('queue2', expect.any(Object), 'redis-connection');
+		expect(BullMock).toHaveBeenCalledWith("queue1", expect.any(Object), "redis-connection");
+		expect(BullMock).toHaveBeenCalledWith("queue2", expect.any(Object), "redis-connection");
 
 		// Verify that BullAdapter was created for each queue
 		expect(BullAdapterMock).toHaveBeenCalledTimes(2);
@@ -193,12 +198,12 @@ describe('Bull Queue Setup', () => {
 		expect(setQueuesMock).toHaveBeenCalledWith(expect.any(Array));
 	});
 
-	it('should handle error when no queues are found', async () => {
+	it("should handle error when no queues are found", async () => {
 		// Setup mocks with empty queue keys
 		setupCommonMocks(defaultConfig, []);
 
 		// Mock console.error to verify it's called
-  consoleSpy = spyOn(console, 'error').mockImplementation(() => {});
+  consoleSpy = spyOn(console, "error").mockImplementation(() => {});
 
 		// Import the module to test
 		const bull = await import('../../src/bull.js');
@@ -220,84 +225,411 @@ describe('Bull Queue Setup', () => {
 		await bull.bullMain();
 
 		// Get the appropriate mock based on the version
-		const mock = configWithPrefix.BULL_VERSION === 'BULLMQ' ? QueueMock : BullMock;
-		const connectionKey = configWithPrefix.BULL_VERSION === 'BULLMQ' ? 'connection' : 'redis';
+		const mock = configWithPrefix.BULL_VERSION === "BULLMQ" ? QueueMock : BullMock;
+		const connectionKey = configWithPrefix.BULL_VERSION === "BULLMQ" ? "connection" : "redis";
 
 		if (!reverseCheck) {
 			expect.assertions(2);
 
 			// Verify that Queue constructor was called with prefix in configuration
-			expect(mock).toHaveBeenCalledWith('queue1', expect.objectContaining({
-				[connectionKey]: expect.any(Object),
-				prefix: 'test-prefix'
-			}), 'redis-connection');
-			expect(mock).toHaveBeenCalledWith('queue2', expect.objectContaining({
-				[connectionKey]: expect.any(Object),
-				prefix: 'test-prefix'
-			}), 'redis-connection');
+			expect(mock).toHaveBeenCalledWith(
+				"queue1",
+				expect.objectContaining({
+					[connectionKey]: expect.any(Object),
+					prefix: "test-prefix",
+				}),
+				"redis-connection",
+			);
+			expect(mock).toHaveBeenCalledWith(
+				"queue2",
+				expect.objectContaining({
+					[connectionKey]: expect.any(Object),
+					prefix: "test-prefix",
+				}),
+				"redis-connection",
+			);
 		} else {
 			expect.assertions(4);
 
 			// Verify that Queue constructor was called without prefix in configuration
-			expect(mock).toHaveBeenCalledWith('queue1', expect.objectContaining({
-				[connectionKey]: expect.any(Object),
-			}), 'redis-connection');
-			expect(mock).toHaveBeenCalledWith('queue2', expect.objectContaining({
-				[connectionKey]: expect.any(Object),
-			}), 'redis-connection');
+			expect(mock).toHaveBeenCalledWith(
+				"queue1",
+				expect.objectContaining({
+					[connectionKey]: expect.any(Object),
+				}),
+				"redis-connection",
+			);
+			expect(mock).toHaveBeenCalledWith(
+				"queue2",
+				expect.objectContaining({
+					[connectionKey]: expect.any(Object),
+				}),
+				"redis-connection",
+			);
 
 			// Verify that prefix is not included in the configuration
-			expect(mock).not.toHaveBeenCalledWith('queue1', expect.objectContaining({
-				prefix: expect.anything()
-			}), 'redis-connection');
-			expect(mock).not.toHaveBeenCalledWith('queue2', expect.objectContaining({
-				prefix: expect.anything()
-			}), 'redis-connection');
+			expect(mock).not.toHaveBeenCalledWith(
+				"queue1",
+				expect.objectContaining({
+					prefix: expect.anything(),
+				}),
+				"redis-connection",
+			);
+			expect(mock).not.toHaveBeenCalledWith(
+				"queue2",
+				expect.objectContaining({
+					prefix: expect.anything(),
+				}),
+				"redis-connection",
+			);
 		}
 	}
 
+	describe("Cluster Mode", () => {
+		const setupClusterMocks = (
+			config = defaultConfig,
+			queueKeys = ["bull:queue1:jobs", "bull:queue2:jobs"],
+		) => {
+			// Setup BullMQ mock
+			QueueMock = vi.fn();
+			vi.doMock("bullmq", () => ({
+				Queue: QueueMock,
+			}));
+
+			// Setup Bull mock
+			BullMock = vi.fn();
+			vi.doMock("bull", () => ({ default: BullMock }));
+
+			// Setup Bull Board mocks
+			setQueuesMock = vi.fn();
+			createBullBoardMock = vi.fn().mockReturnValue({
+				setQueues: setQueuesMock,
+			});
+			vi.doMock("@bull-board/api", () => ({
+				createBullBoard: createBullBoardMock,
+			}));
+
+			// Setup Express Adapter mock
+			ExpressAdapterMock = vi.fn();
+			vi.doMock("@bull-board/express", () => ({
+				ExpressAdapter: class {
+					constructor(...args) {
+						ExpressAdapterMock(...args);
+					}
+					getRouter() {
+						return "router";
+					}
+				},
+			}));
+
+			// Setup Adapter mocks
+			BullMQAdapterMock = vi.fn();
+			vi.doMock("@bull-board/api/bullMQAdapter", () => ({
+				BullMQAdapter: class {
+					constructor(...args) {
+						BullMQAdapterMock(...args);
+					}
+				},
+			}));
+
+			BullAdapterMock = vi.fn();
+			vi.doMock("@bull-board/api/bullAdapter", () => ({
+				BullAdapter: class {
+					constructor(...args) {
+						BullAdapterMock(...args);
+					}
+				},
+			}));
+
+			// Setup Redis mock with cluster support
+			const mockNode1 = { keys: vi.fn().mockResolvedValue(queueKeys.slice(0, 1)) };
+			const mockNode2 = { keys: vi.fn().mockResolvedValue(queueKeys.slice(1)) };
+			clientKeysMock = vi.fn().mockResolvedValue(queueKeys);
+
+			const mockClient = {
+				keys: clientKeysMock,
+				connection: "redis-connection",
+				on: vi.fn(),
+				nodes: vi.fn().mockReturnValue([mockNode1, mockNode2]),
+				duplicate: vi.fn().mockReturnValue({ on: vi.fn() }),
+			};
+
+			vi.doMock("../../src/redis", () => ({
+				client: mockClient,
+				redisConfig: {
+					redis: {
+						host: "localhost",
+						port: 6379,
+					},
+				},
+				isCluster: true,
+			}));
+
+			// Setup config mock
+			vi.doMock("../../src/config", () => ({
+				config,
+			}));
+
+			// Setup backoff mock
+			vi.doMock("exponential-backoff", () => ({
+				backOff: vi.fn().mockImplementation((fn) => fn()),
+			}));
+
+			return { mockClient, mockNode1, mockNode2 };
+		};
+
+		it("should scan all master nodes for keys in cluster mode (BullMQ)", async () => {
+			const { mockNode1, mockNode2 } = setupClusterMocks();
+
+			const bull = await import("../../src/bull.js");
+			await bull.bullMain();
+
+			expect(mockNode1.keys).toHaveBeenCalledWith("bull:*");
+			expect(mockNode2.keys).toHaveBeenCalledWith("bull:*");
+			expect(BullMQAdapterMock).toHaveBeenCalledTimes(2);
+			expect(setQueuesMock).toHaveBeenCalledWith(expect.any(Array));
+		});
+
+		it("should pass cluster client as connection for BullMQ queues", async () => {
+			const { mockClient } = setupClusterMocks();
+
+			const bull = await import("../../src/bull.js");
+			await bull.bullMain();
+
+			expect(QueueMock).toHaveBeenCalledWith(
+				"queue1",
+				expect.objectContaining({
+					connection: mockClient,
+				}),
+				"redis-connection",
+			);
+		});
+
+		it("should use createClient for Bull queues in cluster mode", async () => {
+			const { mockClient } = setupClusterMocks({
+				...defaultConfig,
+				BULL_VERSION: "BULL",
+				BULL_PREFIX: "{bull}",
+			});
+
+			const bull = await import("../../src/bull.js");
+			await bull.bullMain();
+
+			expect(BullMock).toHaveBeenCalledWith(
+				"queue1",
+				expect.objectContaining({
+					createClient: expect.any(Function),
+				}),
+				"redis-connection",
+			);
+
+			// Verify createClient calls duplicate and attaches error handler
+			const createClientFn = BullMock.mock.calls[0][1].createClient;
+			const dup = createClientFn();
+			expect(mockClient.duplicate).toHaveBeenCalled();
+			expect(dup.on).toHaveBeenCalledWith("error", expect.any(Function));
+		});
+
+		it("should not use redis options object for Bull queues in cluster mode", async () => {
+			setupClusterMocks({
+				...defaultConfig,
+				BULL_VERSION: "BULL",
+				BULL_PREFIX: "{bull}",
+			});
+
+			const bull = await import("../../src/bull.js");
+			await bull.bullMain();
+
+			expect(BullMock).not.toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({ redis: expect.anything() }),
+				expect.anything(),
+			);
+		});
+
+		it("should throw when no master nodes are available", async () => {
+			setupClusterMocks();
+
+			// Override nodes to return empty array
+			vi.doMock("../../src/redis", () => ({
+				client: {
+					keys: vi.fn(),
+					connection: "redis-connection",
+					on: vi.fn(),
+					nodes: vi.fn().mockReturnValue([]),
+					duplicate: vi.fn().mockReturnValue({ on: vi.fn() }),
+				},
+				redisConfig: { redis: { host: "localhost", port: 6379 } },
+				isCluster: true,
+			}));
+
+			const bull = await import("../../src/bull.js");
+			await expect(bull.getBullQueues()).rejects.toThrow("No master nodes available");
+		});
+
+		it("should handle partial node failures gracefully", async () => {
+			const failingNode = { keys: vi.fn().mockRejectedValue(new Error("ECONNREFUSED")) };
+			const workingNode = { keys: vi.fn().mockResolvedValue(["bull:queue1:jobs"]) };
+
+			vi.doMock("bullmq", () => ({ Queue: vi.fn() }));
+			vi.doMock("bull", () => ({ default: vi.fn() }));
+			setQueuesMock = vi.fn();
+			vi.doMock("@bull-board/api", () => ({
+				createBullBoard: vi.fn().mockReturnValue({ setQueues: setQueuesMock }),
+			}));
+			vi.doMock("@bull-board/express", () => ({
+				ExpressAdapter: class {
+					getRouter() {
+						return "router";
+					}
+				},
+			}));
+			vi.doMock("@bull-board/api/bullMQAdapter", () => ({
+				BullMQAdapter: class {},
+			}));
+			vi.doMock("@bull-board/api/bullAdapter", () => ({
+				BullAdapter: class {},
+			}));
+			vi.doMock("../../src/redis", () => ({
+				client: {
+					keys: vi.fn(),
+					connection: "redis-connection",
+					on: vi.fn(),
+					nodes: vi.fn().mockReturnValue([failingNode, workingNode]),
+					duplicate: vi.fn().mockReturnValue({ on: vi.fn() }),
+				},
+				redisConfig: { redis: {} },
+				isCluster: true,
+			}));
+			vi.doMock("../../src/config", () => ({ config: defaultConfig }));
+			vi.doMock("exponential-backoff", () => ({
+				backOff: vi.fn().mockImplementation((fn) => fn()),
+			}));
+
+			consoleSpy = vi.spyOn(console, "error").mockImplementation();
+
+			const bull = await import("../../src/bull.js");
+			await bull.bullMain();
+
+			// Should log the partial failure
+			expect(consoleSpy).toHaveBeenCalledWith(
+				expect.stringContaining("Failed to scan keys on 1/2 master node(s)"),
+				expect.any(Array),
+			);
+			// Should still discover the queue from the working node
+			expect(setQueuesMock).toHaveBeenCalledWith(expect.any(Array));
+		});
+
+		it("should throw when all master nodes fail", async () => {
+			const failingNode1 = { keys: vi.fn().mockRejectedValue(new Error("ECONNREFUSED")) };
+			const failingNode2 = { keys: vi.fn().mockRejectedValue(new Error("ETIMEDOUT")) };
+
+			vi.doMock("bullmq", () => ({ Queue: vi.fn() }));
+			vi.doMock("bull", () => ({ default: vi.fn() }));
+			vi.doMock("@bull-board/api", () => ({
+				createBullBoard: vi.fn().mockReturnValue({ setQueues: vi.fn() }),
+			}));
+			vi.doMock("@bull-board/express", () => ({
+				ExpressAdapter: class {
+					getRouter() {
+						return "router";
+					}
+				},
+			}));
+			vi.doMock("@bull-board/api/bullMQAdapter", () => ({
+				BullMQAdapter: class {},
+			}));
+			vi.doMock("@bull-board/api/bullAdapter", () => ({
+				BullAdapter: class {},
+			}));
+			vi.doMock("../../src/redis", () => ({
+				client: {
+					keys: vi.fn(),
+					connection: "redis-connection",
+					on: vi.fn(),
+					nodes: vi.fn().mockReturnValue([failingNode1, failingNode2]),
+					duplicate: vi.fn().mockReturnValue({ on: vi.fn() }),
+				},
+				redisConfig: { redis: {} },
+				isCluster: true,
+			}));
+			vi.doMock("../../src/config", () => ({ config: defaultConfig }));
+			vi.doMock("exponential-backoff", () => ({
+				backOff: vi.fn().mockImplementation((fn) => fn()),
+			}));
+
+			consoleSpy = vi.spyOn(console, "error").mockImplementation();
+
+			const bull = await import("../../src/bull.js");
+			await expect(bull.getBullQueues()).rejects.toThrow("All master nodes failed");
+		});
+
+		it("should throw when Bull is used in cluster mode without hash-tag prefix", async () => {
+			setupClusterMocks({
+				...defaultConfig,
+				BULL_VERSION: "BULL",
+				BULL_PREFIX: "bull",
+			});
+
+			const bull = await import("../../src/bull.js");
+
+			await expect(bull.getBullQueues()).rejects.toThrow(
+				"Redis Cluster with BULL requires BULL_PREFIX to include a hash tag",
+			);
+		});
+	});
+
 	[
 		{
-			name: 'BullMQ',
-			version: 'BULLMQ',
+			name: "BullMQ",
+			version: "BULLMQ",
 		},
 		{
-			name: 'Bull',
-			version: 'BULL',
-		}
-	].forEach(({name, version}) => {
+			name: "Bull",
+			version: "BULL",
+		},
+	].forEach(({ name, version }) => {
 		describe(`Prefix Handling (${name})`, () => {
 			it(`should include prefix in ${name} queue configuration when BULL_PREFIX is defined`, async () => {
 				await testPrefix({
 					...defaultConfig,
-					BULL_PREFIX: 'test-prefix',
+					BULL_PREFIX: "test-prefix",
 					BULL_VERSION: version,
-				})
+				});
 			});
 
 			it(`should not include prefix in ${name} queue configuration when BULL_PREFIX is undefined`, async () => {
-				await testPrefix({
-					...defaultConfig,
-					BULL_PREFIX: undefined,
-					BULL_VERSION: version,
-				}, true)
+				await testPrefix(
+					{
+						...defaultConfig,
+						BULL_PREFIX: undefined,
+						BULL_VERSION: version,
+					},
+					true,
+				);
 			});
 
 			it(`should not include prefix in ${name} queue configuration when BULL_PREFIX is empty string`, async () => {
-				await testPrefix({
-					...defaultConfig,
-					BULL_PREFIX: '',
-					BULL_VERSION: version,
-				}, true)
+				await testPrefix(
+					{
+						...defaultConfig,
+						BULL_PREFIX: "",
+						BULL_VERSION: version,
+					},
+					true,
+				);
 			});
 
 			it(`should not include prefix in ${name} queue configuration when BULL_PREFIX is null`, async () => {
-				await testPrefix({
-					...defaultConfig,
-					BULL_PREFIX: null,
-					BULL_VERSION: version,
-				}, true)
+				await testPrefix(
+					{
+						...defaultConfig,
+						BULL_PREFIX: null,
+						BULL_VERSION: version,
+					},
+					true,
+				);
 			});
-		})
-	})
+		});
+	});
 });

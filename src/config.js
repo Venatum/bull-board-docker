@@ -1,55 +1,121 @@
-import * as dotenv from 'dotenv'
+import * as dotenv from "dotenv";
+import { existsSync, readFileSync } from "node:fs";
 
 dotenv.config({
-	quiet: true
-})
+	quiet: true,
+});
 
 function normalizePath(pathStr) {
-	return (pathStr || '').replace(/\/$/, '');
+	return (pathStr || "").replace(/\/$/, "");
 }
 
 export const PROXY_PATH = normalizePath(process.env.PROXY_PATH);
 
+function parseBooleanEnv(value, defaultValue = false) {
+	if (value === undefined) return defaultValue;
+	const normalized = String(value).trim().toLowerCase();
+	if (["1", "true", "yes", "on"].includes(normalized)) return true;
+	if (["0", "false", "no", "off"].includes(normalized)) return false;
+	return defaultValue;
+}
+
+function resolvePemOrPath(pemOrPath) {
+	if (!pemOrPath) return undefined;
+	if (pemOrPath.includes("-----BEGIN")) return pemOrPath;
+	if (!existsSync(pemOrPath)) {
+		throw new Error(`TLS file not found: ${pemOrPath}`);
+	}
+
+	try {
+		return readFileSync(pemOrPath, "utf8");
+	} catch (error) {
+		throw new Error(`Cannot read TLS file: ${pemOrPath}. ${error.message}`);
+	}
+}
+
 export const config = {
 	// Redis configuration
 	REDIS_PORT: Number(process.env.REDIS_PORT) || 6379,
-	REDIS_HOST: process.env.REDIS_HOST || 'localhost',
-	REDIS_DB: process.env.REDIS_DB || '0',
+	REDIS_HOST: process.env.REDIS_HOST || "localhost",
+	REDIS_DB: process.env.REDIS_DB || "0",
 	REDIS_USER: process.env.REDIS_USER, // Redis 6+ requires a username and password to be set
 	REDIS_PASSWORD: process.env.REDIS_PASSWORD,
-	REDIS_USE_TLS: process.env.REDIS_USE_TLS,
+	REDIS_USE_TLS: parseBooleanEnv(process.env.REDIS_USE_TLS, false),
+	REDIS_TLS_CA: resolvePemOrPath(process.env.REDIS_TLS_CA),
+	REDIS_TLS_CERT: resolvePemOrPath(process.env.REDIS_TLS_CERT),
+	REDIS_TLS_KEY: resolvePemOrPath(process.env.REDIS_TLS_KEY),
+	REDIS_TLS_SERVERNAME: process.env.REDIS_TLS_SERVERNAME,
+	REDIS_TLS_REJECT_UNAUTHORIZED: parseBooleanEnv(process.env.REDIS_TLS_REJECT_UNAUTHORIZED, true),
+	REDIS_TLS_MIN_VERSION: process.env.REDIS_TLS_MIN_VERSION,
+	REDIS_TLS_CIPHERS: process.env.REDIS_TLS_CIPHERS,
 	REDIS_FAMILY: Number(process.env.REDIS_FAMILY) || 0,
 	SENTINEL_NAME: process.env.SENTINEL_NAME,
 	SENTINEL_HOSTS: process.env.SENTINEL_HOSTS,
 	MAX_RETRIES_PER_REQUEST: process.env.MAX_RETRIES_PER_REQUEST,
 
 	// Additional Sentinel configuration
-	SENTINEL_ROLE: process.env.SENTINEL_ROLE || 'master', // Role to connect to (master or slave)
+	SENTINEL_ROLE: process.env.SENTINEL_ROLE || "master", // Role to connect to (master or slave)
 	SENTINEL_USERNAME: process.env.SENTINEL_USERNAME, // Username for authenticating with Sentinel
 	SENTINEL_PASSWORD: process.env.SENTINEL_PASSWORD, // Password for authenticating with Sentinel
 	SENTINEL_RETRY_STRATEGY: process.env.SENTINEL_RETRY_STRATEGY, // Strategy for retrying connections to Sentinel
 	SENTINEL_RECONNECT_STRATEGY: process.env.SENTINEL_RECONNECT_STRATEGY, // Strategy for reconnecting to Sentinel
 	SENTINEL_COMMAND_TIMEOUT: Number(process.env.SENTINEL_COMMAND_TIMEOUT) || undefined, // Timeout for Sentinel commands in ms
-	SENTINEL_TLS_ENABLED: process.env.SENTINEL_TLS_ENABLED === 'true', // Enable TLS for Sentinel mode
-	SENTINEL_UPDATE: process.env.SENTINEL_UPDATE === 'true', // Whether to update the list of Sentinels
+	SENTINEL_TLS_ENABLED: parseBooleanEnv(process.env.SENTINEL_TLS_ENABLED, false), // Enable TLS for Sentinel mode
+	SENTINEL_TLS_CA: resolvePemOrPath(process.env.SENTINEL_TLS_CA), // CA certificate for Sentinel TLS connections
+	SENTINEL_TLS_CERT: resolvePemOrPath(process.env.SENTINEL_TLS_CERT), // Client certificate for Sentinel TLS connections
+	SENTINEL_TLS_KEY: resolvePemOrPath(process.env.SENTINEL_TLS_KEY), // Client key for Sentinel TLS connections
+	SENTINEL_TLS_SERVERNAME: process.env.SENTINEL_TLS_SERVERNAME, // Servername for SNI in TLS
+	SENTINEL_TLS_REJECT_UNAUTHORIZED: parseBooleanEnv(
+		process.env.SENTINEL_TLS_REJECT_UNAUTHORIZED,
+		true,
+	), // Reject unauthorized TLS
+	SENTINEL_TLS_MIN_VERSION: process.env.SENTINEL_TLS_MIN_VERSION, // Minimum TLS version (e.g., TLSv1.2)
+	SENTINEL_TLS_CIPHERS: process.env.SENTINEL_TLS_CIPHERS, // OpenSSL cipher list
+	SENTINEL_UPDATE: process.env.SENTINEL_UPDATE === "true", // Whether to update the list of Sentinels
 	SENTINEL_MAX_CONNECTIONS: Number(process.env.SENTINEL_MAX_CONNECTIONS) || 10, // Maximum number of connections to Sentinel
-	SENTINEL_FAILOVER_DETECTOR: process.env.SENTINEL_FAILOVER_DETECTOR === 'true', // Whether to enable failover detection
+	SENTINEL_FAILOVER_DETECTOR: process.env.SENTINEL_FAILOVER_DETECTOR === "true", // Whether to enable failover detection
+
+	// Redis Cluster configuration
+	REDIS_CLUSTER_HOSTS: process.env.REDIS_CLUSTER_HOSTS, // Comma/semicolon-separated list of host:port pairs
+	REDIS_CLUSTER_SCALE_READS: process.env.REDIS_CLUSTER_SCALE_READS || "master", // Where to send reads: master, slave, or all
+	REDIS_CLUSTER_MAX_REDIRECTIONS: Number(process.env.REDIS_CLUSTER_MAX_REDIRECTIONS) || 16, // Max MOVED/ASK redirections
+	REDIS_CLUSTER_SLOTS_REFRESH_INTERVAL:
+		Number(process.env.REDIS_CLUSTER_SLOTS_REFRESH_INTERVAL) || undefined, // Auto slots refresh interval in ms (disabled by default)
+	REDIS_CLUSTER_SLOTS_REFRESH_TIMEOUT:
+		Number(process.env.REDIS_CLUSTER_SLOTS_REFRESH_TIMEOUT) || 1000, // Timeout for slots refresh in ms
+	REDIS_CLUSTER_RETRY_DELAY_ON_FAILOVER:
+		Number(process.env.REDIS_CLUSTER_RETRY_DELAY_ON_FAILOVER) || 100, // Retry delay on node disconnect in ms
+	REDIS_CLUSTER_RETRY_DELAY_ON_CLUSTER_DOWN:
+		Number(process.env.REDIS_CLUSTER_RETRY_DELAY_ON_CLUSTER_DOWN) || 100, // Retry delay on CLUSTERDOWN in ms
+	REDIS_CLUSTER_RETRY_DELAY_ON_TRY_AGAIN:
+		Number(process.env.REDIS_CLUSTER_RETRY_DELAY_ON_TRY_AGAIN) || 100, // Retry delay on TRYAGAIN in ms
+	REDIS_CLUSTER_RETRY_DELAY_ON_MOVED: Number(process.env.REDIS_CLUSTER_RETRY_DELAY_ON_MOVED) || 0, // Delay before following MOVED redirect in ms
+	REDIS_CLUSTER_ENABLE_AUTO_PIPELINING: parseBooleanEnv(
+		process.env.REDIS_CLUSTER_ENABLE_AUTO_PIPELINING,
+		false,
+	), // Enable automatic pipelining
+	REDIS_CLUSTER_SKIP_DNS_LOOKUP: parseBooleanEnv(
+		process.env.REDIS_CLUSTER_SKIP_DNS_LOOKUP,
+		false,
+	), // Skip DNS resolution (useful for AWS ElastiCache/MemoryDB with TLS)
+	REDIS_CLUSTER_NAT_MAP: process.env.REDIS_CLUSTER_NAT_MAP, // JSON string mapping internal to external addresses
+	REDIS_CLUSTER_LAZY_CONNECT: parseBooleanEnv(process.env.REDIS_CLUSTER_LAZY_CONNECT, false), // Delay connection until first command
 
 	// Additional Redis configuration
 	REDIS_COMMAND_TIMEOUT: Number(process.env.REDIS_COMMAND_TIMEOUT) || undefined, // Command timeout in ms
 	REDIS_SOCKET_TIMEOUT: Number(process.env.REDIS_SOCKET_TIMEOUT) || undefined, // Socket timeout in ms
 	REDIS_KEEP_ALIVE: Number(process.env.REDIS_KEEP_ALIVE) || 0, // Keep-alive in ms
-	REDIS_NO_DELAY: process.env.REDIS_NO_DELAY !== 'false', // Disable Nagle's algorithm
+	REDIS_NO_DELAY: process.env.REDIS_NO_DELAY !== "false", // Disable Nagle's algorithm
 	REDIS_CONNECTION_NAME: process.env.REDIS_CONNECTION_NAME, // Connection name for client list
-	REDIS_AUTO_RESUBSCRIBE: process.env.REDIS_AUTO_RESUBSCRIBE !== 'false', // Auto resubscribe to channels
-	REDIS_AUTO_RESEND_UNFULFILLED: process.env.REDIS_AUTO_RESEND_UNFULFILLED !== 'false', // Resend unfulfilled commands on reconnect
+	REDIS_AUTO_RESUBSCRIBE: process.env.REDIS_AUTO_RESUBSCRIBE !== "false", // Auto resubscribe to channels
+	REDIS_AUTO_RESEND_UNFULFILLED: process.env.REDIS_AUTO_RESEND_UNFULFILLED !== "false", // Resend unfulfilled commands on reconnect
 	REDIS_CONNECT_TIMEOUT: Number(process.env.REDIS_CONNECT_TIMEOUT) || 10000, // Connection timeout in ms
-	REDIS_ENABLE_OFFLINE_QUEUE: process.env.REDIS_ENABLE_OFFLINE_QUEUE !== 'false', // Enable offline queue
-	REDIS_ENABLE_READY_CHECK: process.env.REDIS_ENABLE_READY_CHECK !== 'false', // Enable ready check
+	REDIS_ENABLE_OFFLINE_QUEUE: process.env.REDIS_ENABLE_OFFLINE_QUEUE !== "false", // Enable offline queue
+	REDIS_ENABLE_READY_CHECK: process.env.REDIS_ENABLE_READY_CHECK !== "false", // Enable ready check
 
 	// Queue configuration
-	BULL_PREFIX: process.env.BULL_PREFIX || 'bull',
-	BULL_VERSION: process.env.BULL_VERSION || 'BULLMQ',
+	BULL_PREFIX: process.env.BULL_PREFIX || "bull",
+	BULL_VERSION: process.env.BULL_VERSION || "BULLMQ",
 	BACKOFF_STARTING_DELAY: process.env.BACKOFF_STARTING_DELAY || 500,
 	BACKOFF_MAX_DELAY: process.env.BACKOFF_MAX_DELAY || Infinity,
 	BACKOFF_TIME_MULTIPLE: process.env.BACKOFF_TIME_MULTIPLE || 2,
@@ -62,7 +128,7 @@ export const config = {
 	USER_LOGIN: process.env.USER_LOGIN,
 	USER_PASSWORD: process.env.USER_PASSWORD,
 	AUTH_ENABLED: Boolean(process.env.USER_LOGIN && process.env.USER_PASSWORD),
-	HOME_PAGE: PROXY_PATH || '/',
+	HOME_PAGE: PROXY_PATH || "/",
 	LOGIN_PAGE: `${PROXY_PATH}/login`,
 
 	// Bullboard UI configuration

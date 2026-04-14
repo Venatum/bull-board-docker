@@ -1,35 +1,36 @@
 #!/usr/bin/env node
 
-import {Queue} from 'bullmq';
-import Bull from 'bull';
-import Redis from 'ioredis';
-import * as dotenv from 'dotenv'
+import { Queue } from "bullmq";
+import Bull from "bull";
+import Redis from "ioredis";
+import { existsSync, readFileSync } from "node:fs";
+import * as dotenv from "dotenv";
 
 // Load environment variables
 dotenv.config({
-	quiet: true
+	quiet: true,
 });
 
 // Constants
 const DEFAULTS = {
-	VERSION: 'bullmq',
-	PREFIX: 'bull',
-	QUEUE_NAME: 'test-queue',
+	VERSION: "bullmq",
+	PREFIX: "bull",
+	QUEUE_NAME: "test-queue",
 	COUNT: 5,
-	TYPE: 'default'
+	TYPE: "default",
 };
 
 const JOB_TYPES = {
-	DEFAULT: 'default',
-	DELAYED: 'delayed',
-	REPEATED: 'repeated',
-	PRIORITY: 'priority',
-	FAILED: 'failed'
+	DEFAULT: "default",
+	DELAYED: "delayed",
+	REPEATED: "repeated",
+	PRIORITY: "priority",
+	FAILED: "failed",
 };
 
 const QUEUE_VERSIONS = {
-	BULLMQ: 'bullmq',
-	BULL: 'bull'
+	BULLMQ: "bullmq",
+	BULL: "bull",
 };
 
 // Job configuration constants
@@ -38,21 +39,98 @@ const JOB_CONFIG = {
 	REPEAT_INTERVAL: 30_000, // 30 seconds
 	REPEAT_LIMIT: 3,
 	MAX_PRIORITY: 10,
-	MIN_PRIORITY: 1
+	MIN_PRIORITY: 1,
 };
 
 /**
  * Redis configuration factory
  */
 class RedisConfigFactory {
+	static isCluster() {
+		return Boolean(process.env.REDIS_CLUSTER_HOSTS);
+	}
+
+	static parseClusterNodes(hosts) {
+		return hosts
+			.split(/,|;/)
+			.map((entry) => entry.trim())
+			.filter(Boolean)
+			.map((entry) => {
+				const separatorIndex = entry.lastIndexOf(":");
+				if (separatorIndex === -1) {
+					throw new Error(`Invalid cluster entry "${entry}". Expected host:port`);
+				}
+				return {
+					host: entry.slice(0, separatorIndex).trim(),
+					port: Number.parseInt(entry.slice(separatorIndex + 1).trim(), 10),
+				};
+			});
+	}
+
+	static _buildTlsConfig() {
+		if (process.env.REDIS_USE_TLS !== "true") return undefined;
+		const tls = {};
+		const ca = resolvePemOrPath(process.env.REDIS_TLS_CA);
+		const cert = resolvePemOrPath(process.env.REDIS_TLS_CERT);
+		const key = resolvePemOrPath(process.env.REDIS_TLS_KEY);
+		if (ca) tls.ca = ca;
+		if (cert) tls.cert = cert;
+		if (key) tls.key = key;
+		if (process.env.REDIS_TLS_SERVERNAME) tls.servername = process.env.REDIS_TLS_SERVERNAME;
+		if (process.env.REDIS_TLS_REJECT_UNAUTHORIZED !== undefined) {
+			tls.rejectUnauthorized = process.env.REDIS_TLS_REJECT_UNAUTHORIZED !== "false";
+		}
+		if (process.env.REDIS_TLS_MIN_VERSION) tls.minVersion = process.env.REDIS_TLS_MIN_VERSION;
+		if (process.env.REDIS_TLS_CIPHERS) tls.ciphers = process.env.REDIS_TLS_CIPHERS;
+		return Object.keys(tls).length > 0 ? tls : undefined;
+	}
+
 	static createConfig() {
-		return {
+		const config = {
 			port: process.env.REDIS_PORT,
 			host: process.env.REDIS_HOST,
 			db: process.env.REDIS_DB,
-			...(process.env.REDIS_PASSWORD && {password: process.env.REDIS_PASSWORD}),
-			...(process.env.REDIS_USER && {username: process.env.REDIS_USER}),
+			...(process.env.REDIS_PASSWORD && { password: process.env.REDIS_PASSWORD }),
+			...(process.env.REDIS_USER && { username: process.env.REDIS_USER }),
 		};
+		const tls = this._buildTlsConfig();
+		if (tls) config.tls = tls;
+		return config;
+	}
+
+	static createClusterConfig() {
+		const nodes = this.parseClusterNodes(process.env.REDIS_CLUSTER_HOSTS);
+		const redisOptions = {
+			...(process.env.REDIS_PASSWORD && { password: process.env.REDIS_PASSWORD }),
+			...(process.env.REDIS_USER && { username: process.env.REDIS_USER }),
+			maxRetriesPerRequest: null,
+		};
+		const tls = this._buildTlsConfig();
+		if (tls) redisOptions.tls = tls;
+
+		const options = {
+			redisOptions,
+			...(process.env.REDIS_CLUSTER_SKIP_DNS_LOOKUP === "true" && {
+				dnsLookup: (address, callback) => callback(null, address),
+			}),
+			...(process.env.REDIS_CLUSTER_NAT_MAP && {
+				natMap: JSON.parse(process.env.REDIS_CLUSTER_NAT_MAP),
+			}),
+		};
+
+		return { nodes, options };
+	}
+}
+
+function resolvePemOrPath(pemOrPath) {
+	if (!pemOrPath) return undefined;
+	if (pemOrPath.includes("-----BEGIN")) return pemOrPath;
+	if (!existsSync(pemOrPath)) return undefined;
+
+	try {
+		return readFileSync(pemOrPath, "utf8");
+	} catch {
+		return undefined;
 	}
 }
 
@@ -63,12 +141,19 @@ class ValidationUtils {
 	static validateOptions(options) {
 		const errors = [];
 
-		if (options.version && !Object.values(QUEUE_VERSIONS).includes(options.version.toLowerCase())) {
-			errors.push(`Invalid version: ${options.version}. Must be one of: ${Object.values(QUEUE_VERSIONS).join(', ')}`);
+		if (
+			options.version &&
+			!Object.values(QUEUE_VERSIONS).includes(options.version.toLowerCase())
+		) {
+			errors.push(
+				`Invalid version: ${options.version}. Must be one of: ${Object.values(QUEUE_VERSIONS).join(", ")}`,
+			);
 		}
 
 		if (options.type && !Object.values(JOB_TYPES).includes(options.type)) {
-			errors.push(`Invalid job type: ${options.type}. Must be one of: ${Object.values(JOB_TYPES).join(', ')}`);
+			errors.push(
+				`Invalid job type: ${options.type}. Must be one of: ${Object.values(JOB_TYPES).join(", ")}`,
+			);
 		}
 
 		if (options.count && (isNaN(options.count) || options.count <= 0)) {
@@ -76,7 +161,7 @@ class ValidationUtils {
 		}
 
 		if (errors.length > 0) {
-			throw new Error(`Validation errors:\n${errors.join('\n')}`);
+			throw new Error(`Validation errors:\n${errors.join("\n")}`);
 		}
 	}
 }
@@ -97,6 +182,9 @@ class JobGenerator {
 		// Initialize Redis client and queue
 		this.redisClient = null;
 		this.queue = null;
+		this.redisConfig = null;
+		this.clusterConfig = null;
+		this.isCluster = false;
 		this._initializeConnections();
 	}
 
@@ -106,9 +194,19 @@ class JobGenerator {
 	 */
 	_initializeConnections() {
 		try {
-			// Create Redis client
-			this.redisClient = Redis.createClient(RedisConfigFactory.createConfig());
-			this.redisClient.on('error', (err) => console.error('Redis Client Error:', err));
+			this.isCluster = RedisConfigFactory.isCluster();
+
+			if (this.isCluster) {
+				this.clusterConfig = RedisConfigFactory.createClusterConfig();
+				this.redisClient = new Redis.Cluster(
+					this.clusterConfig.nodes,
+					this.clusterConfig.options,
+				);
+			} else {
+				this.redisConfig = RedisConfigFactory.createConfig();
+				this.redisClient = Redis.createClient(this.redisConfig);
+			}
+			this.redisClient.on("error", (err) => console.error("Redis Client Error:", err));
 
 			// Initialize queue
 			this._initializeQueue();
@@ -124,12 +222,19 @@ class JobGenerator {
 	_initializeQueue() {
 		if (this.version === QUEUE_VERSIONS.BULLMQ) {
 			this.queue = new Queue(this.queueName, {
-				prefix: this.prefix
-			}, this.redisClient.connection);
+				prefix: this.prefix,
+				connection: this.isCluster ? this.redisClient : this.redisConfig,
+			});
 		} else {
-			this.queue = new Bull(this.queueName, {
-				prefix: this.prefix
-			}, this.redisClient.connection);
+			this.queue = this.isCluster
+				? new Bull(this.queueName, {
+						prefix: this.prefix,
+						createClient: () => this.redisClient.duplicate(),
+					})
+				: new Bull(this.queueName, {
+						prefix: this.prefix,
+						redis: this.redisConfig,
+					});
 		}
 	}
 
@@ -157,9 +262,10 @@ class JobGenerator {
 						const job = await this._createJobByType(jobType, jobData, jobIndex);
 
 						jobs.push(job);
-						console.log(`✅ Created ${jobType} job ${i}: ${job.id || job.name || 'unknown'}`);
+						console.log(
+							`✅ Created ${jobType} job ${i}: ${job.id || job.name || "unknown"}`,
+						);
 						jobIndex++;
-
 					} catch (error) {
 						const errorMsg = `Failed to create ${jobType} job ${i}: ${error.message}`;
 						console.error(`❌ ${errorMsg}`);
@@ -176,8 +282,7 @@ class JobGenerator {
 					const job = await this._createJobByType(this.type, jobData, i);
 
 					jobs.push(job);
-					console.log(`✅ Created job ${i}: ${job.id || job.name || 'unknown'}`);
-
+					console.log(`✅ Created job ${i}: ${job.id || job.name || "unknown"}`);
 				} catch (error) {
 					const errorMsg = `Failed to create job ${i}: ${error.message}`;
 					console.error(`❌ ${errorMsg}`);
@@ -187,7 +292,7 @@ class JobGenerator {
 		}
 
 		this._logGenerationComplete(jobs.length, errors.length);
-		return {jobs, errors};
+		return { jobs, errors };
 	}
 
 	/**
@@ -203,8 +308,8 @@ class JobGenerator {
 			message: `Test job ${index} of type ${jobType}`,
 			timestamp: new Date().toISOString(),
 			type: jobType,
-			generator: 'job-generator-script',
-			version: this.version
+			generator: "job-generator-script",
+			version: this.version,
 		};
 	}
 
@@ -215,12 +320,16 @@ class JobGenerator {
 	_logGenerationStart() {
 		if (this.all) {
 			const totalJobs = this.count * Object.values(JOB_TYPES).length;
-			console.log(`🚀 Generating ${this.count} jobs of each type (${totalJobs} total) using ${this.version.toUpperCase()}`);
+			console.log(
+				`🚀 Generating ${this.count} jobs of each type (${totalJobs} total) using ${this.version.toUpperCase()}`,
+			);
 		} else {
-			console.log(`🚀 Generating ${this.count} ${this.type} jobs using ${this.version.toUpperCase()}`);
+			console.log(
+				`🚀 Generating ${this.count} ${this.type} jobs using ${this.version.toUpperCase()}`,
+			);
 		}
 		console.log(`📋 Queue: ${this.queueName} (prefix: ${this.prefix})`);
-		console.log('');
+		console.log("");
 	}
 
 	/**
@@ -230,9 +339,11 @@ class JobGenerator {
 	 * @private
 	 */
 	_logGenerationComplete(successCount, errorCount) {
-		console.log('');
+		console.log("");
 		if (errorCount > 0) {
-			console.log(`🎉 Generation complete! ${successCount} jobs created, ${errorCount} failed.`);
+			console.log(
+				`🎉 Generation complete! ${successCount} jobs created, ${errorCount} failed.`,
+			);
 		} else {
 			console.log(`🎉 Successfully generated ${successCount} jobs!`);
 		}
@@ -247,7 +358,7 @@ class JobGenerator {
 			[JOB_TYPES.DELAYED]: () => this._createDelayedJob(data, index),
 			[JOB_TYPES.REPEATED]: () => this._createRepeatedJob(data, index),
 			[JOB_TYPES.PRIORITY]: () => this._createPriorityJob(data, index),
-			[JOB_TYPES.FAILED]: () => this._createFailedJob(data, index)
+			[JOB_TYPES.FAILED]: () => this._createFailedJob(data, index),
 		};
 
 		const factory = jobFactories[type];
@@ -267,7 +378,7 @@ class JobGenerator {
 		const jobName = `${JOB_TYPES.DELAYED}-job-${index}`;
 		const delay = index * JOB_CONFIG.DELAY_INTERVAL;
 
-		return await this.queue.add(jobName, data, {delay});
+		return await this.queue.add(jobName, data, { delay });
 	}
 
 	async _createRepeatedJob(data, index) {
@@ -276,16 +387,17 @@ class JobGenerator {
 		return await this.queue.add(jobName, data, {
 			repeat: {
 				every: JOB_CONFIG.REPEAT_INTERVAL,
-				limit: JOB_CONFIG.REPEAT_LIMIT
-			}
+				limit: JOB_CONFIG.REPEAT_LIMIT,
+			},
 		});
 	}
 
 	async _createPriorityJob(data, index) {
 		const jobName = `${JOB_TYPES.PRIORITY}-job-${index}`;
-		const priority = Math.floor(Math.random() * JOB_CONFIG.MAX_PRIORITY) + JOB_CONFIG.MIN_PRIORITY;
+		const priority =
+			Math.floor(Math.random() * JOB_CONFIG.MAX_PRIORITY) + JOB_CONFIG.MIN_PRIORITY;
 
-		return await this.queue.add(jobName, {...data, priority}, {priority});
+		return await this.queue.add(jobName, { ...data, priority }, { priority });
 	}
 
 	async _createFailedJob(data, index) {
@@ -293,7 +405,7 @@ class JobGenerator {
 		const failingData = {
 			...data,
 			shouldFail: true,
-			error: 'This job is designed to fail for testing purposes'
+			error: "This job is designed to fail for testing purposes",
 		};
 
 		return await this.queue.add(jobName, failingData);
@@ -308,7 +420,7 @@ class JobGenerator {
 				await this.redisClient.quit();
 			}
 		} catch (error) {
-			console.error('Error during cleanup:', error.message);
+			console.error("Error during cleanup:", error.message);
 		}
 	}
 
@@ -316,8 +428,8 @@ class JobGenerator {
 	 * Display help information
 	 */
 	static showHelp() {
-		const availableTypes = Object.values(JOB_TYPES).join(', ');
-		const availableVersions = Object.values(QUEUE_VERSIONS).join(', ');
+		const availableTypes = Object.values(JOB_TYPES).join(", ");
+		const availableVersions = Object.values(QUEUE_VERSIONS).join(", ");
 
 		console.log(`
 Job Generator Script for Bull & BullMQ
@@ -358,25 +470,25 @@ function parseArgs() {
 
 	for (let i = 0; i < args.length; i++) {
 		switch (args[i]) {
-			case '--version':
+			case "--version":
 				options.version = args[++i];
 				break;
-			case '--prefix':
+			case "--prefix":
 				options.prefix = args[++i];
 				break;
-			case '--queue':
+			case "--queue":
 				options.queue = args[++i];
 				break;
-			case '--count':
+			case "--count":
 				options.count = parseInt(args[++i]);
 				break;
-			case '--type':
+			case "--type":
 				options.type = args[++i];
 				break;
-			case '--all':
+			case "--all":
 				options.all = true;
 				break;
-			case '--help':
+			case "--help":
 				JobGenerator.showHelp();
 				process.exit(0);
 				break;
@@ -404,11 +516,10 @@ async function main() {
 			process.exit(1);
 		}
 
-		console.log('\n✅ All jobs generated successfully!');
+		console.log("\n✅ All jobs generated successfully!");
 		process.exit(0);
-
 	} catch (error) {
-		console.error('❌ Fatal error:', error.message);
+		console.error("❌ Fatal error:", error.message);
 		process.exit(1);
 	} finally {
 		if (generator) {
@@ -418,6 +529,6 @@ async function main() {
 }
 
 // Run if called directly
-if (process?.argv?.[1].endsWith('job-generator.js')) {
+if (process?.argv?.[1].endsWith("job-generator.js")) {
 	main();
 }

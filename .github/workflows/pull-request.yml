@@ -2,7 +2,7 @@ name: PR Tests
 
 on:
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
   workflow_call:
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ steps.node_version.outputs.VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm i
@@ -37,10 +37,10 @@ jobs:
 
       - name: Report Coverage
         if: always()
-        uses:  davelosert/vitest-coverage-report-action@v2
+        uses: davelosert/vitest-coverage-report-action@v2
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: coverage/
