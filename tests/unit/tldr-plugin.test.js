@@ -288,7 +288,7 @@ describe("buildTldr", () => {
 describe("generateNotes", () => {
 	const { generateNotes } = tldrPlugin;
 
-	it("prepends the TL;DR block when one is generated", async () => {
+	it("injects the TL;DR block after the version header", async () => {
 		const pluginConfig = { preset: "conventionalcommits" };
 		const context = {
 			lastRelease: { gitTag: "v1.0.0" },
@@ -296,10 +296,20 @@ describe("generateNotes", () => {
 		};
 		const result = await generateNotes(pluginConfig, context, {
 			buildTldr: async () => "## TL;DR\n- Update [foo](https://example.com) 1 to 2",
-			upstreamGenerateNotes: async () => "## Changes\n- commit 1",
+			upstreamGenerateNotes: async () =>
+				"## [1.1.0](https://github.com/test/repo/compare/v1.0.0...v1.1.0) (2026-04-13)\n\n### Dependency updates\n\n* bump foo",
 		});
 		expect(result).toBe(
-			"## TL;DR\n- Update [foo](https://example.com) 1 to 2\n\n## Changes\n- commit 1",
+			[
+				"## [1.1.0](https://github.com/test/repo/compare/v1.0.0...v1.1.0) (2026-04-13)",
+				"",
+				"## TL;DR",
+				"- Update [foo](https://example.com) 1 to 2",
+				"",
+				"### Dependency updates",
+				"",
+				"* bump foo",
+			].join("\n"),
 		);
 	});
 

@@ -134,7 +134,16 @@ async function generateNotes(pluginConfig, context, options = {}) {
 	const upstreamNotes = await upstreamFn(pluginConfig, context);
 
 	if (!tldr) return upstreamNotes;
-	return `${tldr}\n\n${upstreamNotes}`;
+
+	// Inject the TL;DR between the version header (first line) and the rest,
+	// so the release body reads: header → TL;DR → auto-generated changelog.
+	const firstNewline = upstreamNotes.indexOf("\n");
+	if (firstNewline === -1) {
+		return `${upstreamNotes}\n\n${tldr}`;
+	}
+	const header = upstreamNotes.slice(0, firstNewline);
+	const rest = upstreamNotes.slice(firstNewline + 1).replace(/^\n+/, "");
+	return `${header}\n\n${tldr}\n\n${rest}`;
 }
 
 module.exports = {
