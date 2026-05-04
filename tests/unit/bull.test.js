@@ -88,9 +88,11 @@ describe("Bull Queue Setup", () => {
 
 		// Setup Redis mock
 		clientKeysMock = vi.fn().mockResolvedValue(queueKeys);
+		const clientScanMock = vi.fn().mockResolvedValue(["0", queueKeys]);
 		vi.doMock("../../src/redis", () => ({
 			client: {
 				keys: clientKeysMock,
+				scan: clientScanMock,
 				connection: "redis-connection",
 				on: vi.fn(),
 				nodes: vi.fn().mockReturnValue([]),
@@ -178,6 +180,64 @@ describe("Bull Queue Setup", () => {
 
 		// Verify that setQueues was called with the adapters
 		expect(setQueuesMock).toHaveBeenCalledWith(expect.any(Array));
+	});
+
+	it("should accumulate keys across multiple SCAN pages", async () => {
+		const multiPageQueueMock = vi.fn();
+		vi.doMock("bullmq", () => ({ Queue: multiPageQueueMock }));
+		vi.doMock("bull", () => ({ default: vi.fn() }));
+		const multiPageSetQueuesMock = vi.fn();
+		vi.doMock("@bull-board/api", () => ({
+			createBullBoard: vi.fn().mockReturnValue({ setQueues: multiPageSetQueuesMock }),
+		}));
+		vi.doMock("@bull-board/express", () => ({
+			ExpressAdapter: class {
+				getRouter() {
+					return "router";
+				}
+			},
+		}));
+		vi.doMock("@bull-board/api/bullMQAdapter", () => ({
+			BullMQAdapter: class {},
+		}));
+		vi.doMock("@bull-board/api/bullAdapter", () => ({
+			BullAdapter: class {},
+		}));
+
+		const multiPageScanMock = vi
+			.fn()
+			.mockResolvedValueOnce(["42", ["bull:queue1:id"]])
+			.mockResolvedValueOnce(["0", ["bull:queue2:id"]]);
+
+		vi.doMock("../../src/redis", () => ({
+			client: {
+				scan: multiPageScanMock,
+				connection: "redis-connection",
+				on: vi.fn(),
+				nodes: vi.fn().mockReturnValue([]),
+				duplicate: vi.fn().mockReturnValue({ on: vi.fn() }),
+			},
+			redisConfig: { redis: { host: "localhost", port: 6379 } },
+			isCluster: false,
+		}));
+		vi.doMock("../../src/config", () => ({ config: defaultConfig }));
+		vi.doMock("exponential-backoff", () => ({
+			backOff: vi.fn().mockImplementation((fn) => fn()),
+		}));
+
+		const bull = await import("../../src/bull.js");
+		await bull.bullMain();
+
+		// Verify SCAN pagination
+		expect(multiPageScanMock).toHaveBeenCalledTimes(2);
+		expect(multiPageScanMock).toHaveBeenNthCalledWith(1, "0", "MATCH", "bull:*", "COUNT", 100);
+		expect(multiPageScanMock).toHaveBeenNthCalledWith(2, "42", "MATCH", "bull:*", "COUNT", 100);
+
+		// Verify both queues from different pages were discovered and registered
+		expect(multiPageQueueMock).toHaveBeenCalledTimes(2);
+		expect(multiPageQueueMock).toHaveBeenCalledWith("queue1", expect.any(Object), "redis-connection");
+		expect(multiPageQueueMock).toHaveBeenCalledWith("queue2", expect.any(Object), "redis-connection");
+		expect(multiPageSetQueuesMock).toHaveBeenCalledWith(expect.arrayContaining([expect.any(Object), expect.any(Object)]));
 	});
 
 	it("should discover Bull queues and add them to the board (Bull)", async () => {
@@ -348,8 +408,8 @@ describe("Bull Queue Setup", () => {
 			}));
 
 			// Setup Redis mock with cluster support
-			const mockNode1 = { keys: vi.fn().mockResolvedValue(queueKeys.slice(0, 1)) };
-			const mockNode2 = { keys: vi.fn().mockResolvedValue(queueKeys.slice(1)) };
+			const mockNode1 = { scan: vi.fn().mockResolvedValue(["0", queueKeys.slice(0, 1)]) };
+			const mockNode2 = { scan: vi.fn().mockResolvedValue(["0", queueKeys.slice(1)]) };
 			clientKeysMock = vi.fn().mockResolvedValue(queueKeys);
 
 			const mockClient = {
@@ -390,8 +450,8 @@ describe("Bull Queue Setup", () => {
 			const bull = await import("../../src/bull.js");
 			await bull.bullMain();
 
-			expect(mockNode1.keys).toHaveBeenCalledWith("bull:*");
-			expect(mockNode2.keys).toHaveBeenCalledWith("bull:*");
+			expect(mockNode1.scan).toHaveBeenCalledWith("0", "MATCH", "bull:*", "COUNT", 100);
+			expect(mockNode2.scan).toHaveBeenCalledWith("0", "MATCH", "bull:*", "COUNT", 100);
 			expect(BullMQAdapterMock).toHaveBeenCalledTimes(2);
 			expect(setQueuesMock).toHaveBeenCalledWith(expect.any(Array));
 		});
@@ -454,9 +514,24 @@ describe("Bull Queue Setup", () => {
 		});
 
 		it("should throw when no master nodes are available", async () => {
-			setupClusterMocks();
-
-			// Override nodes to return empty array
+			vi.doMock("bullmq", () => ({ Queue: vi.fn() }));
+			vi.doMock("bull", () => ({ default: vi.fn() }));
+			vi.doMock("@bull-board/api", () => ({
+				createBullBoard: vi.fn().mockReturnValue({ setQueues: vi.fn() }),
+			}));
+			vi.doMock("@bull-board/express", () => ({
+				ExpressAdapter: class {
+					getRouter() {
+						return "router";
+					}
+				},
+			}));
+			vi.doMock("@bull-board/api/bullMQAdapter", () => ({
+				BullMQAdapter: class {},
+			}));
+			vi.doMock("@bull-board/api/bullAdapter", () => ({
+				BullAdapter: class {},
+			}));
 			vi.doMock("../../src/redis", () => ({
 				client: {
 					keys: vi.fn(),
@@ -468,14 +543,18 @@ describe("Bull Queue Setup", () => {
 				redisConfig: { redis: { host: "localhost", port: 6379 } },
 				isCluster: true,
 			}));
+			vi.doMock("../../src/config", () => ({ config: defaultConfig }));
+			vi.doMock("exponential-backoff", () => ({
+				backOff: vi.fn().mockImplementation((fn) => fn()),
+			}));
 
 			const bull = await import("../../src/bull.js");
 			await expect(bull.getBullQueues()).rejects.toThrow("No master nodes available");
 		});
 
 		it("should handle partial node failures gracefully", async () => {
-			const failingNode = { keys: vi.fn().mockRejectedValue(new Error("ECONNREFUSED")) };
-			const workingNode = { keys: vi.fn().mockResolvedValue(["bull:queue1:jobs"]) };
+			const failingNode = { scan: vi.fn().mockRejectedValue(new Error("ECONNREFUSED")) };
+			const workingNode = { scan: vi.fn().mockResolvedValue(["0", ["bull:queue1:jobs"]]) };
 
 			vi.doMock("bullmq", () => ({ Queue: vi.fn() }));
 			vi.doMock("bull", () => ({ default: vi.fn() }));
@@ -527,8 +606,8 @@ describe("Bull Queue Setup", () => {
 		});
 
 		it("should throw when all master nodes fail", async () => {
-			const failingNode1 = { keys: vi.fn().mockRejectedValue(new Error("ECONNREFUSED")) };
-			const failingNode2 = { keys: vi.fn().mockRejectedValue(new Error("ETIMEDOUT")) };
+			const failingNode1 = { scan: vi.fn().mockRejectedValue(new Error("ECONNREFUSED")) };
+			const failingNode2 = { scan: vi.fn().mockRejectedValue(new Error("ETIMEDOUT")) };
 
 			vi.doMock("bullmq", () => ({ Queue: vi.fn() }));
 			vi.doMock("bull", () => ({ default: vi.fn() }));
