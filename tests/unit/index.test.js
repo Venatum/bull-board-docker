@@ -330,7 +330,7 @@ describe("Express Application", () => {
 			processExitSpy.mockRestore();
 		});
 
-		it("should still exit when client.quit() rejects during shutdown", async () => {
+		it("should exit with code 1 when client.quit() rejects during shutdown", async () => {
 			const processOnSpy = vi.spyOn(process, "on");
 			const processExitSpy = vi.spyOn(process, "exit").mockImplementation(() => {});
 			const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation();
@@ -351,7 +351,7 @@ describe("Express Application", () => {
 				"Error closing Redis connection:",
 				expect.any(Error),
 			);
-			expect(processExitSpy).toHaveBeenCalledWith(0);
+			expect(processExitSpy).toHaveBeenCalledWith(1);
 
 			processOnSpy.mockRestore();
 			processExitSpy.mockRestore();

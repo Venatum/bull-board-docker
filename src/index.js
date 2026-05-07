@@ -103,14 +103,16 @@ const gracefulShutdown = (signal) => {
 	server.close(async () => {
 		console.log("HTTP server closed");
 
+		let exitCode = 0;
 		try {
 			await client.quit();
 			console.log("Redis connection closed");
 		} catch (err) {
 			console.error("Error closing Redis connection:", err);
+			exitCode = 1;
 		}
 
-		process.exit(0);
+		process.exit(exitCode);
 	});
 
 	setTimeout(() => {
