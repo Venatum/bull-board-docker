@@ -350,6 +350,44 @@ describe("Configuration", () => {
 		});
 	});
 
+	describe("Numeric env parsing", () => {
+		it("should accept 0 as an explicit value, not fall back to default", async () => {
+			process.env.GRACEFUL_SHUTDOWN_TIMEOUT = "0";
+			process.env.BACKOFF_NB_ATTEMPTS = "0";
+
+			const { config } = await getConfig();
+
+			expect(config.GRACEFUL_SHUTDOWN_TIMEOUT).toBe(0);
+			expect(config.BACKOFF_NB_ATTEMPTS).toBe(0);
+		});
+
+		it("should preserve Infinity for BACKOFF_MAX_DELAY", async () => {
+			process.env.BACKOFF_MAX_DELAY = "Infinity";
+
+			const { config } = await getConfig();
+
+			expect(config.BACKOFF_MAX_DELAY).toBe(Infinity);
+		});
+
+		it("should fall back to default when env value is empty string", async () => {
+			process.env.GRACEFUL_SHUTDOWN_TIMEOUT = "";
+			process.env.BACKOFF_STARTING_DELAY = "";
+
+			const { config } = await getConfig();
+
+			expect(config.GRACEFUL_SHUTDOWN_TIMEOUT).toBe(10000);
+			expect(config.BACKOFF_STARTING_DELAY).toBe(500);
+		});
+
+		it("should fall back to default when env value is non-numeric", async () => {
+			process.env.BACKOFF_TIME_MULTIPLE = "not-a-number";
+
+			const { config } = await getConfig();
+
+			expect(config.BACKOFF_TIME_MULTIPLE).toBe(2);
+		});
+	});
+
 	describe("App Configuration", () => {
 		it("should load App configuration from environment variables", async () => {
 			// Set environment variables

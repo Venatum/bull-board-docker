@@ -11,6 +11,12 @@ function normalizePath(pathStr) {
 
 export const PROXY_PATH = normalizePath(process.env.PROXY_PATH);
 
+function parseNumberEnv(value, defaultValue) {
+	if (value === undefined || value === "") return defaultValue;
+	const n = Number(value);
+	return Number.isNaN(n) ? defaultValue : n;
+}
+
 function parseBooleanEnv(value, defaultValue = false) {
 	if (value === undefined) return defaultValue;
 	const normalized = String(value).trim().toLowerCase();
@@ -113,13 +119,13 @@ export const config = {
 	// Queue configuration
 	BULL_PREFIX: process.env.BULL_PREFIX || "bull",
 	BULL_VERSION: process.env.BULL_VERSION || "BULLMQ",
-	BACKOFF_STARTING_DELAY: Number(process.env.BACKOFF_STARTING_DELAY) || 500,
-	BACKOFF_MAX_DELAY: Number(process.env.BACKOFF_MAX_DELAY) || Infinity,
-	BACKOFF_TIME_MULTIPLE: Number(process.env.BACKOFF_TIME_MULTIPLE) || 2,
-	BACKOFF_NB_ATTEMPTS: Number(process.env.BACKOFF_NB_ATTEMPTS) || 10,
+	BACKOFF_STARTING_DELAY: parseNumberEnv(process.env.BACKOFF_STARTING_DELAY, 500),
+	BACKOFF_MAX_DELAY: parseNumberEnv(process.env.BACKOFF_MAX_DELAY, Infinity),
+	BACKOFF_TIME_MULTIPLE: parseNumberEnv(process.env.BACKOFF_TIME_MULTIPLE, 2),
+	BACKOFF_NB_ATTEMPTS: parseNumberEnv(process.env.BACKOFF_NB_ATTEMPTS, 10),
 
 	// Shutdown configuration
-	GRACEFUL_SHUTDOWN_TIMEOUT: Number(process.env.GRACEFUL_SHUTDOWN_TIMEOUT) || 10000,
+	GRACEFUL_SHUTDOWN_TIMEOUT: parseNumberEnv(process.env.GRACEFUL_SHUTDOWN_TIMEOUT, 10000),
 
 	// App configuration
 	BULL_BOARD_HOSTNAME: process.env.BULL_BOARD_HOSTNAME || "0.0.0.0",
