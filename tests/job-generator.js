@@ -141,10 +141,7 @@ class ValidationUtils {
 	static validateOptions(options) {
 		const errors = [];
 
-		if (
-			options.version &&
-			!Object.values(QUEUE_VERSIONS).includes(options.version.toLowerCase())
-		) {
+		if (options.version && !Object.values(QUEUE_VERSIONS).includes(options.version.toLowerCase())) {
 			errors.push(
 				`Invalid version: ${options.version}. Must be one of: ${Object.values(QUEUE_VERSIONS).join(", ")}`,
 			);
@@ -198,10 +195,7 @@ class JobGenerator {
 
 			if (this.isCluster) {
 				this.clusterConfig = RedisConfigFactory.createClusterConfig();
-				this.redisClient = new Redis.Cluster(
-					this.clusterConfig.nodes,
-					this.clusterConfig.options,
-				);
+				this.redisClient = new Redis.Cluster(this.clusterConfig.nodes, this.clusterConfig.options);
 			} else {
 				this.redisConfig = RedisConfigFactory.createConfig();
 				this.redisClient = Redis.createClient(this.redisConfig);
@@ -262,9 +256,7 @@ class JobGenerator {
 						const job = await this._createJobByType(jobType, jobData, jobIndex);
 
 						jobs.push(job);
-						console.log(
-							`✅ Created ${jobType} job ${i}: ${job.id || job.name || "unknown"}`,
-						);
+						console.log(`✅ Created ${jobType} job ${i}: ${job.id || job.name || "unknown"}`);
 						jobIndex++;
 					} catch (error) {
 						const errorMsg = `Failed to create ${jobType} job ${i}: ${error.message}`;
@@ -341,9 +333,7 @@ class JobGenerator {
 	_logGenerationComplete(successCount, errorCount) {
 		console.log("");
 		if (errorCount > 0) {
-			console.log(
-				`🎉 Generation complete! ${successCount} jobs created, ${errorCount} failed.`,
-			);
+			console.log(`🎉 Generation complete! ${successCount} jobs created, ${errorCount} failed.`);
 		} else {
 			console.log(`🎉 Successfully generated ${successCount} jobs!`);
 		}
@@ -394,8 +384,7 @@ class JobGenerator {
 
 	async _createPriorityJob(data, index) {
 		const jobName = `${JOB_TYPES.PRIORITY}-job-${index}`;
-		const priority =
-			Math.floor(Math.random() * JOB_CONFIG.MAX_PRIORITY) + JOB_CONFIG.MIN_PRIORITY;
+		const priority = Math.floor(Math.random() * JOB_CONFIG.MAX_PRIORITY) + JOB_CONFIG.MIN_PRIORITY;
 
 		return await this.queue.add(jobName, { ...data, priority }, { priority });
 	}
