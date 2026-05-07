@@ -358,6 +358,37 @@ describe("Express Application", () => {
 			consoleErrorSpy.mockRestore();
 		});
 
+		it("should force-exit with code 1 when shutdown exceeds the timeout", async () => {
+			vi.useFakeTimers();
+			const processOnSpy = vi.spyOn(process, "on");
+			const processExitSpy = vi.spyOn(process, "exit").mockImplementation(() => {});
+			const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation();
+			setupCommonMocks({
+				...defaultConfig,
+				GRACEFUL_SHUTDOWN_TIMEOUT: 5000,
+			});
+
+			await import("../../src/index.js");
+
+			// Simulate a hanging server.close() — never invokes its callback
+			mockServer.close = vi.fn();
+
+			const sigtermHandler = processOnSpy.mock.calls.find((call) => call[0] === "SIGTERM")[1];
+			sigtermHandler();
+
+			expect(processExitSpy).not.toHaveBeenCalled();
+
+			vi.advanceTimersByTime(5000);
+
+			expect(consoleErrorSpy).toHaveBeenCalledWith("Forced shutdown after timeout");
+			expect(processExitSpy).toHaveBeenCalledWith(1);
+
+			vi.useRealTimers();
+			processOnSpy.mockRestore();
+			processExitSpy.mockRestore();
+			consoleErrorSpy.mockRestore();
+		});
+
 		it("should not shutdown twice on repeated signals", async () => {
 			const processOnSpy = vi.spyOn(process, "on");
 			const processExitSpy = vi.spyOn(process, "exit").mockImplementation(() => {});
