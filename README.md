@@ -210,6 +210,10 @@ A Healthcheck based on NestJS is available to monitor the status of the containe
 | `error`   | String containing information of each health indicator which is of status 'down', or in other words "unhealthy". | string          |
 | `details` | Object containing all information of each health indicator                                                       | object          |
 
+The endpoint returns `200 OK` when healthy and `503 Service Unavailable` when Redis is unreachable.
+
+> **Use as a readiness probe, not a liveness probe.** A transient Redis outage will return 503 — if `/healthcheck` is wired as a Kubernetes `livenessProbe`, the pod will be killed and restarted on every Redis blip (which doesn't help, since restarting bull-board doesn't fix Redis). Use it as a `readinessProbe` so the pod is removed from the load balancer until Redis recovers, without being killed.
+
 ### Example with docker-compose
 
 ```yaml
