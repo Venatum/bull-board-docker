@@ -6,13 +6,23 @@ on:
   workflow_call:
 
 jobs:
-  test:
-    name: Run Tests
+  checks:
+    name: ${{ matrix.task }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - task: lint
+            script: lint
+          - task: format
+            script: format
+          - task: test
+            script: test:coverage
 
     steps:
       - name: Checkout repository
@@ -30,16 +40,17 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm i
+        run: npm ci
 
-      - name: Run test coverage
-        run: npm run test:coverage
+      - name: Run ${{ matrix.task }}
+        run: npm run ${{ matrix.script }}
 
       - name: Report Coverage
-        if: always()
+        if: always() && matrix.task == 'test'
         uses: davelosert/vitest-coverage-report-action@v2
 
       - name: Upload coverage report
+        if: matrix.task == 'test'
         uses: actions/upload-artifact@v7
         with:
           name: coverage-report
