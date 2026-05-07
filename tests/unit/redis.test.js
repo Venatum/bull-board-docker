@@ -430,9 +430,7 @@ describe("Redis Client", () => {
 				REDIS_ENABLE_OFFLINE_QUEUE: true,
 			});
 
-			await expect(import("../../src/redis")).rejects.toThrow(
-				"Invalid REDIS_CLUSTER_NAT_MAP JSON",
-			);
+			await expect(import("../../src/redis")).rejects.toThrow("Invalid REDIS_CLUSTER_NAT_MAP JSON");
 		});
 
 		it("should include TLS options in cluster redisOptions", async () => {

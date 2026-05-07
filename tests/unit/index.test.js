@@ -182,11 +182,7 @@ describe("Express Application", () => {
 
 			// Verify that app.use was called with the correct routes
 			expect(mockApp.use).toHaveBeenCalledWith("/login", "auth-router");
-			expect(mockApp.use).toHaveBeenCalledWith(
-				"/",
-				"ensure-logged-in-middleware",
-				"bull-router",
-			);
+			expect(mockApp.use).toHaveBeenCalledWith("/", "ensure-logged-in-middleware", "bull-router");
 		});
 
 		it("should set up proxy path middleware when PROXY_PATH is configured", async () => {
@@ -266,9 +262,7 @@ describe("Express Application", () => {
 			await import("../../src/index.js");
 
 			// Find the health check route handler
-			const healthCheckRoute = mockApp.use.mock.calls.find(
-				(call) => call[0] === "/healthcheck",
-			);
+			const healthCheckRoute = mockApp.use.mock.calls.find((call) => call[0] === "/healthcheck");
 			expect(healthCheckRoute).toBeDefined();
 
 			// Get the handler

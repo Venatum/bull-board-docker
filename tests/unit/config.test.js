@@ -294,9 +294,7 @@ describe("Configuration", () => {
 			expect(config.REDIS_CLUSTER_RETRY_DELAY_ON_MOVED).toBe(50);
 			expect(config.REDIS_CLUSTER_ENABLE_AUTO_PIPELINING).toBe(true);
 			expect(config.REDIS_CLUSTER_SKIP_DNS_LOOKUP).toBe(true);
-			expect(config.REDIS_CLUSTER_NAT_MAP).toBe(
-				'{"10.0.0.1:6379":{"host":"ext.com","port":6379}}',
-			);
+			expect(config.REDIS_CLUSTER_NAT_MAP).toBe('{"10.0.0.1:6379":{"host":"ext.com","port":6379}}');
 			expect(config.REDIS_CLUSTER_LAZY_CONNECT).toBe(true);
 		});
 
