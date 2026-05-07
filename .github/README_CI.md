@@ -4,12 +4,12 @@
 
 ## Workflows
 
-| Workflow                                               | Triggers                                                    | Purpose                                                                                  |
-|--------------------------------------------------------|-------------------------------------------------------------|------------------------------------------------------------------------------------------|
+| Workflow                                               | Triggers                                                    | Purpose                                                                                                                                             |
+| ------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`pull-request.yml`](./workflows/pull-request.yml)     | `pull_request` on `master`, `workflow_call`                 | Matrix job running `lint` (oxlint), `format` (oxfmt) and `test:coverage` in parallel; the `test` leg also publishes a coverage report and artifact. |
-| [`docker-publish.yml`](./workflows/docker-publish.yml) | `push` on tags `v*.*.*`, `pull_request` on `master`, manual | Build multi-arch Docker image (`linux/amd64,linux/arm64`) and push to Docker Hub on tag. |
-| [`release.yml`](./workflows/release.yml)               | `push` on `master`, manual                                  | Run `semantic-release` to cut a new version and Github release.                          |
-| [`renovate.yml`](./workflows/renovate.yml)             | Cron `00 1 * * 1` (Mondays 01:00 UTC), manual               | Self-hosted Renovate run to open dependency-update PRs.                                  |
+| [`docker-publish.yml`](./workflows/docker-publish.yml) | `push` on tags `v*.*.*`, `pull_request` on `master`, manual | Build multi-arch Docker image (`linux/amd64,linux/arm64`) and push to Docker Hub on tag.                                                            |
+| [`release.yml`](./workflows/release.yml)               | `push` on `master`, manual                                  | Run `semantic-release` to cut a new version and Github release.                                                                                     |
+| [`renovate.yml`](./workflows/renovate.yml)             | Cron `00 1 * * 1` (Mondays 01:00 UTC), manual               | Self-hosted Renovate run to open dependency-update PRs.                                                                                             |
 
 ## Dependencies
 
@@ -35,7 +35,7 @@
 ## Secrets
 
 | Name              | Used by              | Description                                                                   |
-|-------------------|----------------------|-------------------------------------------------------------------------------|
+| ----------------- | -------------------- | ----------------------------------------------------------------------------- |
 | `DOCKERHUB_TOKEN` | `docker-publish.yml` | Docker Hub access token for `venatum` to push the `venatum/bull-board` image. |
 | `SEMANTIC_TOKEN`  | `release.yml`        | GitHub token used by `semantic-release` to create tags and releases.          |
 | `RENOVATE_TOKEN`  | `renovate.yml`       | GitHub token used by the self-hosted Renovate run to open PRs.                |

@@ -200,7 +200,7 @@ A Healthcheck based on NestJS is available to monitor the status of the containe
 ```
 
 | Field     | Description                                                                                                      | Type            |
-|-----------|------------------------------------------------------------------------------------------------------------------|-----------------|
+| --------- | ---------------------------------------------------------------------------------------------------------------- | --------------- |
 | `status`  | Indicates the overall health status. If any health indicator fails, the status will be 'error'.                  | 'ok' or 'error' |
 | `info`    | Object containing information of each health indicator which is of status 'up', or in other words "healthy".     | object          |
 | `error`   | String containing information of each health indicator which is of status 'down', or in other words "unhealthy". | string          |
