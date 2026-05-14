@@ -42,11 +42,11 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@bull-board/api": "^7.0.0",
-    "@bull-board/express": "^7.0.0",
+    "@bull-board/api": "^7.1.5",
+    "@bull-board/express": "^7.1.5",
     "body-parser": "^2.2.2",
     "bull": "^4.16.5",
-    "bullmq": "^5.73.5",
+    "bullmq": "^5.76.8",
     "connect-ensure-login": "^0.1.1",
     "dotenv": "^17.4.2",
     "exponential-backoff": "^3.1.3",
@@ -60,16 +60,16 @@
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
-    "@semantic-release/github": "^12.0.6",
-    "@semantic-release/release-notes-generator": "^14.1.0",
-    "@vitest/coverage-v8": "^4.1.5",
-    "@vitest/ui": "^4.1.5",
+    "@semantic-release/github": "^12.0.8",
+    "@semantic-release/release-notes-generator": "^14.1.1",
+    "@vitest/coverage-v8": "^4.1.6",
+    "@vitest/ui": "^4.1.6",
     "conventional-changelog-conventionalcommits": "^9.3.1",
     "nodemon": "^3.1.14",
-    "oxfmt": "^0.48.0",
-    "oxlint": "^1.63.0",
+    "oxfmt": "^0.49.0",
+    "oxlint": "^1.64.0",
     "semantic-release": "^25.0.3",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.6"
   },
   "engines": {
     "bun": "please use npm",
