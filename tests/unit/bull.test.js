@@ -454,20 +454,11 @@ describe("Bull Queue Setup", () => {
 		});
 
 		it("should throw when no master nodes are available", async () => {
-			setupClusterMocks();
+			const { mockClient } = setupClusterMocks();
 
-			// Override nodes to return empty array
-			vi.doMock("../../src/redis", () => ({
-				client: {
-					keys: vi.fn(),
-					connection: "redis-connection",
-					on: vi.fn(),
-					nodes: vi.fn().mockReturnValue([]),
-					duplicate: vi.fn().mockReturnValue({ on: vi.fn() }),
-				},
-				redisConfig: { redis: { host: "localhost", port: 6379 } },
-				isCluster: true,
-			}));
+			// Override nodes to return empty array on the already-registered mock
+			// to avoid re-mocking the same module (which can race across test files).
+			mockClient.nodes.mockReturnValue([]);
 
 			const bull = await import("../../src/bull.js");
 			await expect(bull.getBullQueues()).rejects.toThrow("No master nodes available");
