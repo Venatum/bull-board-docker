@@ -21,17 +21,17 @@ const { setQueues } = createBullBoard({
 			...(config.BULL_BOARD_LOGO_PATH && {
 				boardLogo: {
 					path: config.BULL_BOARD_LOGO_PATH,
+					...(config.BULL_BOARD_LOGO_WIDTH && { width: config.BULL_BOARD_LOGO_WIDTH }),
+					...(config.BULL_BOARD_LOGO_HEIGHT && { height: config.BULL_BOARD_LOGO_HEIGHT }),
 				},
-				...(config.BULL_BOARD_LOGO_WIDTH && { width: config.BULL_BOARD_LOGO_WIDTH }),
-				...(config.BULL_BOARD_LOGO_HEIGHT && { height: config.BULL_BOARD_LOGO_HEIGHT }),
 			}),
 			...(config.BULL_BOARD_FAVICON && {
 				favIcon: {
 					default: config.BULL_BOARD_FAVICON,
+					...(config.BULL_BOARD_FAVICON_ALTERNATIVE && {
+						alternative: config.BULL_BOARD_FAVICON_ALTERNATIVE,
+					}),
 				},
-				...(config.BULL_BOARD_FAVICON_ALTERNATIVE && {
-					alternative: config.BULL_BOARD_FAVICON_ALTERNATIVE,
-				}),
 			}),
 			locale: {
 				...(config.BULL_BOARD_LOCALE && { lng: config.BULL_BOARD_LOCALE }),
