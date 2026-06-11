@@ -462,20 +462,11 @@ describe("Bull Queue Setup", () => {
 		});
 
 		it("should throw when no master nodes are available", async () => {
-			setupClusterMocks();
+			const { mockClient } = setupClusterMocks();
 
-			// Override nodes to return empty array
-			mock.module("../../src/redis.js", () => ({
-				client: {
-					keys: mock(),
-					connection: "redis-connection",
-					on: mock(),
-					nodes: mock().mockReturnValue([]),
-					duplicate: mock().mockReturnValue({ on: mock() }),
-				},
-				redisConfig: { redis: { host: "localhost", port: 6379 } },
-				isCluster: true,
-			}));
+			// Override nodes to return empty array on the already-registered mock
+			// to avoid re-mocking the same module (which can race across test files).
+			mockClient.nodes.mockReturnValue([]);
 
 			importCounter++;
 			const bull = await import(`../../src/bull.js?v=${importCounter}`);
