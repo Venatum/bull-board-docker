@@ -4,7 +4,7 @@ Run the full test suite and report results.
 
 ## Steps
 
-1. Run `npm test`
+1. Run `bun test`
 2. Report results in this format:
 
 ```
@@ -23,5 +23,5 @@ READY TO COMMIT | DO NOT COMMIT — fix failing tests first
 
 ## Allowed tools
 
-- Bash(npm test:\*)
-- Bash(npm run:\*)
+- Bash(bun test:\*)
+- Bash(bun run:\*)

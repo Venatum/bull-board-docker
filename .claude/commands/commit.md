@@ -10,7 +10,7 @@ Run `git diff HEAD` and review the staged/unstaged changes.
 Check for:
 
 - Any obvious issues or mistakes
-- Project conventions (ES modules, npm, no TypeScript)
+- Project conventions (ES modules, bun, no TypeScript)
 - Sensitive data (secrets, tokens, credentials)
 
 If critical issues are found, stop and report them. Do not commit broken code.

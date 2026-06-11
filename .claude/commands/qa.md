@@ -11,13 +11,13 @@ Review the changes for:
 
 - Correctness and logic errors
 - Security issues (injection, hardcoded secrets, etc.)
-- Project conventions: ES modules, no TypeScript, npm only
+- Project conventions: ES modules, no TypeScript, bun only
 - Code clarity and simplicity (no over-engineering)
 - Missing or broken tests
 
 ### 2. Run tests
 
-Run `npm test`.
+Run `bun test`.
 
 ### 3. Report
 
@@ -46,5 +46,5 @@ X passed, Y failed
 ## Allowed tools
 
 - Bash(git:\*)
-- Bash(npm test:\*)
-- Bash(npm run:\*)
+- Bash(bun test:\*)
+- Bash(bun run:\*)
