@@ -28,26 +28,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Get Node version from package.json
-        id: node_version
-        shell: bash
-        run: echo "VERSION=$(jq -r '.engines.node' package.json)" >> $GITHUB_OUTPUT
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ steps.node_version.outputs.VERSION }}
-          cache: "npm"
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Run ${{ matrix.task }}
-        run: npm run ${{ matrix.script }}
+        run: bun run ${{ matrix.script }}
 
       - name: Report Coverage
-        if: always() && matrix.task == 'test'
-        uses: davelosert/vitest-coverage-report-action@v2
+        # Only on pull_request: the comment needs a PR context, and this
+        # workflow is also reused via workflow_call on push.
+        if: always() && matrix.task == 'test' && github.event_name == 'pull_request'
+        uses: romeovs/lcov-reporter-action@v0.4.0
+        with:
+          lcov-file: coverage/lcov.info
+          delete-old-comments: true
 
       - name: Upload coverage report
         if: matrix.task == 'test'

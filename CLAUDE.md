@@ -5,19 +5,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm test                    # Run tests (vitest run)
-npm run test:watch          # Watch mode
-npm run test:coverage       # With coverage report
-npm start                   # Run the app locally (needs Redis)
-npm run start:docker        # Start app + Redis via docker compose
-npm run start:docker-deps   # Start Redis only
-npm run stop:docker         # Stop and clean containers
+bun test                    # Run tests (bun:test)
+bun run test:watch          # Watch mode
+bun run test:coverage       # With coverage report (lcov + text, see bunfig.toml)
+bun start                   # Run the app locally (needs Redis)
+bun run start:docker        # Start app + Redis via docker compose
+bun run start:docker-deps   # Start Redis only
+bun run stop:docker         # Stop and clean containers
 ```
 
 Run a single test file:
 
 ```bash
-npx vitest run tests/unit/redis.test.js
+bun test tests/unit/redis.test.js
 ```
 
 ## Architecture
@@ -34,14 +34,14 @@ This is a thin Express wrapper that auto-discovers Bull/BullMQ queues from Redis
 - `login.js` — Optional passport-local auth. Only mounted when both `USER_LOGIN` and `USER_PASSWORD` are set.
 - `index.js` — Express app entry point. Conditionally enables auth middleware, mounts the board router, and exposes `/healthcheck`.
 
-**Test setup**: `NODE_ENV=test` causes `redis.js` to export a mock client (avoids real Redis connections) and `bull.js` to skip `bullMain()`. Tests in `tests/unit/` use vitest globals (`describe`, `it`, `expect` — no imports needed).
+**Test setup**: `NODE_ENV=test` causes `redis.js` to export a mock client (avoids real Redis connections) and `bull.js` to skip `bullMain()`. Tests in `tests/unit/` import from `bun:test` (`describe`, `it`, `expect`, `mock`, `spyOn`). Module mocks use `mock.module()`; since bun caches ES modules, tests re-import modules with a cache-busting query string (e.g. `import(\`../../src/bull.js?v=${n}\`)`).
 
 ## Conventions
 
-- **Always use existing scripts**: Run commands via `package.json` scripts (`npm test`, `npm run start:docker`, etc.) — never craft manual/ad-hoc commands
+- **Always use existing scripts**: Run commands via `package.json` scripts (`bun test`, `bun run start:docker`, etc.) — never craft manual/ad-hoc commands
 - **Code navigation**: Prefer LSP over Grep for go-to-definition, find references, symbol search
-- **Package manager**: npm only — yarn/pnpm/bun are blocked in `package.json`
-- **Runtime**: Node.js ≥24, ES modules (`"type": "module"`) — use `import`/`export`
+- **Package manager**: bun only — node/npm/yarn/pnpm are blocked in `package.json` engines
+- **Runtime**: Bun ≥1.0, ES modules (`"type": "module"`) — use `import`/`export`
 - **No TypeScript**, no build step, no frontend framework
 - **Commits**: Conventional Commits (see CONTRIBUTING.md)
 - **Docker**: `docker compose` (not `docker-compose`)
