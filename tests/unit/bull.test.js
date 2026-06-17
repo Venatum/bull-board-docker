@@ -235,9 +235,19 @@ describe("Bull Queue Setup", () => {
 
 		// Verify both queues from different pages were discovered and registered
 		expect(multiPageQueueMock).toHaveBeenCalledTimes(2);
-		expect(multiPageQueueMock).toHaveBeenCalledWith("queue1", expect.any(Object), "redis-connection");
-		expect(multiPageQueueMock).toHaveBeenCalledWith("queue2", expect.any(Object), "redis-connection");
-		expect(multiPageSetQueuesMock).toHaveBeenCalledWith(expect.arrayContaining([expect.any(Object), expect.any(Object)]));
+		expect(multiPageQueueMock).toHaveBeenCalledWith(
+			"queue1",
+			expect.any(Object),
+			"redis-connection",
+		);
+		expect(multiPageQueueMock).toHaveBeenCalledWith(
+			"queue2",
+			expect.any(Object),
+			"redis-connection",
+		);
+		expect(multiPageSetQueuesMock).toHaveBeenCalledWith(
+			expect.arrayContaining([expect.any(Object), expect.any(Object)]),
+		);
 	});
 
 	it("should discover Bull queues and add them to the board (Bull)", async () => {

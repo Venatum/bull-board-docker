@@ -70,13 +70,7 @@ async function scanForKeys(redisClient, pattern) {
 	const keys = [];
 	let cursor = "0";
 	do {
-		const [nextCursor, foundKeys] = await redisClient.scan(
-			cursor,
-			"MATCH",
-			pattern,
-			"COUNT",
-			100,
-		);
+		const [nextCursor, foundKeys] = await redisClient.scan(cursor, "MATCH", pattern, "COUNT", 100);
 		cursor = nextCursor;
 		keys.push(...foundKeys);
 	} while (cursor !== "0");
@@ -129,10 +123,7 @@ function createBullAdapter(name) {
 							createClient: () => {
 								const dup = client.duplicate();
 								dup.on("error", (err) =>
-									console.error(
-										`Redis Cluster duplicate client error (queue "${name}"):`,
-										err,
-									),
+									console.error(`Redis Cluster duplicate client error (queue "${name}"):`, err),
 								);
 								return dup;
 							},
@@ -150,8 +141,7 @@ async function getBullQueues() {
 	const keys = await getRedisKeys(`${config.BULL_PREFIX}:*`);
 	const uniqKeys = new Set(keys.map((key) => key.replace(/^.+?:(.+?):.+?$/, "$1")));
 
-	const createAdapter =
-		config.BULL_VERSION === "BULLMQ" ? createBullMQAdapter : createBullAdapter;
+	const createAdapter = config.BULL_VERSION === "BULLMQ" ? createBullMQAdapter : createBullAdapter;
 	const queueList = Array.from(uniqKeys).sort().map(createAdapter);
 	if (queueList.length === 0) {
 		throw new Error("No queue found.");
