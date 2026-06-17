@@ -148,15 +148,15 @@ Please note that on the interface, the Redis server info button will not work. F
 > Default values come from the original project
 
 - `BULL_BOARD_TITLE` - The Board and page titles (`Bull Dashboard` by default)
-- `BULL_BOARD_LOGO_PATH` - Allows you to specify a different logo (`empty` by default)
-- `BULL_BOARD_LOGO_WIDTH` - `BULL_BOARD_LOGO_PATH` is required
-- `BULL_BOARD_LOGO_HEIGHT` - `BULL_BOARD_LOGO_PATH` is required
-- `BULL_BOARD_FAVICON` - Allows you to specify the default favicon (`empty` by default)
-- `BULL_BOARD_FAVICON_ALTERNATIVE` - `BULL_BOARD_FAVICON` is required
-- `BULL_BOARD_LOCALE` - The locale to use
-- `BULL_BOARD_DATE_FORMATS_SHORT` - The date format to use
-- `BULL_BOARD_DATE_FORMATS_COMMON` - The date format to use
-- `BULL_BOARD_DATE_FORMATS_FULL` - The date format to use
+- `BULL_BOARD_LOGO_PATH` - Path to a custom logo image. Can be a URL or a path if the image is mounted in the container.
+- `BULL_BOARD_LOGO_WIDTH` - Width of the logo (e.g. `100px`, `50%`). Requires `BULL_BOARD_LOGO_PATH`.
+- `BULL_BOARD_LOGO_HEIGHT` - Height of the logo (e.g. `100px`, `auto`). Requires `BULL_BOARD_LOGO_PATH`.
+- `BULL_BOARD_FAVICON` - Path to a custom favicon.
+- `BULL_BOARD_FAVICON_ALTERNATIVE` - Path to an alternative favicon (e.g. for dark mode). Requires `BULL_BOARD_FAVICON`.
+- `BULL_BOARD_LOCALE` - The locale to use (e.g. `fr-FR`, `en-US`).
+- `BULL_BOARD_DATE_FORMATS_SHORT` - Short date format (e.g. `yyyy-MM-dd`).
+- `BULL_BOARD_DATE_FORMATS_COMMON` - Common date format (e.g. `yyyy-MM-dd HH:mm`).
+- `BULL_BOARD_DATE_FORMATS_FULL` - Full date format (e.g. `yyyy-MM-dd HH:mm:ss`).
 
 ### Restrict access with login and password
 
@@ -204,7 +204,7 @@ A Healthcheck based on NestJS is available to monitor the status of the containe
 ```
 
 | Field     | Description                                                                                                      | Type            |
-|-----------|------------------------------------------------------------------------------------------------------------------|-----------------|
+| --------- | ---------------------------------------------------------------------------------------------------------------- | --------------- |
 | `status`  | Indicates the overall health status. If any health indicator fails, the status will be 'error'.                  | 'ok' or 'error' |
 | `info`    | Object containing information of each health indicator which is of status 'up', or in other words "healthy".     | object          |
 | `error`   | String containing information of each health indicator which is of status 'down', or in other words "unhealthy". | string          |
