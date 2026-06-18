@@ -7,6 +7,7 @@ describe("Express Application", () => {
 	// Common mocks
 	let mockApp;
 	let mockRouter;
+	let mockServer;
 	let consoleSpy;
 
 	// Default config
@@ -27,7 +28,13 @@ describe("Express Application", () => {
 			use: vi.fn(),
 			listen: vi.fn().mockImplementation((port, hostname, callback) => {
 				if (callback) callback();
-				return { on: vi.fn() };
+				mockServer = {
+					on: vi.fn(),
+					close: vi.fn().mockImplementation((cb) => {
+						if (cb) cb();
+					}),
+				};
+				return mockServer;
 			}),
 			get: vi.fn(),
 		};
@@ -272,7 +279,7 @@ describe("Express Application", () => {
 			await handler(req, res);
 
 			// Verify that res.status and res.json were called with the correct arguments
-			expect(res.status).toHaveBeenCalledWith(200);
+			expect(res.status).toHaveBeenCalledWith(503);
 			expect(res.json).toHaveBeenCalledWith(
 				expect.objectContaining({
 					status: "error",
@@ -285,6 +292,123 @@ describe("Express Application", () => {
 					}),
 				}),
 			);
+		});
+	});
+
+	describe("Graceful Shutdown", () => {
+		it("should register SIGTERM and SIGINT handlers", async () => {
+			const processOnSpy = vi.spyOn(process, "on");
+			setupCommonMocks();
+
+			await import("../../src/index.js");
+
+			expect(processOnSpy).toHaveBeenCalledWith("SIGTERM", expect.any(Function));
+			expect(processOnSpy).toHaveBeenCalledWith("SIGINT", expect.any(Function));
+			processOnSpy.mockRestore();
+		});
+
+		it("should close server and Redis connection on SIGTERM", async () => {
+			const processOnSpy = vi.spyOn(process, "on");
+			const processExitSpy = vi.spyOn(process, "exit").mockImplementation(() => {});
+			const redisMock = setupCommonMocks({
+				...defaultConfig,
+				GRACEFUL_SHUTDOWN_TIMEOUT: 10000,
+			});
+			redisMock.client.quit = vi.fn().mockResolvedValue("OK");
+
+			await import("../../src/index.js");
+
+			const sigtermHandler = processOnSpy.mock.calls.find((call) => call[0] === "SIGTERM")[1];
+
+			await sigtermHandler();
+
+			expect(mockServer.close).toHaveBeenCalledWith(expect.any(Function));
+			expect(redisMock.client.quit).toHaveBeenCalled();
+			expect(processExitSpy).toHaveBeenCalledWith(0);
+
+			processOnSpy.mockRestore();
+			processExitSpy.mockRestore();
+		});
+
+		it("should exit with code 1 when client.quit() rejects during shutdown", async () => {
+			const processOnSpy = vi.spyOn(process, "on");
+			const processExitSpy = vi.spyOn(process, "exit").mockImplementation(() => {});
+			const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation();
+			const redisMock = setupCommonMocks({
+				...defaultConfig,
+				GRACEFUL_SHUTDOWN_TIMEOUT: 10000,
+			});
+			redisMock.client.quit = vi.fn().mockRejectedValue(new Error("Redis quit failed"));
+
+			await import("../../src/index.js");
+
+			const sigtermHandler = processOnSpy.mock.calls.find((call) => call[0] === "SIGTERM")[1];
+
+			await sigtermHandler();
+
+			expect(redisMock.client.quit).toHaveBeenCalled();
+			expect(consoleErrorSpy).toHaveBeenCalledWith(
+				"Error closing Redis connection:",
+				expect.any(Error),
+			);
+			expect(processExitSpy).toHaveBeenCalledWith(1);
+
+			processOnSpy.mockRestore();
+			processExitSpy.mockRestore();
+			consoleErrorSpy.mockRestore();
+		});
+
+		it("should force-exit with code 1 when shutdown exceeds the timeout", async () => {
+			vi.useFakeTimers();
+			const processOnSpy = vi.spyOn(process, "on");
+			const processExitSpy = vi.spyOn(process, "exit").mockImplementation(() => {});
+			const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation();
+			setupCommonMocks({
+				...defaultConfig,
+				GRACEFUL_SHUTDOWN_TIMEOUT: 5000,
+			});
+
+			await import("../../src/index.js");
+
+			// Simulate a hanging server.close() — never invokes its callback
+			mockServer.close = vi.fn();
+
+			const sigtermHandler = processOnSpy.mock.calls.find((call) => call[0] === "SIGTERM")[1];
+			sigtermHandler();
+
+			expect(processExitSpy).not.toHaveBeenCalled();
+
+			vi.advanceTimersByTime(5000);
+
+			expect(consoleErrorSpy).toHaveBeenCalledWith("Forced shutdown after timeout");
+			expect(processExitSpy).toHaveBeenCalledWith(1);
+
+			vi.useRealTimers();
+			processOnSpy.mockRestore();
+			processExitSpy.mockRestore();
+			consoleErrorSpy.mockRestore();
+		});
+
+		it("should not shutdown twice on repeated signals", async () => {
+			const processOnSpy = vi.spyOn(process, "on");
+			const processExitSpy = vi.spyOn(process, "exit").mockImplementation(() => {});
+			const redisMock = setupCommonMocks({
+				...defaultConfig,
+				GRACEFUL_SHUTDOWN_TIMEOUT: 10000,
+			});
+			redisMock.client.quit = vi.fn().mockResolvedValue("OK");
+
+			await import("../../src/index.js");
+
+			const sigtermHandler = processOnSpy.mock.calls.find((call) => call[0] === "SIGTERM")[1];
+
+			await sigtermHandler();
+			await sigtermHandler();
+
+			expect(mockServer.close).toHaveBeenCalledTimes(1);
+
+			processOnSpy.mockRestore();
+			processExitSpy.mockRestore();
 		});
 	});
 });

@@ -130,6 +130,10 @@ Please note that on the interface, the Redis server info button will not work. F
 - `USER_LOGIN` - login to restrict access to bull-board interface (disabled by default)
 - `USER_PASSWORD` - password to restrict access to bull-board interface (disabled by default)
 
+**Graceful shutdown**
+
+- `GRACEFUL_SHUTDOWN_TIMEOUT` - Maximum time in milliseconds to wait for the server to close before forcing shutdown (`10000` by default)
+
 **Queue setup**
 
 - `BULL_PREFIX` - prefix to your bull queue name (`bull` by default)
@@ -205,6 +209,10 @@ A Healthcheck based on NestJS is available to monitor the status of the containe
 | `info`    | Object containing information of each health indicator which is of status 'up', or in other words "healthy".     | object          |
 | `error`   | String containing information of each health indicator which is of status 'down', or in other words "unhealthy". | string          |
 | `details` | Object containing all information of each health indicator                                                       | object          |
+
+The endpoint returns `200 OK` when healthy and `503 Service Unavailable` when Redis is unreachable.
+
+> **Use as a readiness probe, not a liveness probe.** A transient Redis outage will return 503 — if `/healthcheck` is wired as a Kubernetes `livenessProbe`, the pod will be killed and restarted on every Redis blip (which doesn't help, since restarting bull-board doesn't fix Redis). Use it as a `readinessProbe` so the pod is removed from the load balancer until Redis recovers, without being killed.
 
 ### Example with docker-compose
 
