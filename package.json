@@ -42,8 +42,8 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@bull-board/api": "^8.1.0",
-    "@bull-board/express": "^8.1.0",
+    "@bull-board/api": "^8.1.1",
+    "@bull-board/express": "^8.1.1",
     "body-parser": "^2.3.0",
     "bull": "^4.16.5",
     "bullmq": "^5.79.2",
@@ -62,14 +62,14 @@
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/github": "^12.0.9",
     "@semantic-release/release-notes-generator": "^14.1.1",
-    "@vitest/coverage-v8": "^4.1.9",
-    "@vitest/ui": "^4.1.9",
-    "conventional-changelog-conventionalcommits": "^10.2.0",
+    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/ui": "^4.1.10",
+    "conventional-changelog-conventionalcommits": "^10.2.1",
     "nodemon": "^3.1.14",
     "oxfmt": "^0.57.0",
     "oxlint": "^1.72.0",
     "semantic-release": "^25.0.5",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.10"
   },
   "engines": {
     "bun": "please use npm",
