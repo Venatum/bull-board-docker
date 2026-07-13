@@ -16,3 +16,6 @@ coverage
 .npmrc
 
 examples/tls-example/certs/*
+
+# Local docs (superpowers plans/specs, etc.)
+docs/
