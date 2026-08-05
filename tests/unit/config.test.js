@@ -90,6 +90,9 @@ describe("Configuration", () => {
 			expect(config.BACKOFF_TIME_MULTIPLE).toBe(2);
 			expect(config.BACKOFF_NB_ATTEMPTS).toBe(10);
 
+			// Shutdown configuration
+			expect(config.GRACEFUL_SHUTDOWN_TIMEOUT).toBe(10000);
+
 			// App configuration
 			expect(config.PORT).toBe(3000);
 			expect(config.BULL_BOARD_HOSTNAME).toBe("0.0.0.0");
@@ -330,10 +333,58 @@ describe("Configuration", () => {
 			// Verify that environment variables were loaded correctly
 			expect(config.BULL_PREFIX).toBe("custom-bull");
 			expect(config.BULL_VERSION).toBe("BULL");
-			expect(config.BACKOFF_STARTING_DELAY).toBe("1000");
-			expect(config.BACKOFF_MAX_DELAY).toBe("10000");
-			expect(config.BACKOFF_TIME_MULTIPLE).toBe("3");
-			expect(config.BACKOFF_NB_ATTEMPTS).toBe("5");
+			expect(config.BACKOFF_STARTING_DELAY).toBe(1000);
+			expect(config.BACKOFF_MAX_DELAY).toBe(10000);
+			expect(config.BACKOFF_TIME_MULTIPLE).toBe(3);
+			expect(config.BACKOFF_NB_ATTEMPTS).toBe(5);
+		});
+	});
+
+	describe("Shutdown Configuration", () => {
+		it("should load GRACEFUL_SHUTDOWN_TIMEOUT from environment variable", async () => {
+			process.env.GRACEFUL_SHUTDOWN_TIMEOUT = "30000";
+
+			const { config } = await getConfig();
+
+			expect(config.GRACEFUL_SHUTDOWN_TIMEOUT).toBe(30000);
+		});
+	});
+
+	describe("Numeric env parsing", () => {
+		it("should accept 0 as an explicit value, not fall back to default", async () => {
+			process.env.GRACEFUL_SHUTDOWN_TIMEOUT = "0";
+			process.env.BACKOFF_NB_ATTEMPTS = "0";
+
+			const { config } = await getConfig();
+
+			expect(config.GRACEFUL_SHUTDOWN_TIMEOUT).toBe(0);
+			expect(config.BACKOFF_NB_ATTEMPTS).toBe(0);
+		});
+
+		it("should preserve Infinity for BACKOFF_MAX_DELAY", async () => {
+			process.env.BACKOFF_MAX_DELAY = "Infinity";
+
+			const { config } = await getConfig();
+
+			expect(config.BACKOFF_MAX_DELAY).toBe(Infinity);
+		});
+
+		it("should fall back to default when env value is empty string", async () => {
+			process.env.GRACEFUL_SHUTDOWN_TIMEOUT = "";
+			process.env.BACKOFF_STARTING_DELAY = "";
+
+			const { config } = await getConfig();
+
+			expect(config.GRACEFUL_SHUTDOWN_TIMEOUT).toBe(10000);
+			expect(config.BACKOFF_STARTING_DELAY).toBe(500);
+		});
+
+		it("should fall back to default when env value is non-numeric", async () => {
+			process.env.BACKOFF_TIME_MULTIPLE = "not-a-number";
+
+			const { config } = await getConfig();
+
+			expect(config.BACKOFF_TIME_MULTIPLE).toBe(2);
 		});
 	});
 
