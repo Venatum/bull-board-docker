@@ -42,8 +42,8 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@bull-board/api": "^8.5.0",
-    "@bull-board/express": "^8.5.0",
+    "@bull-board/api": "^8.6.0",
+    "@bull-board/express": "^8.6.0",
     "body-parser": "^2.3.0",
     "bull": "^4.16.5",
     "bullmq": "^5.81.3",
@@ -66,9 +66,9 @@
     "@vitest/ui": "^4.1.10",
     "conventional-changelog-conventionalcommits": "^10.2.1",
     "nodemon": "^3.1.14",
-    "oxfmt": "^0.61.0",
-    "oxlint": "^1.76.0",
-    "semantic-release": "^25.0.8",
+    "oxfmt": "^0.62.0",
+    "oxlint": "^1.77.0",
+    "semantic-release": "^25.0.9",
     "vitest": "^4.1.10"
   },
   "engines": {
