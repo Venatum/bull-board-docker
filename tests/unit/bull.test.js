@@ -20,6 +20,10 @@ describe("Bull Queue Setup", () => {
 
 	// Cache-busting counter for ESM re-evaluation
 	let importCounter = 0;
+	const importBull = async () => {
+		importCounter++;
+		return await import(`../../src/bull.js?v=${importCounter}`);
+	};
 
 	// Default config
 	const defaultConfig = {
@@ -91,11 +95,15 @@ describe("Bull Queue Setup", () => {
 
 		// Setup Redis mock
 		clientKeysMock = mock().mockResolvedValue(queueKeys);
+		const clientScanMock = mock().mockResolvedValue(["0", queueKeys]);
 		mock.module("../../src/redis.js", () => ({
 			client: {
 				keys: clientKeysMock,
+				scan: clientScanMock,
 				connection: "redis-connection",
 				on: mock(),
+				nodes: mock().mockReturnValue([]),
+				duplicate: mock().mockReturnValue({ on: mock() }),
 			},
 			redisConfig: {
 				redis: {
@@ -104,7 +112,6 @@ describe("Bull Queue Setup", () => {
 				},
 			},
 			isCluster: false,
-			clusterConfig: null,
 		}));
 
 		// Setup config mock
@@ -119,7 +126,7 @@ describe("Bull Queue Setup", () => {
 	};
 
 	beforeEach(() => {
-		// Restore all mocks between tests
+		// Clear all mocks before each test
 		mock.restore();
 	});
 
@@ -136,8 +143,7 @@ describe("Bull Queue Setup", () => {
 		setupCommonMocks();
 
 		// Import the module to test
-		importCounter++;
-		await import(`../../src/bull.js?v=${importCounter}`);
+		await importBull();
 
 		// We don't need to call bullMain for this test as we're just testing the initial setup
 		// which happens when the module is imported
@@ -164,8 +170,7 @@ describe("Bull Queue Setup", () => {
 		setupCommonMocks();
 
 		// Import the module to test
-		importCounter++;
-		const bull = await import(`../../src/bull.js?v=${importCounter}`);
+		const bull = await importBull();
 
 		// Call the bullMain function
 		await bull.bullMain();
@@ -181,6 +186,73 @@ describe("Bull Queue Setup", () => {
 		expect(setQueuesMock).toHaveBeenCalledWith(expect.any(Array));
 	});
 
+	it("should accumulate keys across multiple SCAN pages", async () => {
+		const multiPageQueueMock = mock();
+		mock.module("bullmq", () => ({ Queue: multiPageQueueMock }));
+		mock.module("bull", () => ({ default: mock() }));
+		const multiPageSetQueuesMock = mock();
+		mock.module("@bull-board/api", () => ({
+			createBullBoard: mock().mockReturnValue({ setQueues: multiPageSetQueuesMock }),
+		}));
+		mock.module("@bull-board/express", () => ({
+			ExpressAdapter: class {
+				getRouter() {
+					return "router";
+				}
+			},
+		}));
+		mock.module("@bull-board/api/bullMQAdapter", () => ({
+			BullMQAdapter: class {},
+		}));
+		mock.module("@bull-board/api/bullAdapter", () => ({
+			BullAdapter: class {},
+		}));
+
+		const multiPageScanMock = mock()
+			.mockResolvedValueOnce(["42", ["bull:queue1:id"]])
+			.mockResolvedValueOnce(["0", ["bull:queue2:id"]]);
+
+		mock.module("../../src/redis.js", () => ({
+			client: {
+				scan: multiPageScanMock,
+				connection: "redis-connection",
+				on: mock(),
+				nodes: mock().mockReturnValue([]),
+				duplicate: mock().mockReturnValue({ on: mock() }),
+			},
+			redisConfig: { redis: { host: "localhost", port: 6379 } },
+			isCluster: false,
+		}));
+		mock.module("../../src/config.js", () => ({ config: defaultConfig }));
+		mock.module("exponential-backoff", () => ({
+			backOff: mock().mockImplementation((fn) => fn()),
+		}));
+
+		const bull = await importBull();
+		await bull.bullMain();
+
+		// Verify SCAN pagination
+		expect(multiPageScanMock).toHaveBeenCalledTimes(2);
+		expect(multiPageScanMock).toHaveBeenNthCalledWith(1, "0", "MATCH", "bull:*", "COUNT", 100);
+		expect(multiPageScanMock).toHaveBeenNthCalledWith(2, "42", "MATCH", "bull:*", "COUNT", 100);
+
+		// Verify both queues from different pages were discovered and registered
+		expect(multiPageQueueMock).toHaveBeenCalledTimes(2);
+		expect(multiPageQueueMock).toHaveBeenCalledWith(
+			"queue1",
+			expect.any(Object),
+			"redis-connection",
+		);
+		expect(multiPageQueueMock).toHaveBeenCalledWith(
+			"queue2",
+			expect.any(Object),
+			"redis-connection",
+		);
+		expect(multiPageSetQueuesMock).toHaveBeenCalledWith(
+			expect.arrayContaining([expect.any(Object), expect.any(Object)]),
+		);
+	});
+
 	it("should discover Bull queues and add them to the board (Bull)", async () => {
 		// Setup mocks with Bull configuration
 		setupCommonMocks({
@@ -189,8 +261,7 @@ describe("Bull Queue Setup", () => {
 		});
 
 		// Import the module to test
-		importCounter++;
-		const bull = await import(`../../src/bull.js?v=${importCounter}`);
+		const bull = await importBull();
 
 		// Call the bullMain function
 		await bull.bullMain();
@@ -211,11 +282,10 @@ describe("Bull Queue Setup", () => {
 		setupCommonMocks(defaultConfig, []);
 
 		// Mock console.error to verify it's called
-		consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+		consoleSpy = spyOn(console, "error").mockImplementation();
 
 		// Import the module to test
-		importCounter++;
-		const bull = await import(`../../src/bull.js?v=${importCounter}`);
+		const bull = await importBull();
 
 		// Call the bullMain function
 		await bull.bullMain();
@@ -228,8 +298,7 @@ describe("Bull Queue Setup", () => {
 		setupCommonMocks(configWithPrefix);
 
 		// Import the module to test
-		importCounter++;
-		const bull = await import(`../../src/bull.js?v=${importCounter}`);
+		const bull = await importBull();
 
 		// Call the bullMain function
 		await bull.bullMain();
@@ -352,8 +421,8 @@ describe("Bull Queue Setup", () => {
 			}));
 
 			// Setup Redis mock with cluster support
-			const mockNode1 = { keys: mock().mockResolvedValue(queueKeys.slice(0, 1)) };
-			const mockNode2 = { keys: mock().mockResolvedValue(queueKeys.slice(1)) };
+			const mockNode1 = { scan: mock().mockResolvedValue(["0", queueKeys.slice(0, 1)]) };
+			const mockNode2 = { scan: mock().mockResolvedValue(["0", queueKeys.slice(1)]) };
 			clientKeysMock = mock().mockResolvedValue(queueKeys);
 
 			const mockClient = {
@@ -391,12 +460,11 @@ describe("Bull Queue Setup", () => {
 		it("should scan all master nodes for keys in cluster mode (BullMQ)", async () => {
 			const { mockNode1, mockNode2 } = setupClusterMocks();
 
-			importCounter++;
-			const bull = await import(`../../src/bull.js?v=${importCounter}`);
+			const bull = await importBull();
 			await bull.bullMain();
 
-			expect(mockNode1.keys).toHaveBeenCalledWith("bull:*");
-			expect(mockNode2.keys).toHaveBeenCalledWith("bull:*");
+			expect(mockNode1.scan).toHaveBeenCalledWith("0", "MATCH", "bull:*", "COUNT", 100);
+			expect(mockNode2.scan).toHaveBeenCalledWith("0", "MATCH", "bull:*", "COUNT", 100);
 			expect(BullMQAdapterMock).toHaveBeenCalledTimes(2);
 			expect(setQueuesMock).toHaveBeenCalledWith(expect.any(Array));
 		});
@@ -404,8 +472,7 @@ describe("Bull Queue Setup", () => {
 		it("should pass cluster client as connection for BullMQ queues", async () => {
 			const { mockClient } = setupClusterMocks();
 
-			importCounter++;
-			const bull = await import(`../../src/bull.js?v=${importCounter}`);
+			const bull = await importBull();
 			await bull.bullMain();
 
 			expect(QueueMock).toHaveBeenCalledWith(
@@ -424,8 +491,7 @@ describe("Bull Queue Setup", () => {
 				BULL_PREFIX: "{bull}",
 			});
 
-			importCounter++;
-			const bull = await import(`../../src/bull.js?v=${importCounter}`);
+			const bull = await importBull();
 			await bull.bullMain();
 
 			expect(BullMock).toHaveBeenCalledWith(
@@ -450,8 +516,7 @@ describe("Bull Queue Setup", () => {
 				BULL_PREFIX: "{bull}",
 			});
 
-			importCounter++;
-			const bull = await import(`../../src/bull.js?v=${importCounter}`);
+			const bull = await importBull();
 			await bull.bullMain();
 
 			expect(BullMock).not.toHaveBeenCalledWith(
@@ -462,20 +527,47 @@ describe("Bull Queue Setup", () => {
 		});
 
 		it("should throw when no master nodes are available", async () => {
-			const { mockClient } = setupClusterMocks();
+			mock.module("bullmq", () => ({ Queue: mock() }));
+			mock.module("bull", () => ({ default: mock() }));
+			mock.module("@bull-board/api", () => ({
+				createBullBoard: mock().mockReturnValue({ setQueues: mock() }),
+			}));
+			mock.module("@bull-board/express", () => ({
+				ExpressAdapter: class {
+					getRouter() {
+						return "router";
+					}
+				},
+			}));
+			mock.module("@bull-board/api/bullMQAdapter", () => ({
+				BullMQAdapter: class {},
+			}));
+			mock.module("@bull-board/api/bullAdapter", () => ({
+				BullAdapter: class {},
+			}));
+			mock.module("../../src/redis.js", () => ({
+				client: {
+					keys: mock(),
+					connection: "redis-connection",
+					on: mock(),
+					nodes: mock().mockReturnValue([]),
+					duplicate: mock().mockReturnValue({ on: mock() }),
+				},
+				redisConfig: { redis: { host: "localhost", port: 6379 } },
+				isCluster: true,
+			}));
+			mock.module("../../src/config.js", () => ({ config: defaultConfig }));
+			mock.module("exponential-backoff", () => ({
+				backOff: mock().mockImplementation((fn) => fn()),
+			}));
 
-			// Override nodes to return empty array on the already-registered mock
-			// to avoid re-mocking the same module (which can race across test files).
-			mockClient.nodes.mockReturnValue([]);
-
-			importCounter++;
-			const bull = await import(`../../src/bull.js?v=${importCounter}`);
+			const bull = await importBull();
 			await expect(bull.getBullQueues()).rejects.toThrow("No master nodes available");
 		});
 
 		it("should handle partial node failures gracefully", async () => {
-			const failingNode = { keys: mock().mockRejectedValue(new Error("ECONNREFUSED")) };
-			const workingNode = { keys: mock().mockResolvedValue(["bull:queue1:jobs"]) };
+			const failingNode = { scan: mock().mockRejectedValue(new Error("ECONNREFUSED")) };
+			const workingNode = { scan: mock().mockResolvedValue(["0", ["bull:queue1:jobs"]]) };
 
 			mock.module("bullmq", () => ({ Queue: mock() }));
 			mock.module("bull", () => ({ default: mock() }));
@@ -514,8 +606,7 @@ describe("Bull Queue Setup", () => {
 
 			consoleSpy = spyOn(console, "error").mockImplementation();
 
-			importCounter++;
-			const bull = await import(`../../src/bull.js?v=${importCounter}`);
+			const bull = await importBull();
 			await bull.bullMain();
 
 			// Should log the partial failure
@@ -528,8 +619,8 @@ describe("Bull Queue Setup", () => {
 		});
 
 		it("should throw when all master nodes fail", async () => {
-			const failingNode1 = { keys: mock().mockRejectedValue(new Error("ECONNREFUSED")) };
-			const failingNode2 = { keys: mock().mockRejectedValue(new Error("ETIMEDOUT")) };
+			const failingNode1 = { scan: mock().mockRejectedValue(new Error("ECONNREFUSED")) };
+			const failingNode2 = { scan: mock().mockRejectedValue(new Error("ETIMEDOUT")) };
 
 			mock.module("bullmq", () => ({ Queue: mock() }));
 			mock.module("bull", () => ({ default: mock() }));
@@ -567,8 +658,7 @@ describe("Bull Queue Setup", () => {
 
 			consoleSpy = spyOn(console, "error").mockImplementation();
 
-			importCounter++;
-			const bull = await import(`../../src/bull.js?v=${importCounter}`);
+			const bull = await importBull();
 			await expect(bull.getBullQueues()).rejects.toThrow("All master nodes failed");
 		});
 
@@ -579,8 +669,7 @@ describe("Bull Queue Setup", () => {
 				BULL_PREFIX: "bull",
 			});
 
-			importCounter++;
-			const bull = await import(`../../src/bull.js?v=${importCounter}`);
+			const bull = await importBull();
 
 			await expect(bull.getBullQueues()).rejects.toThrow(
 				"Redis Cluster with BULL requires BULL_PREFIX to include a hash tag",

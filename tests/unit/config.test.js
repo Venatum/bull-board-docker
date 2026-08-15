@@ -50,17 +50,27 @@ describe("Configuration", () => {
 
 	describe("Default Configuration", () => {
 		it("should load default values when environment variables are not set", async () => {
+			// Import the module to test
 			const { config } = await getConfig();
 
+			// Verify default values
+			// Redis configuration
 			expect(config.REDIS_PORT).toBe(6379);
 			expect(config.REDIS_HOST).toBe("localhost");
 			expect(config.REDIS_DB).toBe("0");
 			expect(config.REDIS_FAMILY).toBe(0);
+
+			// Queue configuration
 			expect(config.BULL_PREFIX).toBe("bull");
 			expect(config.BULL_VERSION).toBe("BULLMQ");
 			expect(config.BACKOFF_STARTING_DELAY).toBe(500);
 			expect(config.BACKOFF_TIME_MULTIPLE).toBe(2);
 			expect(config.BACKOFF_NB_ATTEMPTS).toBe(10);
+
+			// Shutdown configuration
+			expect(config.GRACEFUL_SHUTDOWN_TIMEOUT).toBe(10000);
+
+			// App configuration
 			expect(config.PORT).toBe(3000);
 			expect(config.BULL_BOARD_HOSTNAME).toBe("0.0.0.0");
 			expect(config.HOME_PAGE).toBe("/");
@@ -71,6 +81,7 @@ describe("Configuration", () => {
 
 	describe("Redis Configuration", () => {
 		it("should load Redis configuration from environment variables", async () => {
+			// Set environment variables
 			process.env.REDIS_PORT = "6380";
 			process.env.REDIS_HOST = "redis-server";
 			process.env.REDIS_DB = "1";
@@ -86,8 +97,10 @@ describe("Configuration", () => {
 			process.env.REDIS_TLS_CIPHERS = "ECDHE-RSA-AES256-GCM-SHA384";
 			process.env.REDIS_FAMILY = "4";
 
+			// Import the module to test
 			const { config } = await getConfig();
 
+			// Verify that environment variables were loaded correctly
 			expect(config.REDIS_PORT).toBe(6380);
 			expect(config.REDIS_HOST).toBe("redis-server");
 			expect(config.REDIS_DB).toBe("1");
@@ -106,22 +119,28 @@ describe("Configuration", () => {
 
 		it("should default REDIS_TLS_REJECT_UNAUTHORIZED to true when not set", async () => {
 			delete process.env.REDIS_TLS_REJECT_UNAUTHORIZED;
+
 			const { config } = await getConfig();
+
 			expect(config.REDIS_TLS_REJECT_UNAUTHORIZED).toBe(true);
 		});
 
 		it("should parse REDIS_TLS_REJECT_UNAUTHORIZED with flexible boolean values", async () => {
 			process.env.REDIS_TLS_REJECT_UNAUTHORIZED = "0";
+
 			const { config } = await getConfig();
+
 			expect(config.REDIS_TLS_REJECT_UNAUTHORIZED).toBe(false);
 		});
 
 		it("should throw when a TLS file path does not exist", async () => {
 			process.env.REDIS_TLS_CA = "/path/that/does/not/exist.crt";
+
 			await expect(getConfig()).rejects.toThrow("TLS file not found");
 		});
 
 		it("should handle additional Redis configuration options", async () => {
+			// Set environment variables
 			process.env.REDIS_COMMAND_TIMEOUT = "1000";
 			process.env.REDIS_SOCKET_TIMEOUT = "2000";
 			process.env.REDIS_KEEP_ALIVE = "5000";
@@ -133,8 +152,10 @@ describe("Configuration", () => {
 			process.env.REDIS_ENABLE_OFFLINE_QUEUE = "false";
 			process.env.REDIS_ENABLE_READY_CHECK = "false";
 
+			// Import the module to test
 			const { config } = await getConfig();
 
+			// Verify that environment variables were loaded correctly
 			expect(config.REDIS_COMMAND_TIMEOUT).toBe(1000);
 			expect(config.REDIS_SOCKET_TIMEOUT).toBe(2000);
 			expect(config.REDIS_KEEP_ALIVE).toBe(5000);
@@ -150,6 +171,7 @@ describe("Configuration", () => {
 
 	describe("Sentinel Configuration", () => {
 		it("should load Sentinel configuration from environment variables", async () => {
+			// Set environment variables
 			process.env.SENTINEL_NAME = "mymaster";
 			process.env.SENTINEL_HOSTS = "sentinel1:26379,sentinel2:26379";
 			process.env.SENTINEL_ROLE = "slave";
@@ -168,8 +190,10 @@ describe("Configuration", () => {
 			process.env.SENTINEL_MAX_CONNECTIONS = "20";
 			process.env.SENTINEL_FAILOVER_DETECTOR = "true";
 
+			// Import the module to test
 			const { config } = await getConfig();
 
+			// Verify that environment variables were loaded correctly
 			expect(config.SENTINEL_NAME).toBe("mymaster");
 			expect(config.SENTINEL_HOSTS).toBe("sentinel1:26379,sentinel2:26379");
 			expect(config.SENTINEL_ROLE).toBe("slave");
@@ -191,18 +215,25 @@ describe("Configuration", () => {
 
 		it("should default SENTINEL_TLS_REJECT_UNAUTHORIZED to true when not set", async () => {
 			delete process.env.SENTINEL_TLS_REJECT_UNAUTHORIZED;
+
 			const { config } = await getConfig();
+
 			expect(config.SENTINEL_TLS_REJECT_UNAUTHORIZED).toBe(true);
 		});
 
 		it("should parse SENTINEL_TLS_ENABLED with flexible boolean values", async () => {
 			process.env.SENTINEL_TLS_ENABLED = "YES";
+
 			const { config } = await getConfig();
+
 			expect(config.SENTINEL_TLS_ENABLED).toBe(true);
 		});
 
 		it("should use default values for Sentinel configuration when not set", async () => {
+			// Import the module to test
 			const { config } = await getConfig();
+
+			// Verify default values
 			expect(config.SENTINEL_ROLE).toBe("master");
 			expect(config.SENTINEL_TLS_ENABLED).toBe(false);
 			expect(config.SENTINEL_UPDATE).toBe(false);
@@ -246,6 +277,7 @@ describe("Configuration", () => {
 
 		it("should use default values for Cluster configuration when not set", async () => {
 			const { config } = await getConfig();
+
 			expect(config.REDIS_CLUSTER_HOSTS).toBeUndefined();
 			expect(config.REDIS_CLUSTER_SCALE_READS).toBe("master");
 			expect(config.REDIS_CLUSTER_MAX_REDIRECTIONS).toBe(16);
@@ -264,6 +296,7 @@ describe("Configuration", () => {
 
 	describe("Queue Configuration", () => {
 		it("should load Queue configuration from environment variables", async () => {
+			// Set environment variables
 			process.env.BULL_PREFIX = "custom-bull";
 			process.env.BULL_VERSION = "BULL";
 			process.env.BACKOFF_STARTING_DELAY = "1000";
@@ -271,27 +304,80 @@ describe("Configuration", () => {
 			process.env.BACKOFF_TIME_MULTIPLE = "3";
 			process.env.BACKOFF_NB_ATTEMPTS = "5";
 
+			// Import the module to test
 			const { config } = await getConfig();
 
+			// Verify that environment variables were loaded correctly
 			expect(config.BULL_PREFIX).toBe("custom-bull");
 			expect(config.BULL_VERSION).toBe("BULL");
-			expect(config.BACKOFF_STARTING_DELAY).toBe("1000");
-			expect(config.BACKOFF_MAX_DELAY).toBe("10000");
-			expect(config.BACKOFF_TIME_MULTIPLE).toBe("3");
-			expect(config.BACKOFF_NB_ATTEMPTS).toBe("5");
+			expect(config.BACKOFF_STARTING_DELAY).toBe(1000);
+			expect(config.BACKOFF_MAX_DELAY).toBe(10000);
+			expect(config.BACKOFF_TIME_MULTIPLE).toBe(3);
+			expect(config.BACKOFF_NB_ATTEMPTS).toBe(5);
+		});
+	});
+
+	describe("Shutdown Configuration", () => {
+		it("should load GRACEFUL_SHUTDOWN_TIMEOUT from environment variable", async () => {
+			process.env.GRACEFUL_SHUTDOWN_TIMEOUT = "30000";
+
+			const { config } = await getConfig();
+
+			expect(config.GRACEFUL_SHUTDOWN_TIMEOUT).toBe(30000);
+		});
+	});
+
+	describe("Numeric env parsing", () => {
+		it("should accept 0 as an explicit value, not fall back to default", async () => {
+			process.env.GRACEFUL_SHUTDOWN_TIMEOUT = "0";
+			process.env.BACKOFF_NB_ATTEMPTS = "0";
+
+			const { config } = await getConfig();
+
+			expect(config.GRACEFUL_SHUTDOWN_TIMEOUT).toBe(0);
+			expect(config.BACKOFF_NB_ATTEMPTS).toBe(0);
+		});
+
+		it("should preserve Infinity for BACKOFF_MAX_DELAY", async () => {
+			process.env.BACKOFF_MAX_DELAY = "Infinity";
+
+			const { config } = await getConfig();
+
+			expect(config.BACKOFF_MAX_DELAY).toBe(Infinity);
+		});
+
+		it("should fall back to default when env value is empty string", async () => {
+			process.env.GRACEFUL_SHUTDOWN_TIMEOUT = "";
+			process.env.BACKOFF_STARTING_DELAY = "";
+
+			const { config } = await getConfig();
+
+			expect(config.GRACEFUL_SHUTDOWN_TIMEOUT).toBe(10000);
+			expect(config.BACKOFF_STARTING_DELAY).toBe(500);
+		});
+
+		it("should fall back to default when env value is non-numeric", async () => {
+			process.env.BACKOFF_TIME_MULTIPLE = "not-a-number";
+
+			const { config } = await getConfig();
+
+			expect(config.BACKOFF_TIME_MULTIPLE).toBe(2);
 		});
 	});
 
 	describe("App Configuration", () => {
 		it("should load App configuration from environment variables", async () => {
+			// Set environment variables
 			process.env.PORT = "4000";
 			process.env.BULL_BOARD_HOSTNAME = "127.0.0.1";
 			process.env.PROXY_PATH = "/custom-path";
 			process.env.USER_LOGIN = "admin";
 			process.env.USER_PASSWORD = "admin";
 
+			// Import the module to test
 			const { config } = await getConfig();
 
+			// Verify that environment variables were loaded correctly
 			expect(config.PORT).toBe("4000");
 			expect(config.BULL_BOARD_HOSTNAME).toBe("127.0.0.1");
 			expect(config.PROXY_PATH).toBe("/custom-path");
@@ -303,6 +389,7 @@ describe("Configuration", () => {
 		});
 
 		it("should load Bullboard UI configuration from environment variables", async () => {
+			// Set environment variables
 			process.env.BULL_BOARD_TITLE = "Custom Bull Board";
 			process.env.BULL_BOARD_LOGO_PATH = "/path/to/logo.png";
 			process.env.BULL_BOARD_LOGO_WIDTH = "100";
@@ -314,8 +401,10 @@ describe("Configuration", () => {
 			process.env.BULL_BOARD_DATE_FORMATS_COMMON = "DD/MM/YYYY HH:mm";
 			process.env.BULL_BOARD_DATE_FORMATS_FULL = "DD/MM/YYYY HH:mm:ss";
 
+			// Import the module to test
 			const { config } = await getConfig();
 
+			// Verify that environment variables were loaded correctly
 			expect(config.BULL_BOARD_TITLE).toBe("Custom Bull Board");
 			expect(config.BULL_BOARD_LOGO_PATH).toBe("/path/to/logo.png");
 			expect(config.BULL_BOARD_LOGO_WIDTH).toBe("100");
@@ -331,8 +420,13 @@ describe("Configuration", () => {
 
 	describe("Path Handling", () => {
 		it("should normalize paths correctly", async () => {
+			// Set environment variables with trailing slashes
 			process.env.PROXY_PATH = "/custom-path/";
+
+			// Import the module to test
 			const { config, PROXY_PATH } = await getConfig();
+
+			// Verify that paths were normalized correctly
 			expect(PROXY_PATH).toBe("/custom-path");
 			expect(config.PROXY_PATH).toBe("/custom-path");
 			expect(config.HOME_PAGE).toBe("/custom-path");
@@ -340,8 +434,13 @@ describe("Configuration", () => {
 		});
 
 		it("should handle empty proxy path", async () => {
+			// Set environment variables with empty proxy path
 			process.env.PROXY_PATH = "";
+
+			// Import the module to test
 			const { config, PROXY_PATH } = await getConfig();
+
+			// Verify that paths were handled correctly
 			expect(PROXY_PATH).toBe("");
 			expect(config.PROXY_PATH).toBe("");
 			expect(config.HOME_PAGE).toBe("/");
@@ -349,8 +448,13 @@ describe("Configuration", () => {
 		});
 
 		it("should handle undefined proxy path", async () => {
+			// Unset PROXY_PATH
 			delete process.env.PROXY_PATH;
+
+			// Import the module to test
 			const { config, PROXY_PATH } = await getConfig();
+
+			// Verify that paths were handled correctly
 			expect(PROXY_PATH).toBe("");
 			expect(config.PROXY_PATH).toBeFalsy();
 			expect(config.HOME_PAGE).toBe("/");
@@ -360,23 +464,38 @@ describe("Configuration", () => {
 
 	describe("Authentication", () => {
 		it("should set AUTH_ENABLED to true when USER_LOGIN and USER_PASSWORD are set", async () => {
+			// Set environment variables
 			process.env.USER_LOGIN = "admin";
 			process.env.USER_PASSWORD = "password";
+
+			// Import the module to test
 			const { config } = await getConfig();
+
+			// Verify that AUTH_ENABLED is true
 			expect(config.AUTH_ENABLED).toBe(true);
 		});
 
 		it("should set AUTH_ENABLED to false when USER_LOGIN is not set", async () => {
+			// Set environment variables
 			process.env.USER_PASSWORD = "password";
 			delete process.env.USER_LOGIN;
+
+			// Import the module to test
 			const { config } = await getConfig();
+
+			// Verify that AUTH_ENABLED is false
 			expect(config.AUTH_ENABLED).toBe(false);
 		});
 
 		it("should set AUTH_ENABLED to false when USER_PASSWORD is not set", async () => {
+			// Set environment variables
 			process.env.USER_LOGIN = "admin";
 			delete process.env.USER_PASSWORD;
+
+			// Import the module to test
 			const { config } = await getConfig();
+
+			// Verify that AUTH_ENABLED is false
 			expect(config.AUTH_ENABLED).toBe(false);
 		});
 	});
