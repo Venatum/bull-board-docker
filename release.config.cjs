@@ -4,11 +4,11 @@
 // MINOR release
 // 		Commit type chore with scope api-deps (Dependency updates)
 // 		Commit type feat (Features) with any scope
+// 		Commit type perf (Performance improvements) with any scope
 // PATCH release
 // 		Commit type chore with scope core-deps (Dependency updates)
 // 		Commit type fix (Bug Fixes) with any scope
 // 		Commit type docs (Documentation) with any scope
-// 		Commit type perf (Performance improvements) with any scope
 // 		Commit type revert (Revert previous changes) with any scope
 // No release
 // 		Commit type test (Tests)
@@ -45,6 +45,8 @@ module.exports = {
 				},
 				releaseRules: [
 					{ type: "*!", release: "major" },
+					{ type: "feat", release: "minor" },
+					{ type: "perf", release: "minor" },
 					{ type: "chore", scope: "deps", release: "patch" },
 					{ type: "chore", scope: "dev-deps", release: false },
 					{ type: "build", scope: "docker", release: "patch" },
