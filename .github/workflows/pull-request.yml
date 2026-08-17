@@ -34,7 +34,7 @@ jobs:
         run: echo "VERSION=$(jq -r '.engines.node' package.json)" >> $GITHUB_OUTPUT
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ steps.node_version.outputs.VERSION }}
           cache: "npm"
