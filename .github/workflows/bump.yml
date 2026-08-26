@@ -1,0 +1,102 @@
+name: Bump
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bump:
+    name: Bump dependencies
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Get Node version from package.json
+        id: node_version
+        shell: bash
+        run: echo "VERSION=$(jq -r '.engines.node' package.json)" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ steps.node_version.outputs.VERSION }}
+          cache: "npm"
+
+      - name: Bump minor versions (ncu)
+        run: npx --yes npm-check-updates -t minor -u
+
+      - name: Install and update dependencies
+        run: |
+          npm install
+          npm update
+          # audit fix should not fail the job when vulnerabilities remain unfixable
+          npm audit fix || true
+
+      - name: Lint & Format
+        run: npm run fix
+
+      - name: Test
+        run: npm run test
+
+      - name: Build Docker image
+        run: docker compose build
+
+      - name: Start bullboard
+        run: docker compose up --wait --wait-timeout 180 --detach bullboard
+
+      - name: Generate jobs
+        run: ./tests/job-generator.js --all
+
+      # TODO: e2e test — drive the bull-board UI (http://localhost:3000) and assert
+      # the queues/jobs created by job-generator show up (e.g. Playwright).
+      - name: E2E test
+        run: |
+          echo "TODO: implement e2e test against http://localhost:3000"
+
+      - name: Stop containers
+        if: always()
+        run: docker compose down -v
+
+      # Build the commit subject and PR body from the actual dependency diff,
+      # reusing the release TL;DR plugin. Subject follows the changelog norm:
+      # "chore(deps): update dependencies <name> and <name> to <ver> and <name> to <ver>".
+      - name: Build pull request metadata
+        id: pr
+        run: |
+          node -e '
+            const fs = require("node:fs");
+            const path = require("node:path");
+            const { execFileSync } = require("node:child_process");
+            const { parseDependencies, diffDependencies, resolveLink, renderTldr, LINK_OVERRIDES } = require("./scripts/tldr-plugin.cjs");
+            const prev = parseDependencies(execFileSync("git", ["show", "HEAD:package.json"], { encoding: "utf8" }));
+            const next = parseDependencies(fs.readFileSync("package.json", "utf8"));
+            const diff = diffDependencies(prev, next);
+            const groups = new Map();
+            for (const { name, newVersion } of diff) {
+              if (!groups.has(newVersion)) groups.set(newVersion, []);
+              groups.get(newVersion).push(name);
+            }
+            const parts = [...groups].map(([version, names]) => `${names.join(" and ")} to ${version}`);
+            const subject = parts.length
+              ? `chore(deps): update dependencies ${parts.join(" and ")}`
+              : "chore(deps): update dependencies to their latest minor";
+            const enriched = diff.map((e) => ({ ...e, url: resolveLink(e.name, LINK_OVERRIDES, path.join(process.cwd(), "node_modules")) }));
+            const body = renderTldr(enriched) || subject;
+            const out = process.env.GITHUB_OUTPUT;
+            fs.appendFileSync(out, `subject=${subject}\n`);
+            fs.appendFileSync(out, `body<<PR_BODY_EOF\n${body}\nPR_BODY_EOF\n`);
+          '
+
+      - name: Open pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: deps/bump-minor
+          commit-message: ${{ steps.pr.outputs.subject }}
+          title: ${{ steps.pr.outputs.subject }}
+          body: ${{ steps.pr.outputs.body }}
+          labels: dependencies
+          delete-branch: true
