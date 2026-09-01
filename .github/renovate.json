@@ -41,6 +41,11 @@
 			"matchDatasources": ["docker"],
 			"semanticCommitType": "build",
 			"semanticCommitScope": "docker"
+		},
+		{
+			"description": "Pin conventional-changelog-conventionalcommits to v9: v10 requires conventional-changelog-writer@9, but semantic-release@25's release-notes-generator@14 is locked to writer@8. Re-allow once release-notes-generator@15 ships.",
+			"matchPackageNames": ["conventional-changelog-conventionalcommits"],
+			"allowedVersions": "<10"
 		}
 	]
 }
