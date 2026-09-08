@@ -10,7 +10,7 @@
 | [`docker-publish.yml`](./workflows/docker-publish.yml) | `push` on tags `v*.*.*`, `pull_request` on `master`, manual | Build multi-arch Docker image (`linux/amd64,linux/arm64`) and push to Docker Hub on tag.                                                            |
 | [`release.yml`](./workflows/release.yml)               | `push` on `master`, manual                                  | Run `semantic-release` to cut a new version and Github release.                                                                                     |
 | [`renovate.yml`](./workflows/renovate.yml)             | Cron `00 1 * * 1` (Mondays 01:00 UTC), manual               | Self-hosted Renovate run to open dependency-update PRs.                                                                                             |
-| [`bump.yml`](./workflows/bump.yml)                     | Manual                                                       | Bump dependencies to their latest minor (ncu), run lint/format/test + Docker build, and open a `chore(deps)` pull request.                          |
+| [`bump.yml`](./workflows/bump.yml)                     | Manual                                                      | Bump dependencies to their latest minor (ncu), run lint/format/test + Docker build, and open a `chore(deps)` pull request.                          |
 
 ## Dependencies
 
