@@ -43,32 +43,8 @@ jobs:
       - name: Test
         run: npm run test
 
-      - name: Build Docker image
-        run: docker compose build
-
-      - name: Start bullboard
-        run: docker compose up --wait --wait-timeout 180 --detach bullboard
-
-      - name: Generate jobs
-        run: ./tests/job-generator.js --all
-
-      - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
-
-      - name: E2E test
-        run: npm run test:e2e
-
-      - name: Upload Playwright report
-        if: failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7
-
-      - name: Stop containers
-        if: always()
-        run: docker compose down -v
+      - name: E2E (Docker + Playwright)
+        uses: ./.github/actions/e2e
 
       # Build the commit subject and PR body from the actual dependency diff,
       # reusing the release TL;DR plugin. Subject follows the changelog norm:
