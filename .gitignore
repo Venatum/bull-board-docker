@@ -19,3 +19,8 @@ examples/tls-example/certs/*
 
 # Local docs (superpowers plans/specs, etc.)
 docs/
+
+# Playwright
+playwright-report/
+test-results/
+/blob-report/

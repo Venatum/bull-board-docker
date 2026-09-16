@@ -1,0 +1,34 @@
+name: "E2E (Docker + Playwright)"
+description: "Build the image, start the env-var feature scenarios, seed jobs, and run the Playwright suite. Caller must set up Node and install dependencies first."
+runs:
+  using: "composite"
+  steps:
+    - name: Start e2e stack
+      shell: bash
+      run: npm run start:e2e
+
+    - name: Seed jobs
+      shell: bash
+      run: npm run test:e2e:seed
+
+    - name: Install Playwright browser
+      shell: bash
+      run: npx playwright install --with-deps chromium
+
+    - name: Run Playwright suite
+      shell: bash
+      run: npm run test:e2e:suite
+
+    - name: Upload Playwright report
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 7
+        if-no-files-found: ignore
+
+    - name: Stop e2e stack
+      if: always()
+      shell: bash
+      run: npm run stop:e2e

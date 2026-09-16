@@ -64,6 +64,7 @@ describe("Bull Queue Setup", () => {
 				getRouter() {
 					return "router";
 				}
+				setBasePath() {}
 			},
 		}));
 
@@ -195,6 +196,7 @@ describe("Bull Queue Setup", () => {
 				getRouter() {
 					return "router";
 				}
+				setBasePath() {}
 			},
 		}));
 		vi.doMock("@bull-board/api/bullMQAdapter", () => ({
@@ -395,6 +397,7 @@ describe("Bull Queue Setup", () => {
 					getRouter() {
 						return "router";
 					}
+					setBasePath() {}
 				},
 			}));
 
@@ -534,6 +537,7 @@ describe("Bull Queue Setup", () => {
 					getRouter() {
 						return "router";
 					}
+					setBasePath() {}
 				},
 			}));
 			vi.doMock("@bull-board/api/bullMQAdapter", () => ({
@@ -577,6 +581,7 @@ describe("Bull Queue Setup", () => {
 					getRouter() {
 						return "router";
 					}
+					setBasePath() {}
 				},
 			}));
 			vi.doMock("@bull-board/api/bullMQAdapter", () => ({
@@ -629,6 +634,7 @@ describe("Bull Queue Setup", () => {
 					getRouter() {
 						return "router";
 					}
+					setBasePath() {}
 				},
 			}));
 			vi.doMock("@bull-board/api/bullMQAdapter", () => ({

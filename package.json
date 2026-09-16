@@ -31,6 +31,9 @@
     "start:docker": "docker compose up --force-recreate --renew-anon-volumes --wait --detach",
     "start:docker-deps": "npm run start:docker redis",
     "stop:docker": "docker compose down -v",
+    "start:e2e": "docker compose -f tests/docker-compose.e2e.yml up --build --force-recreate --renew-anon-volumes --wait --detach",
+    "stop:e2e": "docker compose -f tests/docker-compose.e2e.yml down -v",
+    "test:e2e:seed": "node tests/e2e/seed.js",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "format": "oxfmt --check",
@@ -39,7 +42,10 @@
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "test:e2e:suite": "playwright test",
+    "test:e2e": "npm run start:e2e && npm run test:e2e:seed && npm run test:e2e:suite",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@bull-board/api": "^9.10.1",
@@ -58,6 +64,7 @@
     "passport-local": "^1.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@semantic-release/changelog": "^7.0.0",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/github": "^12.0.9",

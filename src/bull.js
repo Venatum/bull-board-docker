@@ -15,6 +15,7 @@ const BULL_CLUSTER_PREFIX_REQUIRED = "BULL_CLUSTER_PREFIX_REQUIRED";
 const REDIS_SCAN_COUNT = 100;
 
 const serverAdapter = new ExpressAdapter();
+serverAdapter.setBasePath(config.HOME_PAGE);
 const { setQueues } = createBullBoard({
 	queues: [],
 	serverAdapter,
