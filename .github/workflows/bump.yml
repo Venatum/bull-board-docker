@@ -9,11 +9,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
     timeout-minutes: 20
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.SEMANTIC_TOKEN }}
 
       - name: Get Node version from package.json
         id: node_version
@@ -51,11 +52,19 @@ jobs:
       - name: Generate jobs
         run: ./tests/job-generator.js --all
 
-      # TODO: e2e test — drive the bull-board UI (http://localhost:3000) and assert
-      # the queues/jobs created by job-generator show up (e.g. Playwright).
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
       - name: E2E test
-        run: |
-          echo "TODO: implement e2e test against http://localhost:3000"
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
 
       - name: Stop containers
         if: always()
@@ -64,7 +73,7 @@ jobs:
       # Build the commit subject and PR body from the actual dependency diff,
       # reusing the release TL;DR plugin. Subject follows the changelog norm:
       # "chore(deps): update dependencies <name> and <name> to <ver> and <name> to <ver>".
-      - name: Build pull request metadata
+      - name: Build commit message
         id: pr
         run: |
           node -e '
@@ -91,12 +100,14 @@ jobs:
             fs.appendFileSync(out, `body<<PR_BODY_EOF\n${body}\nPR_BODY_EOF\n`);
           '
 
-      - name: Open pull request
-        uses: peter-evans/create-pull-request@v8
-        with:
-          branch: deps/bump-minor
-          commit-message: ${{ steps.pr.outputs.subject }}
-          title: ${{ steps.pr.outputs.subject }}
-          body: ${{ steps.pr.outputs.body }}
-          labels: dependencies
-          delete-branch: true
+      - name: Commit and push to master
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          if git diff --cached --quiet; then
+            echo "No dependency changes to commit."
+            exit 0
+          fi
+          git commit -m "${{ steps.pr.outputs.subject }}"
+          git push origin HEAD:master
