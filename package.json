@@ -31,6 +31,9 @@
     "start:docker": "docker compose up --force-recreate --renew-anon-volumes --wait --detach",
     "start:docker-deps": "npm run start:docker redis",
     "stop:docker": "docker compose down -v",
+    "start:e2e": "docker compose -f tests/docker-compose.e2e.yml up --build --force-recreate --renew-anon-volumes --wait --detach",
+    "stop:e2e": "docker compose -f tests/docker-compose.e2e.yml down -v",
+    "test:e2e:seed": "node tests/e2e/seed.js",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "format": "oxfmt --check",
@@ -40,7 +43,8 @@
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
-    "test:e2e": "playwright test",
+    "test:e2e:suite": "playwright test",
+    "test:e2e": "npm run start:e2e && npm run test:e2e:seed && npm run test:e2e:suite",
     "test:e2e:report": "playwright show-report"
   },
   "dependencies": {

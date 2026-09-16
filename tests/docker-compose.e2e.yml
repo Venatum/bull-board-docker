@@ -1,0 +1,88 @@
+name: bull-board-e2e
+
+x-app-common: &app-common
+  image: bull-board-e2e:test
+  environment: &app-env
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+  healthcheck:
+    test:
+      [
+        "CMD-SHELL",
+        "wget --no-verbose --tries=1 --spider http://0.0.0.0:3000/healthcheck || exit 1",
+      ]
+    interval: 10s
+    timeout: 10s
+    retries: 5
+  depends_on:
+    redis:
+      condition: service_healthy
+
+services:
+  # Only this service carries `build:`; it tags `bull-board-e2e:test`, which the
+  # other services reuse, so `up --build` builds the image exactly once.
+  bullboard-smoke:
+    <<: *app-common
+    container_name: bullboard-smoke
+    build:
+      dockerfile: ./Dockerfile
+      context: ..
+    ports:
+      - "3000:3000"
+
+  bullboard-auth:
+    <<: *app-common
+    container_name: bullboard-auth
+    pull_policy: never
+    environment:
+      <<: *app-env
+      USER_LOGIN: admin
+      USER_PASSWORD: secret
+      BULL_PREFIX: authq
+    ports:
+      - "3001:3000"
+
+  bullboard-proxy:
+    <<: *app-common
+    container_name: bullboard-proxy
+    pull_policy: never
+    environment:
+      <<: *app-env
+      PROXY_PATH: /monitor
+      USER_LOGIN: admin
+      USER_PASSWORD: secret
+      BULL_PREFIX: proxyq
+    ports:
+      - "3002:3000"
+
+  bullboard-prefix:
+    <<: *app-common
+    container_name: bullboard-prefix
+    pull_policy: never
+    environment:
+      <<: *app-env
+      BULL_PREFIX: myapp
+    ports:
+      - "3003:3000"
+
+  bullboard-version:
+    <<: *app-common
+    container_name: bullboard-version
+    pull_policy: never
+    environment:
+      <<: *app-env
+      BULL_VERSION: BULL
+      BULL_PREFIX: bullv
+    ports:
+      - "3004:3000"
+
+  redis:
+    container_name: redis-e2e
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
