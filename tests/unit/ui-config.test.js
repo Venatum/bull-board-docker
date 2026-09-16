@@ -29,6 +29,7 @@ describe("Bull Board UI Configuration", () => {
 				getRouter() {
 					return "router";
 				}
+				setBasePath() {}
 			},
 		}));
 
