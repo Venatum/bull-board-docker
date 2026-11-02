@@ -20,10 +20,10 @@ If critical issues are found, stop and report them. Do not commit broken code.
 1. Run `git status` to see what files are changed
 2. Stage relevant files with `git add <files>` (never `git add .` blindly)
 3. Write a Conventional Commits message:
-   - Format: `type(scope): short description`
-   - Types: `feat`, `fix`, `chore`, `ci`, `docs`, `test`, `refactor`, `perf`, `build`
-   - Keep the subject line under 72 characters
-   - Add a body if the change needs context
+    - Format: `type(scope): short description`
+    - Types: `feat`, `fix`, `chore`, `ci`, `docs`, `test`, `refactor`, `perf`, `build`
+    - Keep the subject line under 72 characters
+    - Add a body if the change needs context
 4. Commit: `git commit -m "..."`
 
 ### Dependency update commits

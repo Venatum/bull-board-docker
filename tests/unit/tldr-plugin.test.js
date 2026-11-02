@@ -246,7 +246,9 @@ describe("buildTldr", () => {
 		mkdirSync(join(nmDir, "bull-board"), { recursive: true });
 		writeFileSync(
 			join(nmDir, "bull-board", "package.json"),
-			JSON.stringify({ repository: { url: "git+https://github.com/felixmosh/bull-board.git" } }),
+			JSON.stringify({
+				repository: { url: "git+https://github.com/felixmosh/bull-board.git" },
+			}),
 		);
 
 		writeCurrentPkg({ "bull-board": "^6.21.1", bullmq: "^5.73.4" });
