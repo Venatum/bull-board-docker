@@ -44,7 +44,7 @@ module.exports = {
 					],
 				},
 				releaseRules: [
-					{ type: "*!", release: "major" },
+					{ breaking: true, release: "major" },
 					{ type: "feat", release: "minor" },
 					{ type: "perf", release: "minor" },
 					{ type: "chore", scope: "deps", release: "patch" },
