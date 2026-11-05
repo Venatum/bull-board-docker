@@ -1,6 +1,17 @@
+import { isIP } from "node:net";
+import { checkServerIdentity } from "node:tls";
+
 import Redis from "ioredis";
 
 import { config } from "./config.js";
+
+// Node 26 rejects an IP address as TLS servername (RFC 6066 forbids it in SNI), so keep
+// verifying the certificate against that IP without sending it as SNI.
+const serverIdentityOptions = (servername) => {
+	if (!servername) return {};
+	if (!isIP(servername)) return { servername };
+	return { checkServerIdentity: (_host, cert) => checkServerIdentity(servername, cert) };
+};
 
 const parseEntry = (entry) => {
 	const ipv6Match = entry.match(/^\[(.+)]:(\d+)$/);
@@ -55,7 +66,7 @@ const buildTlsConfig = () => {
 		...(config.REDIS_TLS_CA && { ca: config.REDIS_TLS_CA }),
 		...(config.REDIS_TLS_CERT && { cert: config.REDIS_TLS_CERT }),
 		...(config.REDIS_TLS_KEY && { key: config.REDIS_TLS_KEY }),
-		...(config.REDIS_TLS_SERVERNAME && { servername: config.REDIS_TLS_SERVERNAME }),
+		...serverIdentityOptions(config.REDIS_TLS_SERVERNAME),
 		...(config.REDIS_TLS_REJECT_UNAUTHORIZED !== undefined && {
 			rejectUnauthorized: config.REDIS_TLS_REJECT_UNAUTHORIZED,
 		}),
@@ -97,9 +108,7 @@ export const redisConfig = {
 					...(config.SENTINEL_TLS_KEY && {
 						key: config.SENTINEL_TLS_KEY,
 					}),
-					...(config.SENTINEL_TLS_SERVERNAME && {
-						servername: config.SENTINEL_TLS_SERVERNAME,
-					}),
+					...serverIdentityOptions(config.SENTINEL_TLS_SERVERNAME),
 					...(config.SENTINEL_TLS_REJECT_UNAUTHORIZED !== undefined && {
 						rejectUnauthorized: config.SENTINEL_TLS_REJECT_UNAUTHORIZED,
 					}),

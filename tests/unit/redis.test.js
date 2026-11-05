@@ -560,6 +560,24 @@ describe("Redis Client", () => {
 			);
 		});
 
+		it("should verify the certificate against an IP servername instead of sending it as SNI", async () => {
+			setupCommonMocks({
+				REDIS_USE_TLS: true,
+				REDIS_TLS_SERVERNAME: "10.0.0.5",
+			});
+
+			const { redisConfig } = await import("../../src/redis");
+			const { tls } = redisConfig.redis;
+
+			expect(tls).not.toHaveProperty("servername");
+			expect(
+				tls.checkServerIdentity("redis-alias", { subjectaltname: "IP Address:10.0.0.5" }),
+			).toBeUndefined();
+			expect(
+				tls.checkServerIdentity("redis-alias", { subjectaltname: "IP Address:10.0.0.6" }),
+			).toBeInstanceOf(Error);
+		});
+
 		it("should not include TLS options when REDIS_USE_TLS is false", async () => {
 			setupCommonMocks({
 				REDIS_USE_TLS: false,
@@ -601,6 +619,25 @@ describe("Redis Client", () => {
 					},
 				}),
 			);
+		});
+
+		it("should verify the Sentinel certificate against an IP servername instead of sending it as SNI", async () => {
+			setupCommonMocks({
+				SENTINEL_HOSTS: "host1:26379",
+				SENTINEL_NAME: "mymaster",
+				SENTINEL_TLS_ENABLED: true,
+				SENTINEL_TLS_SERVERNAME: "fd00::5",
+			});
+
+			const { redisConfig } = await import("../../src/redis");
+			const { sentinelTLS } = redisConfig.redis;
+
+			expect(sentinelTLS).not.toHaveProperty("servername");
+			expect(
+				sentinelTLS.checkServerIdentity("host1", {
+					subjectaltname: "IP Address:FD00:0:0:0:0:0:0:5",
+				}),
+			).toBeUndefined();
 		});
 
 		it("should keep distinct TLS config for Redis and Sentinel when both are enabled", async () => {
