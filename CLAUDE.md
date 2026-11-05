@@ -41,7 +41,7 @@ This is a thin Express wrapper that auto-discovers Bull/BullMQ queues from Redis
 - **Always use existing scripts**: Run commands via `package.json` scripts (`npm test`, `npm run start:docker`, etc.) — never craft manual/ad-hoc commands
 - **Code navigation**: Prefer LSP over Grep for go-to-definition, find references, symbol search
 - **Package manager**: npm only — yarn/pnpm/bun are blocked in `package.json`
-- **Runtime**: Node.js ≥24, ES modules (`"type": "module"`) — use `import`/`export`
+- **Runtime**: Node.js ≥26, ES modules (`"type": "module"`) — use `import`/`export`
 - **No TypeScript**, no build step, no frontend framework
 - **Commits**: Conventional Commits (see CONTRIBUTING.md)
 - **Docker**: `docker compose` (not `docker-compose`)
