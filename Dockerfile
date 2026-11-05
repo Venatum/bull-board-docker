@@ -5,7 +5,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm ci --only=production --no-audit --no-fund
+RUN npm ci --omit=dev --no-audit --no-fund
 
 # Production stage
 FROM node:26-alpine AS production
